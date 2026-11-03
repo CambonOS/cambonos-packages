@@ -1,0 +1,141 @@
+#!/usr/bin/bash
+# Safely manage CambonOS Fastfetch blocks in global shell rc files.
+set -Eeuo pipefail
+
+readonly BEGIN_MARKER='# >>> CambonOS Fastfetch >>>'
+readonly END_MARKER='# <<< CambonOS Fastfetch <<<'
+readonly BASH_RC='/etc/bash.bashrc'
+readonly ZSH_RC='/etc/zsh/zshrc'
+readonly BASH_FRAGMENT='/usr/share/cambonos/fastfetch/shell/bash'
+readonly ZSH_FRAGMENT='/usr/share/cambonos/fastfetch/shell/zsh'
+
+usage() {
+    printf 'Usage: %s {install|repair|remove|check}\n' "$0"
+}
+
+die() {
+    printf 'cambonos-fastfetch: ERROR: %s\n' "$*" >&2
+    exit 1
+}
+
+# Remove exactly one well-formed managed block. Refuse ambiguous or damaged
+# markers rather than risking unrelated administrator configuration.
+strip_block() {
+    local file="$1" tmp="$2"
+    local begin_count end_count
+    begin_count="$(grep -Fxc -- "$BEGIN_MARKER" "$file" || true)"
+    end_count="$(grep -Fxc -- "$END_MARKER" "$file" || true)"
+
+    if [[ "$begin_count" == 0 && "$end_count" == 0 ]]; then
+        cp -p -- "$file" "$tmp"
+        return 0
+    fi
+    [[ "$begin_count" == 1 && "$end_count" == 1 ]] ||
+        die "marcadores incompletos o duplicados en $file"
+
+    awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
+        $0 == begin {
+            if (inside || seen_begin) exit 20
+            inside=1; seen_begin=1; next
+        }
+        $0 == end {
+            if (!inside || seen_end) exit 21
+            inside=0; seen_end=1; next
+        }
+        !inside { print }
+        END {
+            if (inside || !seen_begin || !seen_end) exit 22
+        }
+    ' "$file" > "$tmp" || die "bloque administrado mal formado en $file"
+}
+
+managed_block() {
+    local fragment="$1"
+    cat <<EOF
+$BEGIN_MARKER
+# Managed by cambonos-fastfetch. Local changes inside this block may be replaced.
+if [[ -r '$fragment' ]]; then
+    source '$fragment'
+fi
+$END_MARKER
+EOF
+}
+
+update_file() {
+    local action="$1" file="$2" fragment="$3"
+    local dir tmp stripped
+
+    [[ -e "$file" || -L "$file" ]] || {
+        [[ "$action" == check ]] && return 1
+        return 0
+    }
+    [[ ! -L "$file" && -f "$file" ]] ||
+        die "$file no es un archivo regular; no se modifica"
+
+    dir="$(dirname -- "$file")"
+    tmp="$(mktemp "$dir/.cambonos-fastfetch.XXXXXX")"
+    stripped="${tmp}.stripped"
+    trap 'rm -f -- "$tmp" "$stripped"' RETURN
+
+    strip_block "$file" "$stripped"
+
+    # Start from a metadata-preserving copy. Replacing its contents keeps
+    # owner, mode, ACLs and extended attributes where supported.
+    cp -a -- "$file" "$tmp"
+
+    case "$action" in
+        install|repair)
+            cat -- "$stripped" > "$tmp"
+            # Ensure the existing content ends with a newline before appending.
+            if [[ -s "$tmp" ]] && [[ "$(tail -c 1 "$tmp" | wc -l)" -eq 0 ]]; then
+                printf '\n' >> "$tmp"
+            fi
+            printf '\n' >> "$tmp"
+            managed_block "$fragment" >> "$tmp"
+            ;;
+        remove)
+            cat -- "$stripped" > "$tmp"
+            ;;
+        check)
+            if ! grep -Fqx -- "$BEGIN_MARKER" "$file"; then
+                rm -f -- "$tmp" "$stripped"
+                trap - RETURN
+                return 1
+            fi
+            rm -f -- "$tmp" "$stripped"
+            trap - RETURN
+            return 0
+            ;;
+    esac
+
+    mv -fT -- "$tmp" "$file"
+    rm -f -- "$stripped"
+    trap - RETURN
+}
+
+main() {
+    local action="${1:-}"
+    [[ $# == 1 ]] || { usage >&2; exit 2; }
+    case "$action" in install|repair|remove|check) ;; *) usage >&2; exit 2 ;; esac
+
+    command -v flock >/dev/null 2>&1 || die 'flock no está disponible'
+    exec 9>/run/lock/cambonos-fastfetch.lock
+    flock 9
+
+    local failed=0
+    if [[ -x /usr/bin/bash && -f "$BASH_RC" ]]; then
+        update_file "$action" "$BASH_RC" "$BASH_FRAGMENT" || failed=1
+    fi
+    if [[ -x /usr/bin/zsh && -f "$ZSH_RC" ]]; then
+        update_file "$action" "$ZSH_RC" "$ZSH_FRAGMENT" || failed=1
+    elif [[ "$action" == check ]] && command -v zsh >/dev/null 2>&1; then
+        failed=1
+    fi
+
+    if (( failed )); then
+        printf 'cambonos-fastfetch: faltan integraciones o se detectó un problema.\n' >&2
+        return 1
+    fi
+}
+
+main "$@"
