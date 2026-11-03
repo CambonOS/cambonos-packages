@@ -1,10 +1,10 @@
 pkgname=cambonos-release
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="CambonOS distribution identity and release metadata"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
-license=('custom')
+license=('GPL-3.0-only')
 depends=('bash' 'coreutils')
 optdepends=(
   'lsb-release: provide the lsb_release command with CambonOS distribution metadata'
