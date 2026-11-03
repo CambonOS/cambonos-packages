@@ -1,0 +1,21 @@
+# Repositorio de paquetes generado
+dist/
+
+# Directorios temporales de makepkg
+packages/*/src/
+packages/*/pkg/
+
+# Paquetes compilados junto a los PKGBUILD
+packages/*/*.pkg.tar.*
+
+# Archivos temporales
+*.log
+*.tmp
+*.swp
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+

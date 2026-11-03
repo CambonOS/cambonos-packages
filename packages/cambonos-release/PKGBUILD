@@ -1,0 +1,26 @@
+pkgname=cambonos-release
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="CambonOS distribution identity and release metadata"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('custom')
+depends=('bash' 'coreutils')
+optdepends=(
+  'lsb-release: provide the lsb_release command with CambonOS distribution metadata'
+  'cambonos-fastfetch: provide the CambonOS Fastfetch profile and logo'
+)
+conflicts=('cambonos-base')
+replaces=('cambonos-base')
+install=cambonos-release.install
+
+package() {
+  install -Dm644 "$startdir/files/cambonos/os-release" \
+    "$pkgdir/usr/lib/cambonos/os-release"
+  install -Dm644 "$startdir/files/cambonos/lsb-release" \
+    "$pkgdir/usr/lib/cambonos/lsb-release"
+  install -Dm755 "$startdir/files/cambonos/lib/restore-release-files" \
+    "$pkgdir/usr/lib/cambonos/restore-release-files"
+  install -Dm644 "$startdir/files/libalpm/hooks/zzzz-cambonos-release.hook" \
+    "$pkgdir/usr/share/libalpm/hooks/zzzz-cambonos-release.hook"
+}

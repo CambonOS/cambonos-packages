@@ -1,0 +1,38 @@
+post_install() {
+    /usr/lib/cambonos/restore-release-files
+}
+
+post_upgrade() {
+    /usr/lib/cambonos/restore-release-files
+}
+
+post_remove() {
+    # Restore Arch's standard os-release link only when ours is still active.
+    if [[ -L /etc/os-release ]] &&
+       [[ "$(readlink -- /etc/os-release)" == "../usr/lib/cambonos/os-release" ]]; then
+        ln -sfnT -- ../usr/lib/os-release /etc/os-release
+    fi
+
+    # Restore the original lsb-release file only if it still contains the
+    # CambonOS-managed content. Preserve administrator edits made afterwards.
+    state_dir="/var/lib/cambonos-release"
+    backup="$state_dir/lsb-release.original"
+    was_absent="$state_dir/lsb-release.was-absent"
+    managed="$state_dir/lsb-release.managed"
+    pacnew="/etc/lsb-release.pacnew"
+
+    if [[ -f /etc/lsb-release && ! -L /etc/lsb-release ]] &&
+       [[ -f "$managed" ]] && cmp -s -- /etc/lsb-release "$managed"; then
+        rm -f -- /etc/lsb-release
+        if [[ -f "$pacnew" ]]; then
+            # If pacman preserved a newer upstream default as .pacnew, prefer it.
+            mv -fT -- "$pacnew" /etc/lsb-release
+        elif [[ -e "$backup" || -L "$backup" ]]; then
+            cp -a -- "$backup" /etc/lsb-release
+        elif [[ -e "$was_absent" ]]; then
+            : # It did not exist before CambonOS managed it.
+        fi
+    fi
+
+    rm -rf -- "$state_dir"
+}

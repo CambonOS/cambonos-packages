@@ -1,0 +1,24 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Package
+Target = filesystem
+Target = systemd
+Target = lsb-release
+
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Path
+Target = usr/lib/os-release
+Target = usr/lib/tmpfiles.d/etc.conf
+Target = etc/lsb-release
+
+[Action]
+Description = Restaurando la identidad de CambonOS...
+When = PostTransaction
+Depends = bash
+Depends = coreutils
+Exec = /usr/lib/cambonos/restore-release-files

@@ -1,0 +1,6 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+readonly CONFIG="/usr/share/cambonos/fastfetch/config.jsonc"
+
+exec fastfetch --config "$CONFIG" "$@"

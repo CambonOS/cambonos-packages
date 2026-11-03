@@ -1,0 +1,26 @@
+pkgname=cambonos-fastfetch
+pkgver=0.1.0
+pkgrel=6
+pkgdesc="CambonOS branding and profile for Fastfetch"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('custom')
+depends=('fastfetch' 'cambonos-release')
+optdepends=('fish: enable automatic Fastfetch in interactive Fish sessions')
+
+package() {
+  install -Dm755 "$startdir/files/cambonos/bin/cambonos-fastfetch" \
+    "$pkgdir/usr/bin/cambonos-fastfetch"
+  install -Dm644 "$startdir/files/cambonos/fastfetch/config.jsonc" \
+    "$pkgdir/usr/share/cambonos/fastfetch/config.jsonc"
+  install -Dm644 "$startdir/files/cambonos/fastfetch/logo.txt" \
+    "$pkgdir/usr/share/cambonos/fastfetch/logo.txt"
+
+  # Login shells using /etc/profile (Bash, Zsh on Arch, and POSIX shells).
+  install -Dm644 "$startdir/files/profile.d/cambonos-fastfetch.sh" \
+    "$pkgdir/etc/profile.d/cambonos-fastfetch.sh"
+
+  # Fish loads vendor_conf.d snippets for every interactive shell.
+  install -Dm644 "$startdir/files/fish/vendor_conf.d/cambonos-fastfetch.fish" \
+    "$pkgdir/usr/share/fish/vendor_conf.d/cambonos-fastfetch.fish"
+}

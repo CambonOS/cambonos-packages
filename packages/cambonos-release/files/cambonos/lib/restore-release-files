@@ -1,0 +1,105 @@
+#!/usr/bin/bash
+# Restore CambonOS release metadata after relevant Arch package transactions.
+set -Eeuo pipefail
+
+readonly OS_RELEASE="/etc/os-release"
+readonly CAMBONOS_OS_TARGET="../usr/lib/cambonos/os-release"
+readonly ARCH_OS_TARGET="../usr/lib/os-release"
+readonly LSB_RELEASE="/etc/lsb-release"
+readonly CAMBONOS_LSB_SOURCE="/usr/lib/cambonos/lsb-release"
+readonly STATE_DIR="/var/lib/cambonos-release"
+readonly LSB_BACKUP="$STATE_DIR/lsb-release.original"
+readonly LSB_WAS_ABSENT="$STATE_DIR/lsb-release.was-absent"
+readonly LSB_MANAGED="$STATE_DIR/lsb-release.managed"
+
+restore_os_release() {
+    local current_target
+
+    if [[ -L "$OS_RELEASE" ]]; then
+        current_target="$(readlink -- "$OS_RELEASE")"
+        case "$current_target" in
+            "$CAMBONOS_OS_TARGET")
+                return 0
+                ;;
+            "$ARCH_OS_TARGET")
+                ln -sfnT -- "$CAMBONOS_OS_TARGET" "$OS_RELEASE"
+                ;;
+            *)
+                # Preserve administrator-defined symlinks.
+                return 0
+                ;;
+        esac
+    elif [[ ! -e "$OS_RELEASE" ]]; then
+        # Recreate the link if a package transaction removed it.
+        ln -s -- "$CAMBONOS_OS_TARGET" "$OS_RELEASE"
+    fi
+    # Preserve regular files supplied by the administrator.
+}
+
+save_original_lsb_release() {
+    install -d -m755 "$STATE_DIR"
+
+    # Do not overwrite the original snapshot on subsequent package upgrades.
+    if [[ -e "$LSB_BACKUP" || -L "$LSB_BACKUP" || -e "$LSB_WAS_ABSENT" ]]; then
+        return 0
+    fi
+
+    if [[ -e "$LSB_RELEASE" || -L "$LSB_RELEASE" ]]; then
+        if [[ -d "$LSB_RELEASE" && ! -L "$LSB_RELEASE" ]]; then
+            printf 'cambonos-release: %s is a directory; leaving it untouched.\n' "$LSB_RELEASE" >&2
+            return 1
+        fi
+        cp -a -- "$LSB_RELEASE" "$LSB_BACKUP"
+    else
+        : > "$LSB_WAS_ABSENT"
+    fi
+}
+
+restore_lsb_release() {
+    local temporary_file
+
+    # lsb-release is optional. Its package owns /etc/lsb-release, so we
+    # customize that package-owned file in place rather than shipping a
+    # competing file or symlink from cambonos-release.
+    if [[ ! -x /usr/bin/lsb_release ]]; then
+        # The optional package was removed. Its old snapshot is no longer
+        # useful; a future installation will create a fresh one.
+        rm -rf -- "$STATE_DIR"
+        return 0
+    fi
+
+    if [[ ! -f "$CAMBONOS_LSB_SOURCE" ]]; then
+        printf 'cambonos-release: missing %s; cannot restore LSB metadata.\n' "$CAMBONOS_LSB_SOURCE" >&2
+        return 1
+    fi
+
+    if [[ -d "$LSB_RELEASE" && ! -L "$LSB_RELEASE" ]]; then
+        printf 'cambonos-release: %s is a directory; leaving it untouched.\n' "$LSB_RELEASE" >&2
+        return 0
+    fi
+
+    # Preserve administrator-defined symlinks rather than replacing them.
+    if [[ -L "$LSB_RELEASE" ]]; then
+        return 0
+    fi
+
+    save_original_lsb_release
+
+    # Write atomically on the same filesystem. The hook runs after the
+    # lsb-release package has finished installing/upgrading its own file.
+    temporary_file="$(mktemp /etc/.lsb-release.cambonos.XXXXXX)"
+    if ! install -m644 -- "$CAMBONOS_LSB_SOURCE" "$temporary_file"; then
+        rm -f -- "$temporary_file"
+        return 1
+    fi
+    if ! mv -fT -- "$temporary_file" "$LSB_RELEASE"; then
+        rm -f -- "$temporary_file"
+        return 1
+    fi
+    # Keep the exact managed version so post_remove can distinguish it from
+    # a later administrator edit, even after this package's files are removed.
+    install -m644 -- "$CAMBONOS_LSB_SOURCE" "$LSB_MANAGED"
+}
+
+restore_os_release
+restore_lsb_release
