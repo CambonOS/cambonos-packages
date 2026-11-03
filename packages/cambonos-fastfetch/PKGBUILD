@@ -1,11 +1,11 @@
 pkgname=cambonos-fastfetch
 pkgver=0.1.0
-pkgrel=8
+pkgrel=9
 pkgdesc="CambonOS branding and automatic Fastfetch integration for interactive shells"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
-depends=('fastfetch' 'cambonos-release' 'bash')
+depends=('fastfetch' 'cambonos-release' 'bash' 'util-linux')
 optdepends=(
   'fish: automatic Fastfetch integration in Fish'
   'zsh: automatic Fastfetch integration in Zsh'

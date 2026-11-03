@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 # Safely manage CambonOS Fastfetch blocks in global shell rc files.
 set -Eeuo pipefail
+umask 022
 
 readonly BEGIN_MARKER='# >>> CambonOS Fastfetch >>>'
 readonly END_MARKER='# <<< CambonOS Fastfetch <<<'
@@ -8,6 +9,8 @@ readonly BASH_RC='/etc/bash.bashrc'
 readonly ZSH_RC='/etc/zsh/zshrc'
 readonly BASH_FRAGMENT='/usr/share/cambonos/fastfetch/shell/bash'
 readonly ZSH_FRAGMENT='/usr/share/cambonos/fastfetch/shell/zsh'
+readonly PROFILE_SCRIPT='/etc/profile.d/cambonos-fastfetch.sh'
+readonly FISH_CONF='/usr/share/fish/vendor_conf.d/cambonos-fastfetch.fish'
 
 usage() {
     printf 'Usage: %s {install|repair|remove|check}\n' "$0"
@@ -18,11 +21,16 @@ die() {
     exit 1
 }
 
-# Remove exactly one well-formed managed block. Refuse ambiguous or damaged
+is_installed() {
+    [[ -x "$1" ]]
+}
+
+# Write the file without the managed block. Refuse ambiguous or damaged
 # markers rather than risking unrelated administrator configuration.
 strip_block() {
     local file="$1" tmp="$2"
     local begin_count end_count
+
     begin_count="$(grep -Fxc -- "$BEGIN_MARKER" "$file" || true)"
     end_count="$(grep -Fxc -- "$END_MARKER" "$file" || true)"
 
@@ -30,21 +38,26 @@ strip_block() {
         cp -p -- "$file" "$tmp"
         return 0
     fi
+
     [[ "$begin_count" == 1 && "$end_count" == 1 ]] ||
         die "marcadores incompletos o duplicados en $file"
 
     awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
         $0 == begin {
-            if (inside || seen_begin) exit 20
-            inside=1; seen_begin=1; next
+            if (inside || seen_begin) { bad=1; next }
+            inside=1
+            seen_begin=1
+            next
         }
         $0 == end {
-            if (!inside || seen_end) exit 21
-            inside=0; seen_end=1; next
+            if (!inside || seen_end) { bad=1; next }
+            inside=0
+            seen_end=1
+            next
         }
         !inside { print }
         END {
-            if (inside || !seen_begin || !seen_end) exit 22
+            if (bad || inside || !seen_begin || !seen_end) exit 1
         }
     ' "$file" > "$tmp" || die "bloque administrado mal formado en $file"
 }
@@ -61,56 +74,94 @@ $END_MARKER
 EOF
 }
 
+check_file() {
+    local file="$1" fragment="$2"
+    [[ -f "$file" && ! -L "$file" && -r "$fragment" ]] || return 1
+
+    local begin_count end_count
+    begin_count="$(grep -Fxc -- "$BEGIN_MARKER" "$file" || true)"
+    end_count="$(grep -Fxc -- "$END_MARKER" "$file" || true)"
+    [[ "$begin_count" == 1 && "$end_count" == 1 ]] || return 1
+
+    # Verify marker order and that the expected source command exists.
+    grep -Fqx -- "    source '$fragment'" "$file" || return 1
+    awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
+        $0 == begin {
+            if (inside || seen_begin) { bad=1; next }
+            inside=1
+            seen_begin=1
+            next
+        }
+        $0 == end {
+            if (!inside || seen_end) { bad=1; next }
+            inside=0
+            seen_end=1
+            next
+        }
+        END {
+            if (bad || inside || !seen_begin || !seen_end) exit 1
+        }
+    ' "$file"
+}
+
 update_file() {
     local action="$1" file="$2" fragment="$3"
-    local dir tmp stripped
+    local dir tmp stripped existed=0
 
-    [[ -e "$file" || -L "$file" ]] || {
-        [[ "$action" == check ]] && return 1
-        return 0
-    }
-    [[ ! -L "$file" && -f "$file" ]] ||
-        die "$file no es un archivo regular; no se modifica"
+    if [[ -e "$file" || -L "$file" ]]; then
+        [[ ! -L "$file" && -f "$file" ]] ||
+            die "$file no es un archivo regular; no se modifica"
+        existed=1
+    else
+        case "$action" in
+            check) return 1 ;;
+            remove) return 0 ;;
+            install|repair) ;;
+        esac
+    fi
+
+    if [[ "$action" == check ]]; then
+        check_file "$file" "$fragment"
+        return
+    fi
+    if [[ "$action" != remove && ! -r "$fragment" ]]; then
+        die "no se encuentra el fragmento de shell $fragment"
+    fi
 
     dir="$(dirname -- "$file")"
+    [[ -d "$dir" ]] || die "no existe el directorio de configuración $dir"
+
     tmp="$(mktemp "$dir/.cambonos-fastfetch.XXXXXX")"
     stripped="${tmp}.stripped"
-    trap 'rm -f -- "$tmp" "$stripped"' RETURN
 
-    strip_block "$file" "$stripped"
-
-    # Start from a metadata-preserving copy. Replacing its contents keeps
-    # owner, mode, ACLs and extended attributes where supported.
-    cp -a -- "$file" "$tmp"
+    if (( existed )); then
+        strip_block "$file" "$stripped"
+        # Preserve ownership, mode, ACLs and extended attributes where supported.
+        cp -a -- "$file" "$tmp"
+    else
+        : > "$stripped"
+        chmod 0644 "$tmp"
+    fi
 
     case "$action" in
         install|repair)
             cat -- "$stripped" > "$tmp"
-            # Ensure the existing content ends with a newline before appending.
             if [[ -s "$tmp" ]] && [[ "$(tail -c 1 "$tmp" | wc -l)" -eq 0 ]]; then
                 printf '\n' >> "$tmp"
             fi
-            printf '\n' >> "$tmp"
             managed_block "$fragment" >> "$tmp"
             ;;
         remove)
             cat -- "$stripped" > "$tmp"
             ;;
-        check)
-            if ! grep -Fqx -- "$BEGIN_MARKER" "$file"; then
-                rm -f -- "$tmp" "$stripped"
-                trap - RETURN
-                return 1
-            fi
+        *)
             rm -f -- "$tmp" "$stripped"
-            trap - RETURN
-            return 0
+            die "acción interna no válida: $action"
             ;;
     esac
 
     mv -fT -- "$tmp" "$file"
     rm -f -- "$stripped"
-    trap - RETURN
 }
 
 main() {
@@ -118,18 +169,59 @@ main() {
     [[ $# == 1 ]] || { usage >&2; exit 2; }
     case "$action" in install|repair|remove|check) ;; *) usage >&2; exit 2 ;; esac
 
-    command -v flock >/dev/null 2>&1 || die 'flock no está disponible'
+    command -v flock >/dev/null 2>&1 || die 'flock no está disponible (dependencia util-linux)'
     exec 9>/run/lock/cambonos-fastfetch.lock
     flock 9
 
     local failed=0
-    if [[ -x /usr/bin/bash && -f "$BASH_RC" ]]; then
-        update_file "$action" "$BASH_RC" "$BASH_FRAGMENT" || failed=1
+
+    if is_installed /usr/bin/bash; then
+        if update_file "$action" "$BASH_RC" "$BASH_FRAGMENT"; then
+            [[ "$action" != check ]] || printf 'OK: integración Bash (%s)\n' "$BASH_RC"
+        else
+            failed=1
+            [[ "$action" != check ]] || printf 'FALTA: integración Bash (%s)\n' "$BASH_RC" >&2
+        fi
+    else
+        printf 'INFO: Bash no está instalado; se omite.\n'
     fi
-    if [[ -x /usr/bin/zsh && -f "$ZSH_RC" ]]; then
-        update_file "$action" "$ZSH_RC" "$ZSH_FRAGMENT" || failed=1
-    elif [[ "$action" == check ]] && command -v zsh >/dev/null 2>&1; then
-        failed=1
+
+    if is_installed /usr/bin/zsh; then
+        if update_file "$action" "$ZSH_RC" "$ZSH_FRAGMENT"; then
+            [[ "$action" != check ]] || printf 'OK: integración Zsh (%s)\n' "$ZSH_RC"
+        else
+            failed=1
+            [[ "$action" != check ]] || printf 'FALTA: integración Zsh (%s)\n' "$ZSH_RC" >&2
+        fi
+    else
+        printf 'INFO: Zsh no está instalado; se omite.\n'
+    fi
+
+    if [[ "$action" == check ]]; then
+        if [[ -r "$PROFILE_SCRIPT" ]]; then
+            printf 'OK: integración POSIX de login (%s)\n' "$PROFILE_SCRIPT"
+        else
+            printf 'FALTA: integración POSIX de login (%s)\n' "$PROFILE_SCRIPT" >&2
+            failed=1
+        fi
+
+        if is_installed /usr/bin/fish; then
+            if [[ -r "$FISH_CONF" ]]; then
+                printf 'OK: integración Fish (%s)\n' "$FISH_CONF"
+            else
+                printf 'FALTA: integración Fish (%s)\n' "$FISH_CONF" >&2
+                failed=1
+            fi
+        else
+            printf 'INFO: Fish no está instalado; se omite.\n'
+        fi
+
+        # /bin/sh may be a POSIX invocation of Bash. Its login startup is
+        # covered by /etc/profile; portable non-login integration is not
+        # possible without arranging ENV in the parent process environment.
+        if [[ -x /bin/sh ]]; then
+            printf 'INFO: sh: inicio login cubierto por /etc/profile; no-login no se fuerza globalmente.\n'
+        fi
     fi
 
     if (( failed )); then
