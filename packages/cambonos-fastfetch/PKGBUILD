@@ -1,10 +1,10 @@
 pkgname=cambonos-fastfetch
 pkgver=0.1.0
-pkgrel=6
+pkgrel=7
 pkgdesc="CambonOS branding and profile for Fastfetch"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
-license=('custom')
+license=('GPL-3.0-only')
 depends=('fastfetch' 'cambonos-release')
 optdepends=('fish: enable automatic Fastfetch in interactive Fish sessions')
 
