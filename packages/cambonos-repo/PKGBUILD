@@ -1,6 +1,6 @@
 pkgname=cambonos-repo
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="CambonOS pacman repository configuration and integration"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
