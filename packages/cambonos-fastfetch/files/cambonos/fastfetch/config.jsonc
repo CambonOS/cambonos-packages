@@ -20,7 +20,7 @@
     "color": {
       "keys": "green",
       "title": "blue"
-    },
+    }
   },
   "modules": [
     "title",

@@ -71,7 +71,7 @@ El pipeline recupera el manifiesto anterior desde GitHub Pages. Cada canal se va
 - El job `build` no recibe secretos de firma.
 - El job `signing` es el único que importa la subclave privada.
 - El job `signing` no ejecuta PKGBUILD ni scripts de instalación.
-- Se verifica por separado que el fingerprint secreto coincide con la subclave pública incluida en el paquete `cambonos-keyring` de cada canal. No se exige que el contenido de esos dos paquetes sea idéntico.
+- Se verifica por separado que el fingerprint secreto coincide con la subclave pública incluida en el paquete `cambonos-keyring` de cada canal. Además, el workflow compara byte a byte `cambonos.gpg`, `cambonos-trusted` y `cambonos-revoked` entre `dev` y `main`; ambos canales deben distribuir exactamente el mismo material de confianza, según la política del proyecto.
 - El manifiesto global también se firma; la siguiente ejecución verifica su firma antes de utilizarlo como referencia de versionado.
 - Cada paquete se firma individualmente.
 - `repo-add --include-sigs` genera las bases de datos incluyendo las firmas de paquetes.
