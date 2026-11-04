@@ -1,6 +1,6 @@
 pkgname=cambonos-branding
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Generic CambonOS logo assets"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
