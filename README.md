@@ -1,275 +1,180 @@
 # CambonOS Packages
 
-Repositorio de paquetes e infraestructura de construcción de CambonOS, una distribución basada en Arch Linux rolling release.
+Repositorio de paquetes e infraestructura de construcción y publicación de CambonOS, una distribución basada en Arch Linux rolling release.
+
+Esta primera versión funcional reconstruye los dos canales en cada publicación:
+
+| Rama | Repositorio pacman | Estado predeterminado |
+|---|---|---|
+| `main` | `stable` (`[cambonos]`) | Habilitado |
+| `dev` | `testing` (`[cambonos-testing]`) | Comentado/deshabilitado |
+
+Cada publicación reconstruye todos los paquetes de ambas ramas, firma los paquetes y las bases de datos, verifica los artefactos y despliega un sitio completo en GitHub Pages. No se conservan versiones antiguas dentro de un canal.
 
 ## Estructura
 
 ```text
 cambonos-packages/
+├── .github/workflows/package-pipeline.yml
 ├── packages/
 │   ├── cambonos-release/
-│   │   ├── PKGBUILD
-│   │   ├── cambonos-release.install
-│   │   └── files/
-│   └── cambonos-fastfetch/
-│       ├── PKGBUILD
-│       └── files/
+│   ├── cambonos-fastfetch/
+│   └── cambonos-keyring/
 ├── scripts/
-│   └── cambonos.py          # Punto de entrada para validar, construir y publicar
-├── dist/                    # Salida local; no se versiona
-│   ├── build/<arch>/         # Artefactos de build sin publicar
-│   ├── testing/<arch>/       # Repositorio local de pruebas
-│   └── stable/<arch>/        # Repositorio local estable
+│   ├── cambonos.py
+│   └── cambonos_lib/
+├── tests/
+├── docs/
+│   ├── GPG-SETUP.md
+│   └── IMPLEMENTATION.md
 └── README.md
 ```
 
-`files/` contiene los archivos fuente mantenidos por CambonOS. No se utiliza `src/` para almacenarlos: makepkg reserva `src/` como directorio temporal de compilación y puede eliminarlo durante `--cleanbuild`.
+## Preparación obligatoria antes de la primera publicación
 
-## Gestor de paquetes
+1. Sigue [`docs/GPG-SETUP.md`](docs/GPG-SETUP.md) para generar la clave primaria y la subclave de firma.
+2. Copia únicamente el material público (`cambonos.gpg`, `cambonos-trusted`, `cambonos-revoked`) a `packages/cambonos-keyring/files/`.
+3. Añade `CAMBONOS_SIGNING_KEY` y `CAMBONOS_SIGNING_PASSPHRASE` como secretos del entorno GitHub `package-signing`.
+4. Añade `CAMBONOS_SIGNING_FINGERPRINT` como variable de ese entorno. Debe ser el fingerprint de la subclave privada de firma.
+5. Configura GitHub Pages con origen **GitHub Actions**.
+6. Establece temporalmente la variable de repositorio `CAMBONOS_BOOTSTRAP=true` para la primera publicación. Tras comprobar el manifiesto publicado, cámbiala a `false`.
 
-Toda la gestión se realiza mediante `scripts/cambonos.py`. El gestor está implementado en Python y utiliza las herramientas nativas de Arch (`makepkg`, `pacman` y `repo-add`) para las operaciones propias del empaquetado. La validación estática no ejecuta ni hace `source` de los PKGBUILD.
+No ejecutes el pipeline antes de provisionar el material GPG: la validación de `cambonos-keyring` rechazará los archivos placeholder vacíos.
 
-Ejecuta los comandos desde la raíz del repositorio y como usuario normal para las operaciones de construcción y publicación. No ejecutes `makepkg` como root.
+La ISO de CambonOS debe instalar `cambonos-keyring` desde el medio local después de inicializar pacman-key y antes de utilizar el repositorio remoto. Ese bootstrap está fuera del alcance de este repositorio.
 
-### Ayuda
+## Herramientas locales
+
+Para validar y probar el código:
 
 ```bash
+python3 -m unittest discover -s tests -v
 python3 scripts/cambonos.py --help
-python3 scripts/cambonos.py validate --help
-python3 scripts/cambonos.py build --help
-python3 scripts/cambonos.py publish --help
 ```
 
-### Validar
+La validación estática requiere Python 3.10+, Bash y GPG. La comparación de versiones utiliza `vercmp` de pacman; si no está instalado en el host, el gestor lo ejecuta dentro de la imagen Docker fijada.
 
-Valida todos los paquetes:
-
-```bash
-python3 scripts/cambonos.py validate
-```
-
-Valida un paquete concreto:
-
-```bash
-python3 scripts/cambonos.py validate --package cambonos-release
-```
-
-Se pueden indicar varios paquetes repitiendo `--package`:
+Validar localmente un snapshot:
 
 ```bash
 python3 scripts/cambonos.py validate \
-  --package cambonos-release \
-  --package cambonos-fastfetch
-```
-
-La validación comprueba, entre otros aspectos:
-
-- Sintaxis Bash de los PKGBUILD y de los scripts asociados.
-- Coherencia entre `pkgname` y el nombre del directorio.
-- Presencia de `pkgver` y `pkgrel`.
-- Uso de arrays estáticos `depends` y ausencia de `source=()`/`sha256sums=()` en este modelo de payload local.
-- Existencia y ubicación de los archivos referenciados bajo `files/`.
-- Rutas de destino utilizadas con `$pkgdir`.
-- Existencia y sintaxis del script `.install`, si está declarado.
-- Estructura básica de los hooks `.hook`.
-- Dependencias internas sin paquete correspondiente y ciclos entre dependencias del monorepo.
-
-Es una validación estática y deliberadamente conservadora. No sustituye a `makepkg`, a la instalación del paquete ni a las pruebas en una máquina virtual.
-
-### Validar y construir
-
-Construye todos los paquetes después de validarlos:
-
-```bash
-python3 scripts/cambonos.py build
-```
-
-Construye solo uno o varios paquetes:
-
-```bash
-python3 scripts/cambonos.py build --package cambonos-release
-
-python3 scripts/cambonos.py build \
-  --package cambonos-release \
-  --package cambonos-fastfetch
-```
-
-Los artefactos resultantes se guardan en `dist/build/<arch>/`. Esta operación no modifica los repositorios `testing` ni `stable`, ni genera una base de datos pacman.
-
-El gestor utiliza un directorio temporal independiente para `BUILDDIR` y `PKGDEST`; no limpia ni elimina manualmente `src/`, `pkg/` o paquetes preexistentes dentro de los directorios de los PKGBUILD. `makepkg --cleanbuild --clean` administra su área temporal de compilación.
-
-Se utiliza `makepkg --nodeps`: las dependencias de ejecución se conservan en la metadata del paquete, pero no se exige que estén instaladas en el host. Si en el futuro se declaran `makedepends`, las herramientas necesarias deberán estar disponibles en el entorno de construcción.
-
-### Validar, construir y publicar
-
-La publicación exige indicar explícitamente el canal. No existe un canal predeterminado:
-
-```bash
-python3 scripts/cambonos.py publish --channel testing
-python3 scripts/cambonos.py publish --channel stable
-```
-
-Publicación selectiva:
-
-```bash
-python3 scripts/cambonos.py publish \
+  --source-root . \
   --channel testing \
-  --package cambonos-release
+  --branch dev
 ```
 
-Se pueden indicar varios `--package`. Si no se indica ninguno, se procesan todos los paquetes del monorepo.
-
-El destino local es `dist/<channel>/<arch>/`, por ejemplo `dist/testing/x86_64/`. La arquitectura se detecta mediante `pacman-conf Architecture` y, si no está disponible o devuelve `auto`, mediante `uname -m`. Se puede especificar manualmente con `--arch`:
+La validación local no consulta automáticamente Pages. Para comparar con una publicación anterior:
 
 ```bash
-python3 scripts/cambonos.py publish --channel testing --arch x86_64
+python3 scripts/cambonos.py validate \
+  --source-root . \
+  --channel testing \
+  --branch dev \
+  --previous-manifest ./manifest.json \
+  --previous-manifest-signature ./manifest.json.sig \
+  --keyring-public-key ./packages/cambonos-keyring/files/cambonos.gpg \
+  --keyring-trusted ./packages/cambonos-keyring/files/cambonos-trusted
 ```
 
-Comportamiento de publicación:
-
-1. Valida los paquetes seleccionados.
-2. Construye los paquetes en un área temporal y comprueba su nombre con `pacman -Qqp`.
-3. Prepara una copia de trabajo del canal y conserva los paquetes que no se están actualizando.
-4. Comprueba que las dependencias internas de los paquetes seleccionados estarán disponibles en el canal resultante.
-5. Sustituye los artefactos de los paquetes seleccionados y retira los nombres declarados como obsoletos en `OBSOLETE_PACKAGES` dentro del gestor.
-6. Regenera la base de datos a partir del conjunto completo de paquetes que queda en el canal.
-7. Sustituye el directorio de arquitectura preparado. Si falla el cambio de directorio, intenta restaurar la copia anterior.
-
-La base de datos se genera de nuevo con `repo-add`; no se modifica incrementalmente. Los alias `cambonos.db` y `cambonos.files` se materializan como archivos regulares además de sus archivos `.tar.gz`, para facilitar su publicación en hosting estático como GitHub Pages.
-
-La publicación selectiva no elimina paquetes que ya no estén en el código fuente salvo que su nombre esté incluido en `OBSOLETE_PACKAGES`. Cuando se retire un paquete del proyecto, añade su nombre a esa lista y publica de nuevo el canal correspondiente.
-
-### Simulación (`--dry-run`)
-
-`--dry-run` está disponible en los tres subcomandos:
+Construir un canal local requiere Docker:
 
 ```bash
-python3 scripts/cambonos.py validate --dry-run
-python3 scripts/cambonos.py build --package cambonos-release --dry-run
-python3 scripts/cambonos.py publish --channel testing --dry-run
+python3 scripts/cambonos.py build \
+  --source-root . \
+  --channel testing \
+  --branch dev \
+  --commit "$(git rev-parse HEAD)" \
+  --output ./build-testing
 ```
 
-La simulación ejecuta la validación estática y muestra los paquetes y operaciones previstas, pero no ejecuta `makepkg` ni `repo-add`, no crea directorios de salida, no adquiere el bloqueo de publicación y no modifica `dist/`. En una simulación de publicación no inspecciona mediante `pacman` los archivos que ya existan en el canal; la comprobación definitiva de dependencias y metadata se realiza durante la publicación real.
+El comando construye cada paquete en un contenedor Arch Linux desechable. El contenedor actualiza los repositorios rolling, instala `makedepends` y, cuando existe `check()`, instala `checkdepends`. No instala automáticamente `depends`.
 
-### Bloqueo y concurrencia
+La firma y el ensamblado del sitio se realizan en el job protegido de GitHub Actions; no se recomienda exportar la clave privada a un equipo de construcción local.
 
-Las operaciones que escriben en `dist/` utilizan un bloqueo exclusivo mediante `flock` (módulo `fcntl` de Python). Esto evita que dos procesos del gestor actualicen simultáneamente las salidas locales. El bloqueo se guarda en `dist/.cambonos-repository.lock`.
+## Política de versiones
 
-Este bloqueo es local al sistema de archivos donde se ejecuta el gestor. No coordina por sí solo ejecuciones de GitHub Actions en máquinas diferentes; los workflows deberán utilizar también un grupo de concurrencia de GitHub Actions.
+Cualquier cambio en los archivos de un paquete, incluido `PKGBUILD`, scripts `.install`, parches y payloads de `files/`, debe incrementar `pkgrel` o `pkgver`.
 
-## Paquetes
+El pipeline compara el hash del contenido fuente y la versión del mismo paquete en el canal correspondiente:
+- Cambia el contenido y no cambia la versión: error.
+- Cambia el contenido y aumenta la versión: permitido.
+- La versión retrocede: error.
+- Un paquete nuevo: permitido.
+- Un paquete eliminado de una rama: desaparece únicamente del canal de esa rama.
+- Si el binario reconstruido cambia de SHA256 manteniendo la misma versión, la firma/publicación se bloquea y requiere incrementar `pkgrel` o `pkgver`.
 
-### cambonos-release
+La comparación de versiones utiliza `vercmp`, no ordenación textual. Para estabilizar las reconstrucciones, `SOURCE_DATE_EPOCH` se fija al último commit Git que modificó el directorio de cada paquete. El hash binario se compara también con el manifiesto anterior para impedir que el rolling de Arch sustituya silenciosamente un paquete con la misma versión.
 
-Gestiona la identidad de distribución de CambonOS:
+`stable` y `testing` se comparan de forma independiente. Es válido que tengan versiones diferentes.
 
-- Instala la identidad vendor en `/usr/lib/cambonos/os-release`.
-- Mantiene `/etc/os-release` apuntando mediante un enlace relativo a `../usr/lib/cambonos/os-release`.
-- Instala un hook de pacman para volver a comprobar la identidad después de transacciones que afecten a `filesystem`, `systemd`, `lsb-release` o a los archivos de release relevantes.
-- Si el paquete opcional `lsb-release` está instalado, adapta `/etc/lsb-release` para que `lsb_release` identifique CambonOS. El contenido original se guarda en `/var/lib/cambonos-release/` y se restaura al desinstalar `cambonos-release`, siempre que el archivo siga conteniendo el contenido administrado por CambonOS.
+## Dependencias
 
-`cambonos-release` ofrece `lsb-release` y `cambonos-fastfetch` como dependencias opcionales. No instala ninguno de ellos automáticamente.
+- `depends`: dependencias de ejecución declaradas en el paquete; no se instalan automáticamente durante la construcción.
+- `makedepends`: se instalan en el contenedor de construcción.
+- `checkdepends`: se instalan cuando el paquete define `check()` y se ejecutan las pruebas.
+- Dependencias internas de construcción se ordenan topológicamente y se instalan desde los artefactos temporales ya construidos.
 
-`cambonos-release` no modifica estos archivos de Arch:
+Cada paquete se construye en su propio contenedor, por lo que no comparte las dependencias instaladas por otro paquete.
 
-- `/usr/lib/os-release`: permanece como identidad vendor original de Arch.
-- `/etc/arch-release`: permanece como marcador de Arch Linux, propiedad del paquete `filesystem`.
+## Repositorios pacman
 
-Esto es intencionado: CambonOS se identifica como distribución derivada de Arch (`ID_LIKE=arch`), pero no oculta la base tecnológica sobre la que se construye. Tampoco se modifican `/etc/issue` ni `/etc/issue.net`, que son banners de inicio de sesión y no identificadores estándar de distribución. No se gestionan `/etc/initrd-release` ni los archivos `extension-release.*`: identifican entornos initrd o imágenes de extensiones, no la identidad del sistema anfitrión.
+El sitio contiene:
 
-**Sobre `/etc/lsb-release`:** el paquete oficial `lsb-release` de Arch es propietario de esta ruta. Por eso `cambonos-release` no instala un segundo archivo ni un symlink competidor en esa ubicación. El hook actualiza el archivo después de que el paquete de Arch lo instale o actualice. Se omite `LSB_VERSION`, ya que ese campo declara conformidad con módulos LSB y CambonOS no está afirmando dicha conformidad.
-
-### cambonos-fastfetch
-
-Proporciona exclusivamente la integración visual con Fastfetch:
-
-- Perfil JSONC de CambonOS.
-- Logo ASCII de CambonOS.
-- Lanzador `/usr/bin/cambonos-fastfetch`.
-- Inicio automático en shells interactivos mediante mecanismos globales no invasivos:
-  - Bash: sesiones interactivas de login mediante `/etc/profile.d/`. Las sesiones interactivas no-login no se modifican ni ejecutan Fastfetch.
-  - Zsh: sesiones interactivas de login mediante `/etc/profile.d/`, que Arch carga desde `/etc/zsh/zprofile`. Las sesiones interactivas no-login no se modifican ni ejecutan Fastfetch.
-  - Otros shells compatibles con `/etc/profile`: sesiones interactivas de login, siempre que el shell cargue el perfil global.
-  - Fish: todas las sesiones interactivas, login y no-login, mediante `/usr/share/fish/vendor_conf.d/`. Fish es opcional y no se instala como dependencia.
-- No modifica `/etc/bash.bashrc`, `/etc/zsh/zshrc`, archivos de configuración de Fish ni archivos personales (`~/.bashrc`, `~/.zshrc`, `~/.config/fish/config.fish`).
-- Para desactivar el inicio automático en shells nuevos, la variable `CAMBONOS_NO_FASTFETCH` debe estar definida en el entorno antes de iniciar el shell. Por ejemplo: `CAMBONOS_NO_FASTFETCH=1 zsh -l`.
-
-Tiene `fastfetch` y `cambonos-release` como dependencias obligatorias. `fish` es una dependencia opcional únicamente para disponer de su integración automática. No se instala ni se configura Fastfetch desde `cambonos-release`. Al desinstalar `cambonos-fastfetch`, pacman elimina sus dos fragmentos de integración junto con el resto de sus archivos.
-
-### cambonos-base (futuro)
-
-El nombre `cambonos-base` queda libre para un futuro metapaquete que agrupe los componentes básicos que CambonOS decida incluir por defecto. No forma parte de esta versión. Se mantiene en la lista de paquetes obsoletos para retirarlo de los repositorios durante la publicación.
-
-## Migración desde cambonos-base 0.1.0-3
-
-El nuevo paquete `cambonos-release` declara `replaces=('cambonos-base')` y `conflicts=('cambonos-base')` para facilitar el cambio de nombre.
-
-Para migrar y conservar también la integración de Fastfetch:
-
-```bash
-sudo pacman -Syu cambonos-release cambonos-fastfetch
+```text
+stable/x86_64/
+testing/x86_64/
+metadata/manifest.json
+metadata/manifest.json.sig
+index.html
 ```
 
-Si no se desea Fastfetch:
+El manifiesto global también se firma. En las ejecuciones posteriores, `validate` verifica esa firma con la clave pública del paquete `cambonos-keyring` antes de utilizar el manifiesto como referencia de versionado.
 
-```bash
-sudo pacman -Syu cambonos-release
+Cada repositorio se genera desde cero. Los nombres de base de datos son:
+- `stable`: `cambonos.db` / `cambonos.files`.
+- `testing`: `cambonos-testing.db` / `cambonos-testing.files`.
+
+Los paquetes y las bases de datos se firman con la subclave configurada. `repo-add --include-sigs` incorpora las firmas de paquetes a la base de datos. Los alias `.db` y `.files` se materializan como archivos regulares y reciben una firma válida para sus bytes.
+
+Configuración de ejemplo en `pacman.conf`:
+
+```ini
+[cambonos]
+SigLevel = Required
+Server = https://<dominio>/stable/$arch
+
+#[cambonos-testing]
+#SigLevel = Required
+#Server = https://<dominio>/testing/$arch
 ```
 
-Pacman puede solicitar confirmar la sustitución del antiguo `cambonos-base`. La base de datos del repositorio deja de publicar el paquete antiguo y pasa a publicar los dos paquetes nuevos.
+`SigLevel = Required` exige firmas de paquetes y de la base de datos. El nombre del repositorio pacman debe coincidir con el nombre de la base de datos.
 
-## Instalación de archivos desde `files/`
+## GitHub Actions
 
-Los paquetes instalan sus archivos locales directamente desde el árbol Git mediante `$startdir/files/...` dentro de `package()`:
+El workflow `.github/workflows/package-pipeline.yml` se ejecuta únicamente con `push` a `dev` o `main`. No se ejecuta en Pull Requests ni tiene disparador manual.
 
-```bash
-install -Dm644 "$startdir/files/cambonos/os-release" \
-  "$pkgdir/usr/lib/cambonos/os-release"
-```
+Jobs:
+1. `validate`: fija los SHA de `dev` y `main`, ejecuta pruebas y valida los dos snapshots contra el manifiesto anterior de Pages.
+2. `build`: matriz `testing`/`stable`, construye todos los paquetes sin secretos GPG.
+3. `signing`: valida artefactos, importa la subclave, firma paquetes y bases de datos, crea y verifica el sitio.
+4. `publish`: despliega el sitio completo mediante GitHub Pages.
 
-Para estos archivos locales no se declaran arrays `source=()` ni `sha256sums=()`. `makepkg` no necesita copiarlos al directorio de compilación: `install` los lee desde su ubicación original y los incorpora directamente a `$pkgdir`.
+La imagen oficial `archlinux:base-devel` está fijada por digest para la plataforma `linux/amd64`. El sistema instalado dentro de cada contenedor se actualiza desde los repositorios rolling actuales de Arch; por tanto, el digest fija la imagen inicial, no las versiones de todos los paquetes de construcción.
 
-El validador comprueba que las rutas literales de origen estén dentro de `files/`, que existan y que los destinos sean rutas de instalación admisibles. El validador es estático: no ejecuta ni hace `source` del PKGBUILD.
+El workflow usa una única concurrencia global y no cancela una publicación activa. Si una validación, construcción, firma o verificación falla, `publish` no se ejecuta y la publicación anterior permanece.
 
-## Requisitos
+## Configuración opcional de Actions
 
-En Arch Linux:
+Variables de repositorio:
+- `CAMBONOS_BOOTSTRAP`: `true` únicamente durante la primera publicación; después `false`.
+- `CAMBONOS_PAGES_URL`: URL base del sitio si no coincide con `https://<owner>.github.io/<repo>`.
 
-```bash
-sudo pacman -S --needed base-devel pacman python
-```
+Secretos del entorno `package-signing`:
+- `CAMBONOS_SIGNING_KEY`: exportación ASCII-armored de la subclave privada de firma.
+- `CAMBONOS_SIGNING_PASSPHRASE`: contraseña de esa subclave.
 
-- `python`: gestor y validación estática.
-- `bash`: análisis sintáctico de PKGBUILD y scripts.
-- `base-devel`: incluye `makepkg` y las herramientas habituales de construcción.
-- `pacman`: inspección de metadata de los paquetes.
-- `repo-add`: generación de la base de datos del repositorio (incluido con pacman).
-- El bloqueo exclusivo utiliza `fcntl`, incluido en la biblioteca estándar de Python.
+Variable del entorno `package-signing`:
+- `CAMBONOS_SIGNING_FINGERPRINT`: fingerprint completo de la subclave de firma.
 
-El gestor requiere Python 3.10 o posterior. La validación estática puede ejecutarse fuera de Arch siempre que haya Python 3.10+ y Bash. La construcción y publicación deben probarse en Arch Linux, con las herramientas anteriores y las dependencias de compilación que requiera cada paquete.
-
-## Flujo de ramas previsto
-
-- `dev`: desarrollo y publicación automatizada en el canal `testing`.
-- `main`: recibe cambios mediante Pull Request desde `dev` y publica en `stable`.
-- `gh-pages`: rama técnica prevista para alojar el árbol de repositorios servido mediante GitHub Pages.
-
-La herramienta gestiona los repositorios locales en `dist/`. La sincronización de esos directorios con GitHub Pages y la concurrencia entre workflows se implementarán en GitHub Actions; no forman parte todavía de este gestor local.
-
-## Alcance de las pruebas
-
-Las comprobaciones estáticas, la sintaxis Python y la planificación `--dry-run` pueden verificarse sin construir paquetes. La construcción real, la lectura de metadata mediante pacman y la generación de bases de datos deben probarse en Arch Linux. Una compilación satisfactoria tampoco sustituye a una instalación y prueba funcional de cada paquete en una máquina virtual.
-
-
-### Nombres de las bases de datos por canal
-
-El nombre de la base de datos debe coincidir con el nombre de la sección del
-repositorio configurada en `pacman.conf`:
-
-- Canal `testing`, sección `[cambonos-testing]`: `cambonos-testing.db` y
-  `cambonos-testing.files` (además de sus archivos `.tar.gz`).
-- Canal `stable`, sección `[cambonos]`: `cambonos.db` y `cambonos.files`
-  (además de sus archivos `.tar.gz`).
-
-El gestor selecciona automáticamente el nombre correcto según `--channel`.
-Los nombres de los paquetes no cambian entre canales.
+Consulta [`docs/GPG-SETUP.md`](docs/GPG-SETUP.md) para el procedimiento completo.

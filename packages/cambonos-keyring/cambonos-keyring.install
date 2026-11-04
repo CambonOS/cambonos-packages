@@ -1,0 +1,18 @@
+#!/bin/bash
+
+_populate_cambonos_keyring() {
+  if [[ ! -d /etc/pacman.d/gnupg ]]; then
+    echo "cambonos-keyring: pacman-key no está inicializado; ejecuta pacman-key --init y después pacman-key --populate cambonos." >&2
+    return 0
+  fi
+
+  pacman-key --populate cambonos
+}
+
+post_install() {
+  _populate_cambonos_keyring
+}
+
+post_upgrade() {
+  _populate_cambonos_keyring
+}
