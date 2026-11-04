@@ -10,8 +10,8 @@ optdepends=(
   'lsb-release: provide the lsb_release command with CambonOS distribution metadata'
   'cambonos-fastfetch: provide the CambonOS Fastfetch profile and logo'
 )
-conflicts=('cambonos-base')
-replaces=('cambonos-base')
+conflicts=()
+replaces=()
 install=cambonos-release.install
 
 package() {
