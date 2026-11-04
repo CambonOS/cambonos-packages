@@ -1,21 +1,27 @@
-# Repositorio de paquetes generado
+# Build outputs and temporary repositories
 dist/
+build-*/
+build-testing/
+build-stable/
+site/
+output/
+*.pkg.tar.*
+*.pkg.tar.*.sig
 
-# Directorios temporales de makepkg
+# makepkg working directories
 packages/*/src/
 packages/*/pkg/
-
-# Paquetes compilados junto a los PKGBUILD
-packages/*/*.pkg.tar.*
-
-# Archivos temporales
-*.log
-*.tmp
-*.swp
-*~
 
 # Python
 __pycache__/
 *.py[cod]
 .pytest_cache/
 
+# Temporary files and local signing material
+*.log
+*.tmp
+*.swp
+*~
+cambonos-signing-subkey.asc
+*-signing-subkey.asc
+*.private.asc

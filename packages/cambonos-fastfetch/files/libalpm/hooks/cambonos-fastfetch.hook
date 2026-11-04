@@ -1,0 +1,12 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = bash
+Target = zsh
+
+[Action]
+Description = Restaurando la integración de CambonOS Fastfetch...
+When = PostTransaction
+Depends = bash
+Exec = /usr/lib/cambonos/fastfetch/integrate-shells repair

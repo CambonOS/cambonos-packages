@@ -1,0 +1,18 @@
+pkgname=cambonos-keyring
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="CambonOS package repository trust anchor for pacman"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('GPL-3.0-only')
+depends=('pacman')
+install=cambonos-keyring.install
+
+package() {
+  install -Dm644 "$startdir/files/cambonos.gpg" \
+    "$pkgdir/usr/share/pacman/keyrings/cambonos.gpg"
+  install -Dm644 "$startdir/files/cambonos-trusted" \
+    "$pkgdir/usr/share/pacman/keyrings/cambonos-trusted"
+  install -Dm644 "$startdir/files/cambonos-revoked" \
+    "$pkgdir/usr/share/pacman/keyrings/cambonos-revoked"
+}

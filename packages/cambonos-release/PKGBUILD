@@ -1,6 +1,6 @@
 pkgname=cambonos-release
 pkgver=0.1.0
-pkgrel=2
+pkgrel=3
 pkgdesc="CambonOS distribution identity and release metadata"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
@@ -15,6 +15,9 @@ replaces=('cambonos-base')
 install=cambonos-release.install
 
 package() {
+  install -Dm644 "$startdir/files/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
   install -Dm644 "$startdir/files/cambonos/os-release" \
     "$pkgdir/usr/lib/cambonos/os-release"
   install -Dm644 "$startdir/files/cambonos/lsb-release" \

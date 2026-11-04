@@ -1,0 +1,20 @@
+post_install() {
+    if [[ -x /usr/lib/cambonos/fastfetch/integrate-shells ]]; then
+        /usr/lib/cambonos/fastfetch/integrate-shells install ||
+            printf 'cambonos-fastfetch: no se pudieron instalar todas las integraciones; ejecuta integrate-shells repair.\n' >&2
+    fi
+}
+
+post_upgrade() {
+    if [[ -x /usr/lib/cambonos/fastfetch/integrate-shells ]]; then
+        /usr/lib/cambonos/fastfetch/integrate-shells repair ||
+            printf 'cambonos-fastfetch: no se pudieron reparar todas las integraciones.\n' >&2
+    fi
+}
+
+pre_remove() {
+    if [[ -x /usr/lib/cambonos/fastfetch/integrate-shells ]]; then
+        /usr/lib/cambonos/fastfetch/integrate-shells remove ||
+            printf 'cambonos-fastfetch: no se pudieron retirar todas las integraciones.\n' >&2
+    fi
+}

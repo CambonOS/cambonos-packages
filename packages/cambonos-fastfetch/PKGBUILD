@@ -1,12 +1,16 @@
 pkgname=cambonos-fastfetch
 pkgver=0.1.0
-pkgrel=7
-pkgdesc="CambonOS branding and profile for Fastfetch"
+pkgrel=9
+pkgdesc="CambonOS branding and automatic Fastfetch integration for interactive shells"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
-depends=('fastfetch' 'cambonos-release')
-optdepends=('fish: enable automatic Fastfetch in interactive Fish sessions')
+depends=('fastfetch' 'cambonos-release' 'bash' 'util-linux')
+optdepends=(
+  'fish: automatic Fastfetch integration in Fish'
+  'zsh: automatic Fastfetch integration in Zsh'
+)
+install=cambonos-fastfetch.install
 
 package() {
   install -Dm755 "$startdir/files/cambonos/bin/cambonos-fastfetch" \
@@ -15,12 +19,26 @@ package() {
     "$pkgdir/usr/share/cambonos/fastfetch/config.jsonc"
   install -Dm644 "$startdir/files/cambonos/fastfetch/logo.txt" \
     "$pkgdir/usr/share/cambonos/fastfetch/logo.txt"
+  install -Dm644 "$startdir/files/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 
-  # Login shells using /etc/profile (Bash, Zsh on Arch, and POSIX shells).
+  # Shared shell fragments.
+  install -Dm644 "$startdir/files/bash/cambonos-fastfetch.bash" \
+    "$pkgdir/usr/share/cambonos/fastfetch/shell/bash"
+  install -Dm644 "$startdir/files/zsh/cambonos-fastfetch.zsh" \
+    "$pkgdir/usr/share/cambonos/fastfetch/shell/zsh"
+
+  # POSIX login shells and Fish interactive shells.
   install -Dm644 "$startdir/files/profile.d/cambonos-fastfetch.sh" \
     "$pkgdir/etc/profile.d/cambonos-fastfetch.sh"
-
-  # Fish loads vendor_conf.d snippets for every interactive shell.
   install -Dm644 "$startdir/files/fish/vendor_conf.d/cambonos-fastfetch.fish" \
     "$pkgdir/usr/share/fish/vendor_conf.d/cambonos-fastfetch.fish"
+
+  # Reversible global shell integration manager.
+  install -Dm755 "$startdir/files/cambonos/lib/integrate-shells" \
+    "$pkgdir/usr/lib/cambonos/fastfetch/integrate-shells"
+
+  # Repair managed blocks after Bash/Zsh package upgrades.
+  install -Dm644 "$startdir/files/libalpm/hooks/cambonos-fastfetch.hook" \
+    "$pkgdir/usr/share/libalpm/hooks/cambonos-fastfetch.hook"
 }
