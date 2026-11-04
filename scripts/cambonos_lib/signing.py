@@ -190,7 +190,6 @@ def sign_and_create_site(
                 "stable": expected_stable_commit,
             }
             channel_manifests: dict[str, dict] = {}
-            keyring_material_hashes: dict[str, tuple[str, str, str]] = {}
 
             for channel, build_root in channel_roots.items():
                 build_manifest = verify_build_manifest(
@@ -226,11 +225,6 @@ def sign_and_create_site(
                 revoked = material_root / "cambonos-revoked"
                 if not material.is_file() or not trusted.is_file() or not revoked.is_file():
                     raise CambonosError(f"{channel}: falta material de cambonos-keyring")
-                keyring_material_hashes[channel] = (
-                    sha256_file(material),
-                    sha256_file(trusted),
-                    sha256_file(revoked),
-                )
                 _all_fprs, signing_fprs, signing_primaries = _fingerprints(material)
                 if expected_fingerprint not in signing_fprs:
                     raise CambonosError(
@@ -291,11 +285,6 @@ def sign_and_create_site(
                     channel_manifest_path, expected_fingerprint, gnupghome, passphrase_file
                 )
                 channel_manifests[channel] = build_manifest
-
-            if keyring_material_hashes["testing"] != keyring_material_hashes["stable"]:
-                raise CambonosError(
-                    "testing y stable no contienen el mismo material público de cambonos-keyring"
-                )
 
             if bool(previous_manifest_path) != bool(previous_manifest_signature_path):
                 raise CambonosError("deben proporcionarse juntos el manifiesto anterior y su firma")

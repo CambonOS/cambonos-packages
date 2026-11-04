@@ -10,7 +10,7 @@ DEFAULT_ARCH_IMAGE = (
 )
 MANIFEST_SCHEMA_VERSION = 1
 REPOSITORY_SECTION = {"stable": "cambonos", "testing": "cambonos-testing"}
-REQUIRED_PACKAGES = {"cambonos-keyring", "cambonos-repo"}
+REQUIRED_PACKAGES = {"cambonos-keyring"}
 KEYRING_FILES = {
     "cambonos.gpg": "usr/share/pacman/keyrings/cambonos.gpg",
     "cambonos-trusted": "usr/share/pacman/keyrings/cambonos-trusted",

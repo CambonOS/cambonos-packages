@@ -19,8 +19,9 @@ class ConfigTests(unittest.TestCase):
     def test_canonical_mirror_origin(self):
         self.assertEqual(MIRROR_BASE_URL, "https://mirror.cambonos.org")
 
-    def test_repository_bootstrap_packages_are_mandatory(self):
-        self.assertEqual(REQUIRED_PACKAGES, {"cambonos-keyring", "cambonos-repo"})
+    def test_only_keyring_is_globally_mandatory(self):
+        self.assertEqual(REQUIRED_PACKAGES, {"cambonos-keyring"})
+        # cambonos-repo is optional and can differ between channels.
 
 
 if __name__ == "__main__":

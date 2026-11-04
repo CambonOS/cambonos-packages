@@ -197,7 +197,7 @@ python3 scripts/cambonos.py validate \
 
 La validación del paquete keyring debe pasar únicamente si el certificado público y el ownertrust son válidos. Las publicaciones posteriores firman también `metadata/manifest.json`; el siguiente pipeline verifica su firma antes de confiar en sus datos de versión.
 
-Haz commit del paquete y de sus archivos públicos en `dev`, y después incorpora esos cambios a `main`. El primer push a una de las ramas puede fallar en el job de validación porque la otra todavía no contiene el material GPG; es esperado. Cuando ambas ramas tengan los mismos tres archivos públicos, el siguiente push a `dev` o `main` podrá completar la reconstrucción doble.
+Cada rama mantiene su propio desarrollo y su propio snapshot de paquetes: no es necesario fusionar `dev` en `main` ni mantener sincronizados sus paquetes. Asegúrate de que cada rama que publiques contiene `cambonos-keyring` con el certificado y los datos de confianza necesarios para verificar la subclave de firma configurada. El pipeline comprueba ese requisito en cada canal por separado; no compara el contenido de los keyrings ni exige que los paquetes coincidan entre ramas. Un push reconstruye los dos canales a partir de los snapshots independientes de `dev` y `main`.
 
 Cuando termine la primera publicación:
 - Comprueba `stable/` y `testing/`.

@@ -56,7 +56,7 @@ El sitio publica `metadata/manifest.json`, con información de ambos canales:
 - Nombre y SHA256 del paquete generado.
 - Imagen y entorno de construcción.
 
-El pipeline recupera el manifiesto anterior desde GitHub Pages. Para cada paquete y canal:
+El pipeline recupera el manifiesto anterior desde GitHub Pages. Cada canal se valida únicamente contra su propio manifiesto anterior: no se comparan los conjuntos de paquetes, las versiones ni los hashes de `stable` y `testing`. Para cada paquete dentro de su canal:
 - Cambio de contenido sin aumento de versión: error.
 - Aumento de versión: permitido.
 - Retroceso de versión según `vercmp`: error.
@@ -71,7 +71,7 @@ El pipeline recupera el manifiesto anterior desde GitHub Pages. Para cada paquet
 - El job `build` no recibe secretos de firma.
 - El job `signing` es el único que importa la subclave privada.
 - El job `signing` no ejecuta PKGBUILD ni scripts de instalación.
-- Se verifica que el fingerprint secreto coincide con la subclave pública incluida en ambos paquetes `cambonos-keyring`.
+- Se verifica por separado que el fingerprint secreto coincide con la subclave pública incluida en el paquete `cambonos-keyring` de cada canal. No se exige que el contenido de esos dos paquetes sea idéntico.
 - El manifiesto global también se firma; la siguiente ejecución verifica su firma antes de utilizarlo como referencia de versionado.
 - Cada paquete se firma individualmente.
 - `repo-add --include-sigs` genera las bases de datos incluyendo las firmas de paquetes.
@@ -110,7 +110,7 @@ El paquete instala el material público en `/usr/share/pacman/keyrings/` y ejecu
 
 ### `cambonos-repo`
 
-Distribuye `/etc/pacman.d/cambonos.conf` con el mirror canónico `https://mirror.cambonos.org`, habilita stable y deja testing comentado. Declara `cambonos-keyring` como dependencia y configura `SigLevel = Required TrustedOnly` para ambos canales. El paquete forma parte de `REQUIRED_PACKAGES`, por lo que la validación exige su presencia tanto en el snapshot `dev`/testing como en `main`/stable.
+Distribuye `/etc/pacman.d/cambonos.conf` con el mirror canónico `https://mirror.cambonos.org`, habilita stable y deja testing comentado. Declara `cambonos-keyring` como dependencia y configura `SigLevel = Required TrustedOnly` para ambos canales. El paquete es opcional: cada canal puede incluirlo o no, sin exigir que esté presente en el otro canal. El único paquete obligatorio en ambos canales es `cambonos-keyring`, necesario para la verificación de firmas.
 
 El paquete integra el fichero mediante un bloque marcado al final de `/etc/pacman.conf`. Su script `.install`:
 - `post_install()`: añade el bloque administrado si no existe.
