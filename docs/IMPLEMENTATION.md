@@ -94,7 +94,9 @@ Los cuatro jobs son:
 
 El despliegue utiliza `actions/upload-pages-artifact` y `actions/deploy-pages`. Se publica un único artefacto de sitio completo. Si falla cualquier fase, el job de despliegue no se ejecuta.
 
-## Nuevo paquete cambonos-keyring
+## Paquetes de integración del sistema
+
+### `cambonos-keyring`
 
 Añade el certificado público y la información de confianza de pacman en:
 
@@ -104,9 +106,20 @@ Añade el certificado público y la información de confianza de pacman en:
 /usr/share/pacman/keyrings/cambonos-revoked
 ```
 
-El script de instalación ejecuta `pacman-key --populate cambonos` cuando el keyring de pacman ya está inicializado.
+El paquete instala el material público en `/usr/share/pacman/keyrings/` y ejecuta `pacman-key --populate cambonos` cuando el keyring local ya está inicializado. El repositorio contiene el certificado público y los datos de confianza; nunca debe contener claves privadas.
 
-Los ficheros del directorio `packages/cambonos-keyring/files/` incluidos en este archivo son placeholders vacíos. No se puede compilar ni publicar `cambonos-keyring` hasta que se generen los archivos reales siguiendo `GPG-SETUP.md`. No se ha generado ni incluido ninguna clave privada.
+### `cambonos-repo`
+
+Distribuye `/etc/pacman.d/cambonos.conf` con el mirror canónico `https://mirror.cambonos.org`, habilita stable y deja testing comentado. Declara `cambonos-keyring` como dependencia y configura `SigLevel = Required TrustedOnly` para ambos canales. El paquete forma parte de `REQUIRED_PACKAGES`, por lo que la validación exige su presencia tanto en el snapshot `dev`/testing como en `main`/stable.
+
+El paquete integra el fichero mediante un bloque marcado al final de `/etc/pacman.conf`. Su script `.install`:
+- `post_install()`: añade el bloque administrado si no existe.
+- `post_upgrade()`: comprueba y repara el bloque.
+- `pre_remove()`: elimina exclusivamente el bloque administrado.
+
+El helper realiza escrituras atómicas, evita duplicados y conserva cualquier `Include` manual preexistente. Si encuentra marcadores incompletos, falla de forma conservadora y no reescribe el archivo.
+
+El hook `cambonos-repo-pacman-conf.hook` usa un disparador `Type = Path` sobre `etc/pacman.conf`, para operaciones `Install` y `Upgrade`. Se ejecuta después de transacciones que incluyen ese archivo y llama al mismo helper. ALPM también utiliza la ruta original como objetivo cuando el archivo se instala como `.pacnew`. El hook no detecta modificaciones manuales arbitrarias ni cambios realizados por scriptlets que no formen parte de la lista de archivos de la transacción.
 
 ## Configuración requerida en GitHub
 

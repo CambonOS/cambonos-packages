@@ -1,0 +1,10 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Path
+Target = etc/pacman.conf
+
+[Action]
+Description = Checking CambonOS repository integration...
+When = PostTransaction
+Exec = /usr/lib/cambonos-repo/manage-pacman-include --ensure

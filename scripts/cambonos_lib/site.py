@@ -9,7 +9,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 from .common import CambonosError, sha256_file
-from .config import REPOSITORY_SECTION
+from .config import MIRROR_BASE_URL, REPOSITORY_SECTION
 
 
 INDEX_MARKER = "<!-- generated-by: cambonos-index -->"
@@ -169,10 +169,11 @@ def write_index(site: Path, manifest: dict, pages_url: str) -> None:
             f"<td>{len(data['packages'])}</td></tr>"
         )
     import html as html_module
-    base_url = html_module.escape(pages_url.rstrip("/"), quote=True)
+    pages_canonical_url = html_module.escape(pages_url.rstrip("/"), quote=True)
+    mirror_base_url = html_module.escape(MIRROR_BASE_URL, quote=True)
     html = """<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CambonOS Packages</title>
+<title>CambonOS Packages</title><link rel="canonical" href="{pages_canonical_url}">
 <style>
 :root{color-scheme:dark light;font-family:system-ui,sans-serif}body{max-width:920px;margin:4rem auto;padding:0 1.25rem;line-height:1.6}
 table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:.7rem;border-bottom:1px solid #8885}
@@ -183,16 +184,18 @@ code{overflow-wrap:anywhere}a{color:inherit} .muted{opacity:.75}
 <tbody>""" + "".join(rows) + """</tbody></table>
 <h2>Configuración de pacman</h2>
 <pre><code>#[cambonos-testing]
-#SigLevel = Required
-#Server = {base_url}/testing/$arch
+#SigLevel = Required TrustedOnly
+#Server = {mirror_base_url}/testing/$arch
 
 [cambonos]
-SigLevel = Required
-Server = {base_url}/stable/$arch</code></pre>
+SigLevel = Required TrustedOnly
+Server = {mirror_base_url}/stable/$arch</code></pre>
 <p class="muted">Testing está deshabilitado por defecto. Explora los canales desde la tabla superior.
 Manifiesto: <a href="metadata/manifest.json">metadata/manifest.json</a>.</p>
 </body></html>
-""".replace("{base_url}", base_url)
+""".replace("{pages_canonical_url}", pages_canonical_url).replace(
+        "{mirror_base_url}", mirror_base_url
+    )
     (site / "index.html").write_text(html, encoding="utf-8")
 
 

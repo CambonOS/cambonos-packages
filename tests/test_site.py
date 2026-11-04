@@ -77,6 +77,9 @@ class DirectoryIndexTests(unittest.TestCase):
             self.assertLess(testing, stable)
             self.assertIn('href="stable/"', html)
             self.assertIn('href="testing/"', html)
+            self.assertIn("https://mirror.cambonos.org/stable/$arch", html)
+            self.assertIn("https://mirror.cambonos.org/testing/$arch", html)
+            self.assertIn("SigLevel = Required TrustedOnly", html)
 
     def test_empty_directory_gets_empty_listing(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -19,7 +19,7 @@ class ValidationTests(unittest.TestCase):
 
     def test_existing_packages_are_statically_valid(self):
         packages = discover_packages(ROOT)
-        for name in ("cambonos-release", "cambonos-fastfetch"):
+        for name in ("cambonos-release", "cambonos-fastfetch", "cambonos-repo"):
             self.assertEqual(validate_package(packages[name]), [], name)
 
     def test_keyring_material_validation_is_consistent(self):

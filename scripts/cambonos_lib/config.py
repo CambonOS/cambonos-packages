@@ -1,6 +1,7 @@
 """Central configuration for CambonOS package builds."""
 
 ARCHITECTURE = "x86_64"
+MIRROR_BASE_URL = "https://mirror.cambonos.org"
 BRANCH_CHANNELS = {"main": "stable", "dev": "testing"}
 PACKAGE_DIR = "packages"
 DEFAULT_ARCH_IMAGE = (
@@ -9,7 +10,7 @@ DEFAULT_ARCH_IMAGE = (
 )
 MANIFEST_SCHEMA_VERSION = 1
 REPOSITORY_SECTION = {"stable": "cambonos", "testing": "cambonos-testing"}
-REQUIRED_PACKAGES = {"cambonos-keyring"}
+REQUIRED_PACKAGES = {"cambonos-keyring", "cambonos-repo"}
 KEYRING_FILES = {
     "cambonos.gpg": "usr/share/pacman/keyrings/cambonos.gpg",
     "cambonos-trusted": "usr/share/pacman/keyrings/cambonos-trusted",
