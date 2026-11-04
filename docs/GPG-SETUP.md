@@ -180,7 +180,7 @@ Solo deben aparecer los archivos públicos. Si aparece `cambonos-signing-subkey.
 
 El paquete instala los tres archivos en `/usr/share/pacman/keyrings/` y ejecuta `pacman-key --populate cambonos` después de instalarse o actualizarse, siempre que el keyring de pacman ya esté inicializado.
 
-La ISO debe instalar `cambonos-keyring` desde el medio local después de inicializar pacman-key y antes de habilitar la confianza obligatoria del repositorio remoto. Ese bootstrap pertenece al proceso de instalación de la ISO, no a este pipeline.
+La ISO debe inicializar `pacman-key` e instalar `cambonos-keyring` desde el medio local antes de habilitar la confianza obligatoria del repositorio remoto. Después debe instalar `cambonos-repo`, que depende del keyring y configura el Include administrado en `/etc/pacman.conf`. Ese bootstrap pertenece al proceso de instalación de la ISO, no a este pipeline.
 
 ## 7. Probar y publicar
 
@@ -197,7 +197,7 @@ python3 scripts/cambonos.py validate \
 
 La validación del paquete keyring debe pasar únicamente si el certificado público y el ownertrust son válidos. Las publicaciones posteriores firman también `metadata/manifest.json`; el siguiente pipeline verifica su firma antes de confiar en sus datos de versión.
 
-Haz commit del paquete y de sus archivos públicos en `dev`, y después incorpora esos cambios a `main`. El primer push a una de las ramas puede fallar en el job de validación porque la otra todavía no contiene el material GPG; es esperado. Cuando ambas ramas tengan los mismos tres archivos públicos, el siguiente push a `dev` o `main` podrá completar la reconstrucción doble.
+Cada rama mantiene su propio desarrollo y su propio snapshot de paquetes: no es necesario fusionar `dev` en `main` ni mantener sincronizados sus paquetes. Asegúrate de que cada rama que publiques contiene `cambonos-keyring` con el certificado y los datos de confianza necesarios para verificar la subclave de firma configurada. El pipeline comprueba ese requisito en cada canal por separado; no compara el contenido de los keyrings ni exige que los paquetes coincidan entre ramas. Un push reconstruye los dos canales a partir de los snapshots independientes de `dev` y `main`.
 
 Cuando termine la primera publicación:
 - Comprueba `stable/` y `testing/`.

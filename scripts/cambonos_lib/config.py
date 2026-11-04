@@ -1,6 +1,7 @@
 """Central configuration for CambonOS package builds."""
 
 ARCHITECTURE = "x86_64"
+MIRROR_BASE_URL = "https://mirror.cambonos.org"
 BRANCH_CHANNELS = {"main": "stable", "dev": "testing"}
 PACKAGE_DIR = "packages"
 DEFAULT_ARCH_IMAGE = (

@@ -1,0 +1,132 @@
+#!/usr/bin/bash
+#
+# Manage the CambonOS Include block in pacman.conf without replacing the
+# surrounding configuration. The optional config argument is intended for
+# isolated tests; normal package operation always uses /etc/pacman.conf.
+
+set -Eeuo pipefail
+
+readonly START_MARKER='# >>> cambonos-repo: managed by cambonos-repo'
+readonly END_MARKER='# <<< cambonos-repo'
+readonly INCLUDE_LINE='Include = /etc/pacman.d/cambonos.conf'
+
+usage() {
+  echo "Usage: $0 --ensure|--remove [pacman.conf-path]" >&2
+  exit 2
+}
+
+[[ $# -ge 1 && $# -le 2 ]] || usage
+
+action="$1"
+config="${2:-/etc/pacman.conf}"
+
+case "$action" in
+  --ensure|--remove) ;;
+  *) usage ;;
+esac
+
+if [[ ! -e "$config" ]]; then
+  echo "cambonos-repo: no existe $config; no se creará una configuración global." >&2
+  exit 1
+fi
+
+if [[ -L "$config" || ! -f "$config" ]]; then
+  echo "cambonos-repo: $config no es un archivo regular; se cancela para evitar reemplazar una ruta especial." >&2
+  exit 1
+fi
+
+tmp="$(mktemp "${config}.cambonos.XXXXXX")"
+state="$(mktemp "${config}.cambonos-state.XXXXXX")"
+cleanup() {
+  rm -f -- "$tmp" "$state"
+}
+trap cleanup EXIT
+
+# Remove only complete, explicitly marked CambonOS blocks. An incomplete
+# marker pair is treated as a conflict and is never rewritten automatically.
+if awk \
+  -v start="$START_MARKER" \
+  -v end="$END_MARKER" \
+  -v state_file="$state" '
+  BEGIN {
+    inside = 0
+    starts = 0
+    ends = 0
+    unmanaged_include = 0
+    malformed = 0
+  }
+  $0 == start {
+    if (inside) malformed = 1
+    inside = 1
+    starts++
+    next
+  }
+  $0 == end {
+    if (!inside) malformed = 1
+    inside = 0
+    ends++
+    next
+  }
+  inside { next }
+  {
+    if ($0 ~ /^[[:space:]]*Include[[:space:]]*=[[:space:]]*\/etc\/pacman\.d\/cambonos\.conf([[:space:]]*(#.*)?)?$/)
+      unmanaged_include = 1
+    print
+  }
+  END {
+    if (inside || starts != ends) malformed = 1
+    if (malformed) exit 42
+    printf "%d %d %d\n", starts, ends, unmanaged_include > state_file
+  }
+' "$config" > "$tmp"; then
+  :
+else
+  status=$?
+  if [[ "$status" -eq 42 ]]; then
+    echo "cambonos-repo: marcadores incompletos o desordenados en $config; no se ha modificado." >&2
+  else
+    echo "cambonos-repo: error al procesar $config." >&2
+  fi
+  exit 1
+fi
+
+read -r managed_blocks _ unmanaged_include < "$state"
+
+if [[ "$action" == "--remove" ]]; then
+  if [[ "$managed_blocks" -eq 0 ]]; then
+    echo "cambonos-repo: no hay ningún bloque administrado que retirar."
+    exit 0
+  fi
+elif [[ "$unmanaged_include" -eq 1 ]]; then
+  # A manually configured Include is user-owned. Keep it and remove any
+  # duplicate managed block rather than claiming ownership of that line.
+  if [[ "$managed_blocks" -gt 0 ]]; then
+    echo "cambonos-repo: existe un Include manual; se conserva y no se crea otro."
+  else
+    echo "cambonos-repo: ya existe un Include manual; no se modifica."
+    exit 0
+  fi
+else
+  if [[ -s "$tmp" ]]; then
+    trailing_bytes="$(tail -c 2 "$tmp" | od -An -t x1 | tr -d ' \n')"
+    case "$trailing_bytes" in
+      *0a0a) ;;
+      *0a) printf '\n' >> "$tmp" ;;
+      *) printf '\n\n' >> "$tmp" ;;
+    esac
+  fi
+  printf '%s\n%s\n%s\n%s\n' \
+    "$START_MARKER" \
+    '# Gestionado por cambonos-repo: desinstala el paquete para deshabilitarlo.' \
+    "$INCLUDE_LINE" \
+    "$END_MARKER" >> "$tmp"
+fi
+
+if cmp -s -- "$config" "$tmp"; then
+  exit 0
+fi
+
+chmod --reference="$config" "$tmp"
+chown --reference="$config" "$tmp"
+mv -f -- "$tmp" "$config"
+echo "cambonos-repo: configuración de $config actualizada."

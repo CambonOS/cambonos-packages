@@ -16,7 +16,7 @@ from .manifest import (
     verify_previous_manifest_signature,
 )
 from .repository import create_repository
-from .site import write_site_metadata, verify_site
+from .site import generate_directory_indexes, write_site_metadata, verify_site
 
 
 def _fingerprints(path: Path) -> tuple[set[str], set[str], dict[str, str]]:
@@ -190,7 +190,6 @@ def sign_and_create_site(
                 "stable": expected_stable_commit,
             }
             channel_manifests: dict[str, dict] = {}
-            keyring_material_hashes: dict[str, tuple[str, str, str]] = {}
 
             for channel, build_root in channel_roots.items():
                 build_manifest = verify_build_manifest(
@@ -226,11 +225,6 @@ def sign_and_create_site(
                 revoked = material_root / "cambonos-revoked"
                 if not material.is_file() or not trusted.is_file() or not revoked.is_file():
                     raise CambonosError(f"{channel}: falta material de cambonos-keyring")
-                keyring_material_hashes[channel] = (
-                    sha256_file(material),
-                    sha256_file(trusted),
-                    sha256_file(revoked),
-                )
                 _all_fprs, signing_fprs, signing_primaries = _fingerprints(material)
                 if expected_fingerprint not in signing_fprs:
                     raise CambonosError(
@@ -292,11 +286,6 @@ def sign_and_create_site(
                 )
                 channel_manifests[channel] = build_manifest
 
-            if keyring_material_hashes["testing"] != keyring_material_hashes["stable"]:
-                raise CambonosError(
-                    "testing y stable no contienen el mismo material público de cambonos-keyring"
-                )
-
             if bool(previous_manifest_path) != bool(previous_manifest_signature_path):
                 raise CambonosError("deben proporcionarse juntos el manifiesto anterior y su firma")
             if previous_manifest_path is not None:
@@ -314,6 +303,11 @@ def sign_and_create_site(
             global_manifest_path = output_site / "metadata" / "manifest.json"
             _sign_file(
                 global_manifest_path, expected_fingerprint, gnupghome, passphrase_file
+            )
+            generated, preserved = generate_directory_indexes(output_site)
+            print(
+                f"Índices del mirror generados: {generated}; "
+                f"páginas manuales conservadas: {preserved}."
             )
             verify_site(output_site)
         finally:

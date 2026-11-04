@@ -46,6 +46,29 @@ class BinaryImmutabilityTests(unittest.TestCase):
         current, previous = self._manifests(new_version="1.0-2", new_hash="bbb")
         validate_binary_immutability(current, previous)
 
+    def test_channel_package_sets_are_independent(self):
+        previous = {
+            "channels": {
+                "stable": {"packages": {"stable-only": {
+                    "version": "1.0-1", "package_hash": "stable-hash"
+                }}},
+                "testing": {"packages": {"testing-only": {
+                    "version": "2.0-1", "package_hash": "testing-hash"
+                }}},
+            }
+        }
+        current = {
+            "stable": {"packages": {"stable-only": {
+                "version": "1.0-1", "package_hash": "stable-hash"
+            }}},
+            "testing": {"packages": {"testing-only": {
+                "version": "3.0-1", "package_hash": "new-testing-hash"
+            }, "testing-new": {
+                "version": "1.0-1", "package_hash": "new-package-hash"
+            }}},
+        }
+        validate_binary_immutability(current, previous)
+
 
 if __name__ == "__main__":
     unittest.main()

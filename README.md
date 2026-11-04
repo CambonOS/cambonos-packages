@@ -19,7 +19,8 @@ cambonos-packages/
 ├── packages/
 │   ├── cambonos-release/
 │   ├── cambonos-fastfetch/
-│   └── cambonos-keyring/
+│   ├── cambonos-keyring/
+│   └── cambonos-repo/
 ├── scripts/
 │   ├── cambonos.py
 │   └── cambonos_lib/
@@ -39,9 +40,9 @@ cambonos-packages/
 5. Configura GitHub Pages con origen **GitHub Actions**.
 6. Establece temporalmente la variable de repositorio `CAMBONOS_BOOTSTRAP=true` para la primera publicación. Tras comprobar el manifiesto publicado, cámbiala a `false`.
 
-No ejecutes el pipeline antes de provisionar el material GPG: la validación de `cambonos-keyring` rechazará los archivos placeholder vacíos.
+Antes de publicar, comprueba que `cambonos.gpg`, `cambonos-trusted` y `cambonos-revoked` contienen el material público correcto. La validación de `cambonos-keyring` rechaza certificados o ficheros de confianza ausentes o inválidos.
 
-La ISO de CambonOS debe instalar `cambonos-keyring` desde el medio local después de inicializar pacman-key y antes de utilizar el repositorio remoto. Ese bootstrap está fuera del alcance de este repositorio.
+La ISO de CambonOS debe inicializar `pacman-key` e instalar `cambonos-keyring` desde el medio local antes de habilitar el repositorio remoto. Después debe instalar `cambonos-repo`, que depende del keyring y gestiona la integración de pacman. Ese bootstrap pertenece al instalador de la ISO.
 
 ## Herramientas locales
 
@@ -136,19 +137,40 @@ Cada repositorio se genera desde cero. Los nombres de base de datos son:
 
 Los paquetes y las bases de datos se firman con la subclave configurada. `repo-add --include-sigs` incorpora las firmas de paquetes a la base de datos. Los alias `.db` y `.files` se materializan como archivos regulares y reciben una firma válida para sus bytes.
 
-Configuración de ejemplo en `pacman.conf`:
+### Paquete `cambonos-repo`
+
+El paquete `cambonos-repo` distribuye la configuración de los repositorios CambonOS y depende de `cambonos-keyring`.
+
+Instala `/etc/pacman.d/cambonos.conf` con esta política:
 
 ```ini
-[cambonos]
-SigLevel = Required
-Server = https://<dominio>/stable/$arch
-
 #[cambonos-testing]
-#SigLevel = Required
-#Server = https://<dominio>/testing/$arch
+#SigLevel = Required TrustedOnly
+#Server = https://mirror.cambonos.org/testing/$arch
+
+[cambonos]
+SigLevel = Required TrustedOnly
+Server = https://mirror.cambonos.org/stable/$arch
 ```
 
-`SigLevel = Required` exige firmas de paquetes y de la base de datos. El nombre del repositorio pacman debe coincidir con el nombre de la base de datos.
+`Required` exige firmas tanto para paquetes como para bases de datos; `TrustedOnly` hace explícito que las claves deben ser de confianza. Testing queda deshabilitado por defecto y stable habilitado.
+
+Durante `post_install()` y `post_upgrade()`, el paquete garantiza que `/etc/pacman.conf` incluya el fichero anterior mediante un bloque marcado y administrado por `cambonos-repo`. No sustituye el archivo global ni modifica las opciones o repositorios existentes. El bloque se añade al final para conservar la prioridad de los repositorios oficiales de Arch.
+
+Un hook ALPM de tipo `Path` vigila las transacciones que instalan o actualizan `etc/pacman.conf`. Si una actualización de un paquete reemplaza ese archivo o instala un `.pacnew`, el hook comprueba y restaura la integración para la siguiente ejecución de pacman. No vigila ediciones manuales arbitrarias ni cambios hechos por scriptlets que no incluyan `pacman.conf` en la transacción.
+
+Al desinstalar `cambonos-repo`, `pre_remove()` elimina exclusivamente el bloque delimitado por sus marcadores. Si ya existe un `Include` manual fuera del bloque, se conserva y no se adopta como propiedad del paquete. Los conflictos con marcadores incompletos se notifican y no se modifican automáticamente para evitar borrar configuración ajena.
+
+En una instalación existente, instala primero el keyring desde una fuente local o de confianza y después `cambonos-repo`. En la ISO, el instalador debe realizar este bootstrap desde el medio local antes de utilizar el mirror remoto. La integración que añade el paquete a `pacman.conf` queda así:
+
+```ini
+# >>> cambonos-repo: managed by cambonos-repo
+# Gestionado por cambonos-repo: desinstala el paquete para deshabilitarlo.
+Include = /etc/pacman.d/cambonos.conf
+# <<< cambonos-repo
+```
+
+El nombre de la sección pacman debe coincidir con el nombre de la base de datos: `cambonos` para stable y `cambonos-testing` para testing.
 
 ## GitHub Actions
 
@@ -157,7 +179,7 @@ El workflow `.github/workflows/package-pipeline.yml` se ejecuta únicamente con 
 Jobs:
 1. `validate`: fija los SHA de `dev` y `main`, ejecuta pruebas y valida los dos snapshots contra el manifiesto anterior de Pages.
 2. `build`: matriz `testing`/`stable`, construye todos los paquetes sin secretos GPG.
-3. `signing`: valida artefactos, importa la subclave, firma paquetes y bases de datos, crea y verifica el sitio.
+3. `signing`: valida artefactos, importa la subclave, firma paquetes y bases de datos, crea la portada, genera índices HTML navegables para los directorios del mirror y verifica el sitio. La portada manual se conserva; los índices secundarios se regeneran en cada publicación.
 4. `publish`: despliega el sitio completo mediante GitHub Pages.
 
 La imagen oficial `archlinux:base-devel` está fijada por digest para la plataforma `linux/amd64`. El sistema instalado dentro de cada contenedor se actualiza desde los repositorios rolling actuales de Arch; por tanto, el digest fija la imagen inicial, no las versiones de todos los paquetes de construcción.

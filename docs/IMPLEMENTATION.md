@@ -56,7 +56,7 @@ El sitio publica `metadata/manifest.json`, con información de ambos canales:
 - Nombre y SHA256 del paquete generado.
 - Imagen y entorno de construcción.
 
-El pipeline recupera el manifiesto anterior desde GitHub Pages. Para cada paquete y canal:
+El pipeline recupera el manifiesto anterior desde GitHub Pages. Cada canal se valida únicamente contra su propio manifiesto anterior: no se comparan los conjuntos de paquetes, las versiones ni los hashes de `stable` y `testing`. Para cada paquete dentro de su canal:
 - Cambio de contenido sin aumento de versión: error.
 - Aumento de versión: permitido.
 - Retroceso de versión según `vercmp`: error.
@@ -71,7 +71,7 @@ El pipeline recupera el manifiesto anterior desde GitHub Pages. Para cada paquet
 - El job `build` no recibe secretos de firma.
 - El job `signing` es el único que importa la subclave privada.
 - El job `signing` no ejecuta PKGBUILD ni scripts de instalación.
-- Se verifica que el fingerprint secreto coincide con la subclave pública incluida en ambos paquetes `cambonos-keyring`.
+- Se verifica por separado que el fingerprint secreto coincide con la subclave pública incluida en el paquete `cambonos-keyring` de cada canal. No se exige que el contenido de esos dos paquetes sea idéntico.
 - El manifiesto global también se firma; la siguiente ejecución verifica su firma antes de utilizarlo como referencia de versionado.
 - Cada paquete se firma individualmente.
 - `repo-add --include-sigs` genera las bases de datos incluyendo las firmas de paquetes.
@@ -94,7 +94,9 @@ Los cuatro jobs son:
 
 El despliegue utiliza `actions/upload-pages-artifact` y `actions/deploy-pages`. Se publica un único artefacto de sitio completo. Si falla cualquier fase, el job de despliegue no se ejecuta.
 
-## Nuevo paquete cambonos-keyring
+## Paquetes de integración del sistema
+
+### `cambonos-keyring`
 
 Añade el certificado público y la información de confianza de pacman en:
 
@@ -104,9 +106,20 @@ Añade el certificado público y la información de confianza de pacman en:
 /usr/share/pacman/keyrings/cambonos-revoked
 ```
 
-El script de instalación ejecuta `pacman-key --populate cambonos` cuando el keyring de pacman ya está inicializado.
+El paquete instala el material público en `/usr/share/pacman/keyrings/` y ejecuta `pacman-key --populate cambonos` cuando el keyring local ya está inicializado. El repositorio contiene el certificado público y los datos de confianza; nunca debe contener claves privadas.
 
-Los ficheros del directorio `packages/cambonos-keyring/files/` incluidos en este archivo son placeholders vacíos. No se puede compilar ni publicar `cambonos-keyring` hasta que se generen los archivos reales siguiendo `GPG-SETUP.md`. No se ha generado ni incluido ninguna clave privada.
+### `cambonos-repo`
+
+Distribuye `/etc/pacman.d/cambonos.conf` con el mirror canónico `https://mirror.cambonos.org`, habilita stable y deja testing comentado. Declara `cambonos-keyring` como dependencia y configura `SigLevel = Required TrustedOnly` para ambos canales. El paquete es opcional: cada canal puede incluirlo o no, sin exigir que esté presente en el otro canal. El único paquete obligatorio en ambos canales es `cambonos-keyring`, necesario para la verificación de firmas.
+
+El paquete integra el fichero mediante un bloque marcado al final de `/etc/pacman.conf`. Su script `.install`:
+- `post_install()`: añade el bloque administrado si no existe.
+- `post_upgrade()`: comprueba y repara el bloque.
+- `pre_remove()`: elimina exclusivamente el bloque administrado.
+
+El helper realiza escrituras atómicas, evita duplicados y conserva cualquier `Include` manual preexistente. Si encuentra marcadores incompletos, falla de forma conservadora y no reescribe el archivo.
+
+El hook `cambonos-repo-pacman-conf.hook` usa un disparador `Type = Path` sobre `etc/pacman.conf`, para operaciones `Install` y `Upgrade`. Se ejecuta después de transacciones que incluyen ese archivo y llama al mismo helper. ALPM también utiliza la ruta original como objetivo cuando el archivo se instala como `.pacnew`. El hook no detecta modificaciones manuales arbitrarias ni cambios realizados por scriptlets que no formen parte de la lista de archivos de la transacción.
 
 ## Configuración requerida en GitHub
 

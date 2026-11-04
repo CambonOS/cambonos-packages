@@ -222,7 +222,7 @@ jobs:
           name: previous-publication-manifest
           path: ${{ runner.temp }}/previous-manifest
 
-      - name: Sign packages, create signed repositories and verify site
+      - name: Sign packages, create repositories, generate mirror indexes and verify site
         env:
           CAMBONOS_SIGNING_KEY: ${{ secrets.CAMBONOS_SIGNING_KEY }}
           CAMBONOS_SIGNING_PASSPHRASE: ${{ secrets.CAMBONOS_SIGNING_PASSPHRASE }}
