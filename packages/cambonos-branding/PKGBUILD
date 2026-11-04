@@ -1,0 +1,16 @@
+pkgname=cambonos-branding
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Generic CambonOS logo assets"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('GPL-3.0-only')
+
+package() {
+  install -Dm644 "$startdir/files/cambonos.svg" \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/cambonos.svg"
+  install -Dm644 "$startdir/files/cambonos.png" \
+    "$pkgdir/usr/share/pixmaps/cambonos.png"
+  install -Dm644 "$startdir/files/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
