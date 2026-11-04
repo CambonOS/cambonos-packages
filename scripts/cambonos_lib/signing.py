@@ -16,7 +16,7 @@ from .manifest import (
     verify_previous_manifest_signature,
 )
 from .repository import create_repository
-from .site import write_site_metadata, verify_site
+from .site import generate_directory_indexes, write_site_metadata, verify_site
 
 
 def _fingerprints(path: Path) -> tuple[set[str], set[str], dict[str, str]]:
@@ -314,6 +314,11 @@ def sign_and_create_site(
             global_manifest_path = output_site / "metadata" / "manifest.json"
             _sign_file(
                 global_manifest_path, expected_fingerprint, gnupghome, passphrase_file
+            )
+            generated, preserved = generate_directory_indexes(output_site)
+            print(
+                f"Índices del mirror generados: {generated}; "
+                f"páginas manuales conservadas: {preserved}."
             )
             verify_site(output_site)
         finally:

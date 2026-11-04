@@ -139,13 +139,13 @@ Los paquetes y las bases de datos se firman con la subclave configurada. `repo-a
 Configuración de ejemplo en `pacman.conf`:
 
 ```ini
-[cambonos]
-SigLevel = Required
-Server = https://<dominio>/stable/$arch
-
 #[cambonos-testing]
 #SigLevel = Required
 #Server = https://<dominio>/testing/$arch
+
+[cambonos]
+SigLevel = Required
+Server = https://<dominio>/stable/$arch
 ```
 
 `SigLevel = Required` exige firmas de paquetes y de la base de datos. El nombre del repositorio pacman debe coincidir con el nombre de la base de datos.
@@ -157,7 +157,7 @@ El workflow `.github/workflows/package-pipeline.yml` se ejecuta únicamente con 
 Jobs:
 1. `validate`: fija los SHA de `dev` y `main`, ejecuta pruebas y valida los dos snapshots contra el manifiesto anterior de Pages.
 2. `build`: matriz `testing`/`stable`, construye todos los paquetes sin secretos GPG.
-3. `signing`: valida artefactos, importa la subclave, firma paquetes y bases de datos, crea y verifica el sitio.
+3. `signing`: valida artefactos, importa la subclave, firma paquetes y bases de datos, crea la portada, genera índices HTML navegables para los directorios del mirror y verifica el sitio. La portada manual se conserva; los índices secundarios se regeneran en cada publicación.
 4. `publish`: despliega el sitio completo mediante GitHub Pages.
 
 La imagen oficial `archlinux:base-devel` está fijada por digest para la plataforma `linux/amd64`. El sistema instalado dentro de cada contenedor se actualiza desde los repositorios rolling actuales de Arch; por tanto, el digest fija la imagen inicial, no las versiones de todos los paquetes de construcción.
