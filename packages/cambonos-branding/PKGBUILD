@@ -1,6 +1,6 @@
 pkgname=cambonos-branding
-pkgver=0.1.0
-pkgrel=9
+pkgver=0.1.1
+pkgrel=1
 pkgdesc="CambonOS visual identity assets"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
@@ -32,11 +32,11 @@ package() {
     "$branding_dir/cambonos-logo.txt"
 
   # Install the prebuilt symbol font as a static branding resource.
-  install -Dm644 "$startdir/files/CambonOS-Symbols.ttf" \
+  install -Dm644 "$startdir/files/ttf/CambonOS-Symbols.ttf" \
     "$font_dir/CambonOS-Symbols.ttf"
 
   # Publish the private-use glyph fallback through Fontconfig defaults.
-  install -Dm644 "$startdir/files/65-cambonos-symbols.conf" \
+  install -Dm644 "$startdir/files/ttf/65-cambonos-symbols.conf" \
     "$fontconfig_avail/65-cambonos-symbols.conf"
   install -d "$fontconfig_default"
   ln -s ../conf.avail/65-cambonos-symbols.conf \
