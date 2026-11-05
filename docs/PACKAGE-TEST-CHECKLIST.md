@@ -25,15 +25,14 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 
 ### Construcción y contenido
 - [ ] `makepkg` termina correctamente.
-- [ ] El paquete contiene `cambonos.svg`, `cambonos.png` y la licencia.
-- [ ] SVG se instala en `/usr/share/icons/hicolor/scalable/apps/cambonos.svg`.
-- [ ] PNG se instala en `/usr/share/pixmaps/cambonos.png`.
-- [ ] `xmllint --noout` valida el SVG.
-- [ ] `file` identifica correctamente el formato del PNG.
-- [ ] Comprobar dimensiones, transparencia y renderizado del PNG.
-- [ ] Renderizar el SVG con un visor independiente y comprobar que no faltan recursos.
+- [ ] El paquete contiene la licencia y los recursos de `files/` instalados por el `PKGBUILD`.
+- [ ] Los seis SVG y `cambonos-logo.txt` se instalan en `/usr/share/cambonos/branding/`.
+- [ ] El enlace `/usr/share/icons/hicolor/scalable/apps/cambonos-logo.svg` apunta al SVG canónico `cambonos-icon.svg`.
+- [ ] Los enlaces `/usr/share/pixmaps/cambonos-logo.svg` y `/usr/share/pixmaps/cambonos-logo-text.svg` apuntan a `cambonos-icon.svg` y `cambonos-text.svg`, respectivamente.
+- [ ] `xmllint --noout` valida los seis SVG instalados.
+- [ ] Renderizar los SVG con un visor independiente y comprobar que no faltan recursos.
 - [ ] Comparar los colores de los recursos con la paleta oficial exacta: `#AEFA50`, `#70E7E6`, `#061C31`, `#FFFFFF`, `#149246`, `#019FA7`.
-- [ ] Comprobar tamaños pequeño, medio y grande en aplicaciones consumidoras.
+- [ ] Comprobar tamaños pequeño, medio y grande de los iconos en aplicaciones consumidoras.
 
 ### Ciclo de vida
 - [ ] Instalar el paquete en una VM limpia.
