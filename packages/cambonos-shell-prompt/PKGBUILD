@@ -1,0 +1,29 @@
+pkgname=cambonos-shell-prompt
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="CambonOS Starship prompt configuration and shell integrations"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('GPL-3.0-only')
+depends=('starship' 'bash' 'util-linux')
+optdepends=('fish: automatic Starship integration in Fish')
+install=cambonos-shell-prompt.install
+
+package() {
+  install -Dm644 "$startdir/files/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  install -Dm644 "$startdir/files/starship.toml" \
+    "$pkgdir/usr/share/cambonos/shell-prompt/starship.toml"
+  install -Dm644 "$startdir/files/bash/cambonos-shell-prompt.bash" \
+    "$pkgdir/usr/share/cambonos/shell-prompt/shell/bash"
+  install -Dm644 "$startdir/files/zsh/conf.d/50-shell-prompt.zsh" \
+    "$pkgdir/usr/share/cambonos/zsh/conf.d/50-shell-prompt.zsh"
+  install -Dm644 "$startdir/files/fish/cambonos-shell-prompt.fish" \
+    "$pkgdir/usr/share/fish/vendor_conf.d/cambonos-shell-prompt.fish"
+
+  install -Dm755 "$startdir/files/cambonos/lib/integrate-bash" \
+    "$pkgdir/usr/lib/cambonos/shell-prompt/integrate-bash"
+  install -Dm644 "$startdir/files/libalpm/hooks/cambonos-shell-prompt.hook" \
+    "$pkgdir/usr/share/libalpm/hooks/cambonos-shell-prompt.hook"
+}

@@ -1,0 +1,121 @@
+#!/usr/bin/bash
+# Safely manage the CambonOS Starship block in the global Bash rc file.
+set -Eeuo pipefail
+umask 022
+
+readonly BEGIN_MARKER='# >>> CambonOS Shell Prompt >>>'
+readonly END_MARKER='# <<< CambonOS Shell Prompt <<<'
+readonly BASH_RC='/etc/bash.bashrc'
+readonly BASH_FRAGMENT='/usr/share/cambonos/shell-prompt/shell/bash'
+readonly LOCK_FILE='/run/lock/cambonos-shell-integration.lock'
+
+TEMP_FILES=()
+cleanup() {
+    local path
+    for path in "${TEMP_FILES[@]}"; do
+        [[ -n "$path" ]] && rm -f -- "$path"
+    done
+}
+trap cleanup EXIT
+
+usage() { printf 'Usage: %s {install|repair|remove|check}\n' "$0"; }
+die() { printf 'cambonos-shell-prompt: ERROR: %s\n' "$*" >&2; exit 1; }
+
+strip_block() {
+    local file="$1" output="$2" begin_count end_count
+    begin_count="$(grep -Fxc -- "$BEGIN_MARKER" "$file" || true)"
+    end_count="$(grep -Fxc -- "$END_MARKER" "$file" || true)"
+    if [[ "$begin_count" == 0 && "$end_count" == 0 ]]; then
+        cp -p -- "$file" "$output"
+        return 0
+    fi
+    [[ "$begin_count" == 1 && "$end_count" == 1 ]] ||
+        die "marcadores incompletos o duplicados en $file"
+    awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
+        $0 == begin { if (inside || seen_begin) { bad=1; next }; inside=1; seen_begin=1; next }
+        $0 == end { if (!inside || seen_end) { bad=1; next }; inside=0; seen_end=1; next }
+        !inside { print }
+        END { if (bad || inside || !seen_begin || !seen_end) exit 1 }
+    ' "$file" > "$output" || die "bloque administrado mal formado en $file"
+}
+
+managed_block() {
+    cat <<EOF_BLOCK
+$BEGIN_MARKER
+# Managed by cambonos-shell-prompt. Local changes inside this block may be replaced.
+if [[ -r '$BASH_FRAGMENT' ]]; then
+    source '$BASH_FRAGMENT'
+fi
+$END_MARKER
+EOF_BLOCK
+}
+
+check_file() {
+    local file="$1" begin_count end_count
+    [[ -f "$file" && ! -L "$file" && -r "$file" ]] || return 1
+    begin_count="$(grep -Fxc -- "$BEGIN_MARKER" "$file" || true)"
+    end_count="$(grep -Fxc -- "$END_MARKER" "$file" || true)"
+    [[ "$begin_count" == 1 && "$end_count" == 1 ]] || return 1
+    grep -Fqx -- "    source '$BASH_FRAGMENT'" "$file" || return 1
+    awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
+        $0 == begin { if (inside || seen_begin) bad=1; inside=1; seen_begin=1; next }
+        $0 == end { if (!inside || seen_end) bad=1; inside=0; seen_end=1; next }
+        END { if (bad || inside || !seen_begin || !seen_end) exit 1 }
+    ' "$file"
+}
+
+update_file() {
+    local action="$1" file="$2" dir tmp stripped existed=0
+    if [[ -e "$file" || -L "$file" ]]; then
+        [[ ! -L "$file" && -f "$file" ]] || die "$file no es un archivo regular; no se modifica"
+        existed=1
+    else
+        case "$action" in check) return 1 ;; remove) return 0 ;; install|repair) ;; esac
+    fi
+    if [[ "$action" == check ]]; then check_file "$file"; return; fi
+
+    dir="$(dirname -- "$file")"
+    [[ -d "$dir" ]] || die "no existe el directorio de configuración $dir"
+    tmp="$(mktemp "$dir/.cambonos-shell-prompt.XXXXXX")"
+    stripped="${tmp}.stripped"
+    TEMP_FILES+=("$tmp" "$stripped")
+    if (( existed )); then
+        strip_block "$file" "$stripped"
+        cp -a -- "$file" "$tmp"
+    else
+        : > "$stripped"
+        chmod 0644 "$tmp"
+    fi
+
+    case "$action" in
+        install|repair)
+            cat -- "$stripped" > "$tmp"
+            if [[ -s "$tmp" ]] && [[ "$(tail -c 1 "$tmp" | wc -l)" -eq 0 ]]; then printf '\n' >> "$tmp"; fi
+            managed_block >> "$tmp"
+            ;;
+        remove) cat -- "$stripped" > "$tmp" ;;
+        *) die "acción no válida: $action" ;;
+    esac
+    mv -fT -- "$tmp" "$file"
+    rm -f -- "$stripped"
+}
+
+main() {
+    local action="${1:-}"
+    [[ $# == 1 ]] || { usage >&2; exit 2; }
+    case "$action" in install|repair|remove|check) ;; *) usage >&2; exit 2 ;; esac
+    command -v flock >/dev/null 2>&1 || die 'flock no está disponible (dependencia util-linux)'
+    [[ -d /run/lock ]] || die 'no existe /run/lock'
+    [[ -x /usr/bin/bash ]] || { printf 'INFO: Bash no está instalado; se omite.\n'; return 0; }
+    exec 9>"$LOCK_FILE"
+    flock 9
+
+    if update_file "$action" "$BASH_RC"; then
+        [[ "$action" != check ]] || printf 'OK: integración Bash (%s)\n' "$BASH_RC"
+    else
+        [[ "$action" != check ]] || printf 'FALTA: integración Bash (%s)\n' "$BASH_RC" >&2
+        return 1
+    fi
+}
+
+main "$@"

@@ -25,11 +25,13 @@ El proceso utiliza los repositorios rolling de Arch durante la construcción. Po
 |---|---|
 | [`cambonos-branding`](packages/cambonos-branding/README.md) | Recursos gráficos genéricos de CambonOS. |
 | [`cambonos-fastfetch`](packages/cambonos-fastfetch/README.md) | Perfil de Fastfetch e integración automática con shells. |
+| [`cambonos-shell-prompt`](packages/cambonos-shell-prompt/README.md) | Configuración e integración de Starship en Zsh, Bash y Fish. |
+| [`cambonos-zsh`](packages/cambonos-zsh/README.md) | Configuración global de Zsh y punto de entrada para integraciones. |
 | [`cambonos-keyring`](packages/cambonos-keyring/README.md) | Raíz pública de confianza para los repositorios CambonOS en pacman. |
 | [`cambonos-release`](packages/cambonos-release/README.md) | Identidad de distribución y metadatos release/LSB. |
 | [`cambonos-repo`](packages/cambonos-repo/README.md) | Configuración e integración de repositorios CambonOS en pacman. |
 
-Cada paquete tiene una responsabilidad independiente. Los metapaquetes futuros, cuando existan, deberán agrupar dependencias; no asumirán la propiedad ni la configuración de los componentes que agrupen.
+Cada paquete tiene una responsabilidad independiente. `cambonos-zsh` proporciona el cargador global de fragmentos Zsh en `/usr/share/cambonos/zsh/conf.d/`; `cambonos-shell-prompt` y `cambonos-fastfetch` instalan ahí sus fragmentos sin modificar `/etc/zsh/zshrc`. Para bloques de Bash, los componentes utilizan marcadores independientes y el bloqueo compartido `/run/lock/cambonos-shell-integration.lock`. Los metapaquetes futuros, cuando existan, deberán agrupar dependencias; no asumirán la propiedad ni la configuración de los componentes que agrupen.
 
 ## Arquitectura del repositorio
 
@@ -40,6 +42,8 @@ cambonos-packages/
 ├── packages/
 │   ├── cambonos-branding/
 │   ├── cambonos-fastfetch/
+│   ├── cambonos-shell-prompt/
+│   ├── cambonos-zsh/
 │   ├── cambonos-keyring/
 │   ├── cambonos-release/
 │   └── cambonos-repo/

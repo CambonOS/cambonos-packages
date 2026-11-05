@@ -1,0 +1,20 @@
+post_install() {
+    if [[ -x /usr/lib/cambonos/shell-prompt/integrate-bash ]]; then
+        /usr/lib/cambonos/shell-prompt/integrate-bash install ||
+            printf 'cambonos-shell-prompt: no se pudo instalar la integración Bash; ejecuta integrate-bash repair.\n' >&2
+    fi
+}
+
+post_upgrade() {
+    if [[ -x /usr/lib/cambonos/shell-prompt/integrate-bash ]]; then
+        /usr/lib/cambonos/shell-prompt/integrate-bash repair ||
+            printf 'cambonos-shell-prompt: no se pudo reparar la integración Bash.\n' >&2
+    fi
+}
+
+pre_remove() {
+    if [[ -x /usr/lib/cambonos/shell-prompt/integrate-bash ]]; then
+        /usr/lib/cambonos/shell-prompt/integrate-bash remove ||
+            printf 'cambonos-shell-prompt: no se pudo retirar la integración Bash.\n' >&2
+    fi
+}

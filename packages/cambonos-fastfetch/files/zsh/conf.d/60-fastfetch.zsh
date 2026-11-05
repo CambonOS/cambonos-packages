@@ -1,5 +1,5 @@
 # CambonOS Fastfetch: all interactive Zsh sessions.
-# This file is sourced by the managed block in /etc/zsh/zshrc.
+# Loaded by cambonos-zsh from /usr/share/cambonos/zsh/conf.d/.
 
 [[ -o interactive ]] || return 0
 

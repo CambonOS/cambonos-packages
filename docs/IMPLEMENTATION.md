@@ -123,6 +123,17 @@ El helper realiza escrituras atómicas, evita duplicados y conserva cualquier `I
 
 El hook `cambonos-repo-pacman-conf.hook` usa un disparador `Type = Path` sobre `etc/pacman.conf`, para operaciones `Install` y `Upgrade`. Se ejecuta después de transacciones que incluyen ese archivo y llama al mismo helper. ALPM también utiliza la ruta original como objetivo cuando el archivo se instala como `.pacnew`. El hook no detecta modificaciones manuales arbitrarias ni cambios realizados por scriptlets que no formen parte de la lista de archivos de la transacción.
 
+
+### `cambonos-zsh`, `cambonos-shell-prompt` y `cambonos-fastfetch`
+
+La configuración de shells se divide por responsabilidad:
+
+- `cambonos-zsh` depende de `zsh`, `zsh-completions`, `zsh-autosuggestions`, `zsh-syntax-highlighting` y `cambonos-shell-prompt`. Mantiene el único bloque administrado de `/etc/zsh/zshrc` y carga en orden lexicográfico los fragmentos `*.zsh` de `/usr/share/cambonos/zsh/conf.d/`. No distribuye `~/.zshrc` en `/etc/skel` ni cambia shells de cuentas; esa decisión pertenece al instalador ISO.
+- `cambonos-shell-prompt` depende de `starship`, `bash` y `util-linux`, pero no depende de Zsh ni de Fish. Proporciona la configuración CambonOS y las integraciones Bash, Zsh y Fish. Zsh utiliza un fragmento en el directorio `conf.d` de `cambonos-zsh`; sin ese paquete la integración Zsh requiere configuración manual. Bash utiliza un bloque propio en `/etc/bash.bashrc`; Fish utiliza `vendor_conf.d`.
+- `cambonos-fastfetch` mantiene sus integraciones Bash, Fish y POSIX de login. Su fragmento Zsh se instala en `conf.d`; no modifica `/etc/zsh/zshrc`. Al actualizar desde versiones anteriores retira su antiguo bloque Zsh de forma conservadora, preservando el cargador y el contenido ajeno.
+
+Los gestores que modifican `/etc/bash.bashrc` utilizan marcadores distintos y el mismo bloqueo `/run/lock/cambonos-shell-integration.lock`, escrituras atómicas y rechazo de archivos no regulares, enlaces simbólicos y marcadores ambiguos. Cada paquete elimina exclusivamente su propio bloque.
+
 ## Configuración requerida en GitHub
 
 Crear el entorno `package-signing`, limitarlo a las ramas `dev` y `main`, y añadir:
