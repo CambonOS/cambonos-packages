@@ -21,18 +21,54 @@ post_remove() {
     managed="$state_dir/lsb-release.managed"
     pacnew="/etc/lsb-release.pacnew"
 
-    if [[ -f /etc/lsb-release && ! -L /etc/lsb-release ]] &&
-       [[ -f "$managed" ]] && cmp -s -- /etc/lsb-release "$managed"; then
-        rm -f -- /etc/lsb-release
+    restored=0
+    temporary_dir=""
+
+    # Restore only when the current file is still the exact version managed by
+    # CambonOS. If an administrator changed it, keep both that file and the
+    # recovery data so the original can still be recovered manually.
+    if [[ -f "$managed" ]] &&
+       [[ -f /etc/lsb-release && ! -L /etc/lsb-release ]] &&
+       cmp -s -- /etc/lsb-release "$managed"; then
         if [[ -f "$pacnew" ]]; then
             # If pacman preserved a newer upstream default as .pacnew, prefer it.
-            mv -fT -- "$pacnew" /etc/lsb-release
+            if mv -fT -- "$pacnew" /etc/lsb-release; then
+                restored=1
+            fi
         elif [[ -e "$backup" || -L "$backup" ]]; then
-            cp -a -- "$backup" /etc/lsb-release
+            # Restore through a temporary directory on /etc's filesystem so
+            # the original metadata is retained and the replacement is atomic.
+            temporary_dir="$(mktemp -d /etc/.lsb-release.restore.XXXXXX)" || temporary_dir=""
+            if [[ -n "$temporary_dir" ]] &&
+               cp -a -- "$backup" "$temporary_dir/restored" &&
+               mv -fT -- "$temporary_dir/restored" /etc/lsb-release; then
+                restored=1
+            fi
+            [[ -z "$temporary_dir" ]] || rmdir -- "$temporary_dir" 2>/dev/null || true
         elif [[ -e "$was_absent" ]]; then
-            : # It did not exist before CambonOS managed it.
+            if rm -f -- /etc/lsb-release; then
+                restored=1
+            fi
         fi
+    elif [[ ! -e /etc/lsb-release && ! -L /etc/lsb-release ]] &&
+         [[ -e "$backup" || -L "$backup" ]]; then
+        # The managed file may have been removed independently. The saved
+        # original is still recoverable and must not be discarded.
+        temporary_dir="$(mktemp -d /etc/.lsb-release.restore.XXXXXX)"
+        if cp -a -- "$backup" "$temporary_dir/restored" &&
+           mv -fT -- "$temporary_dir/restored" /etc/lsb-release; then
+            restored=1
+        fi
+        rmdir -- "$temporary_dir" 2>/dev/null || true
+    elif [[ ! -e /etc/lsb-release && ! -L /etc/lsb-release ]] &&
+         [[ -e "$was_absent" ]]; then
+        restored=1
     fi
 
-    rm -rf -- "$state_dir"
+    if (( restored )); then
+        rm -rf -- "$state_dir"
+    elif [[ -d "$state_dir" ]]; then
+        printf 'cambonos-release: no se pudo restaurar %s de forma segura; se conserva %s para recuperación manual.\n' \
+            /etc/lsb-release "$state_dir" >&2
+    fi
 }

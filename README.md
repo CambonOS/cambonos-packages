@@ -4,9 +4,9 @@ Repositorio oficial de paquetes de CambonOS y de la infraestructura utilizada pa
 
 CambonOS está basado en **Arch Linux** y sigue su modelo **rolling-release**. Arch proporciona la base del sistema; CambonOS añade paquetes, configuraciones, integración y herramientas propias para facilitar su instalación y administración.
 
-## Estado del repositorio
+## Ramas y canales
 
-Esta documentación describe la instantánea auditada del repositorio. Los paquetes y el pipeline pueden evolucionar; consulta siempre los archivos del branch que estés utilizando.
+La documentación describe el comportamiento implementado en los archivos versionados del repositorio. Para conocer el estado operativo de una publicación concreta, consulta la ejecución correspondiente de GitHub Actions y el manifiesto publicado.
 
 ### Canales
 
@@ -95,7 +95,8 @@ La política utiliza una única clave de firma para `stable` y `testing`.
 - La subclave de firma se utiliza en GitHub Actions mediante el entorno protegido `package-signing`.
 - Solo los jobs de firma reciben los secretos; los jobs de construcción no.
 - El entorno `package-signing` está limitado a `dev` y `main`, ramas mantenidas por tres contribuidores de confianza.
-- Los tres archivos públicos del keyring (`cambonos.gpg`, `cambonos-trusted`, `cambonos-revoked`) deben ser idénticos entre `dev` y `main`. La distribución de una nueva clave se realiza simultáneamente en ambos canales.
+- Los tres archivos públicos del keyring (`cambonos.gpg`, `cambonos-trusted`, `cambonos-revoked`) deben ser idénticos entre `dev` y `main`; el job `validate` comprueba esa igualdad byte a byte antes de construir.
+- Cada snapshot se valida contra el manifiesto anterior de su propio canal. La igualdad del keyring público entre ramas es una comprobación adicional y explícita; no implica que los demás paquetes o sus versiones deban coincidir.
 - Nunca se deben almacenar claves privadas en Git.
 
 La firma demuestra que el artefacto fue firmado por la clave de CambonOS; no demuestra por sí sola que el código sea benigno. La revisión del código y la protección de las ramas siguen siendo controles necesarios.
@@ -166,15 +167,15 @@ La firma y el ensamblado final se realizan en el job protegido de GitHub Actions
 
 La checklist de validación manual y de integración está en [`docs/PACKAGE-TEST-CHECKLIST.md`](docs/PACKAGE-TEST-CHECKLIST.md). Incluye construcción, instalación, actualización, configuración, hooks, eliminación y comprobaciones de regresión por paquete.
 
-## Limitaciones conocidas de la instantánea auditada
+## Alcance y validación operativa
 
-- La suite automatizada cubre principalmente el gestor Python, políticas de manifiestos, firmas simuladas/validaciones y helper de integración de `cambonos-repo`; no sustituye pruebas de instalación real de todos los paquetes en Arch.
-- No se ha demostrado en esta auditoría una publicación real de extremo a extremo ni una instalación cliente desde el mirror público.
-- La reproducibilidad bit a bit no es un objetivo del pipeline rolling actual.
-- La recuperación tras compromiso de la clave primaria requiere intervención manual en clientes que no puedan autenticar la nueva raíz.
-- La política de configuración se decide paquete por paquete y debe mantenerse documentada.
-- La configuración JSONC actual de Fastfetch contiene una coma final en `display`; está prevista su corrección en una próxima versión. No se registra como fallo bloqueante de la instantánea actual.
-- El branding actual es transitorio. La paleta oficial exacta es: `#AEFA50`, `#70E7E6`, `#061C31`, `#FFFFFF`, `#149246` y `#019FA7`. El logotipo revisado y adaptado a distintos entornos se incorporará cuando esté preparado.
+La suite automatizada valida el tooling del repositorio y sus políticas, pero no sustituye la construcción real con `makepkg`, la instalación en una máquina Arch ni las pruebas de integración de cada paquete. La validación de una publicación debe apoyarse en los logs de GitHub Actions, los artefactos generados y el manifiesto firmado.
+
+El pipeline usa una imagen Arch fijada por digest, pero actualiza el entorno dentro del contenedor desde los repositorios rolling. Por tanto, no garantiza reproducibilidad binaria entre fechas distintas.
+
+La recuperación tras el compromiso de la clave primaria requiere establecer una nueva raíz de confianza. Los clientes que no puedan autenticar esa transición necesitarán intervención mediante un canal externo confiable.
+
+La política de configuración se define por paquete y debe documentarse junto a sus pruebas. El equipo responsable del diseño mantiene y valida visualmente los recursos de identidad; este repositorio se ocupa de distribuir los recursos aprobados y verificar su empaquetado e integración en las rutas declaradas.
 
 ## Licencia
 

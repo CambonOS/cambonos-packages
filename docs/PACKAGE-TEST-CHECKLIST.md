@@ -28,11 +28,11 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] El paquete contiene la licencia y los recursos de `files/` instalados por el `PKGBUILD`.
 - [ ] Los seis SVG y `cambonos-logo.txt` se instalan en `/usr/share/cambonos/branding/`.
 - [ ] El enlace `/usr/share/icons/hicolor/scalable/apps/cambonos-logo.svg` apunta al SVG canónico `cambonos-icon.svg`.
+- [ ] No se publica el nombre histórico `/usr/share/icons/hicolor/scalable/apps/cambonos.svg`; se considera obsoleto y no se mantiene como alias.
 - [ ] Los enlaces `/usr/share/pixmaps/cambonos-logo.svg` y `/usr/share/pixmaps/cambonos-logo-text.svg` apuntan a `cambonos-icon.svg` y `cambonos-text.svg`, respectivamente.
 - [ ] `xmllint --noout` valida los seis SVG instalados.
-- [ ] Renderizar los SVG con un visor independiente y comprobar que no faltan recursos.
-- [ ] Comparar los colores de los recursos con la paleta oficial exacta: `#AEFA50`, `#70E7E6`, `#061C31`, `#FFFFFF`, `#149246`, `#019FA7`.
-- [ ] Comprobar tamaños pequeño, medio y grande de los iconos en aplicaciones consumidoras.
+- [ ] Confirmar que los SVG distribuidos son los artefactos aprobados por el equipo de diseño.
+- [ ] La validación visual, la paleta, la legibilidad y las variantes de tamaño se verifican en el flujo del equipo de diseño, no en este repositorio de empaquetado.
 
 ### Ciclo de vida
 - [ ] Instalar el paquete en una VM limpia.
@@ -52,7 +52,6 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Confirmar que carga `/usr/share/cambonos/fastfetch/config.jsonc`.
 - [ ] Confirmar que carga `/usr/share/cambonos/fastfetch/logo.txt`.
 - [ ] Validar la configuración con la versión real de Fastfetch instalada.
-- [ ] Registrar y verificar la corrección prevista de la coma final en una versión posterior, sin tratarla como bloqueo de la versión auditada.
 
 ### Inicio de shells
 - [ ] Bash interactivo de login: Fastfetch aparece una vez.
@@ -106,7 +105,7 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Confirmar que `cambonos-revoked` contiene los datos de revocación esperados.
 - [ ] Buscar en Git, artefactos, logs y ZIP cualquier clave privada o exportación `--export-secret-keys` / `--export-secret-subkeys`; no debe existir.
 - [ ] Construir con `makepkg` e inspeccionar los tres archivos instalados.
-- [ ] Confirmar que `dev` y `main` tienen byte a byte idénticos los tres archivos públicos.
+- [ ] Confirmar que `dev` y `main` tienen byte a byte idénticos los tres archivos públicos; el workflow debe fallar si cualquiera difiere.
 
 ### Instalación y pacman-key
 - [ ] En VM inicializada con `pacman-key --init`, instalar el paquete y comprobar `post_install`.
@@ -168,10 +167,12 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Probar enlace simbólico preexistente.
 - [ ] Probar directorio preexistente y confirmar que se conserva.
 - [ ] Modificar manualmente el archivo después de aplicar CambonOS.
-- [ ] Desinstalar y confirmar que se conserva la modificación manual.
-- [ ] Desinstalar sin modificación manual y confirmar restauración del original.
+- [ ] Desinstalar y confirmar que se conserva la modificación manual y que `/var/lib/cambonos-release` mantiene el backup y el estado gestionado.
+- [ ] Desinstalar sin modificación manual y confirmar restauración del original y limpieza del estado solo tras una restauración satisfactoria.
 - [ ] Probar presencia de `/etc/lsb-release.pacnew` y verificar prioridad.
-- [ ] Comprobar el comportamiento del directorio `/var/lib/cambonos-release` cuando no se puede restaurar por modificación manual: determinar si el backup debe conservarse.
+- [ ] Si `/etc/lsb-release` ha desaparecido pero existe un backup original, comprobar que se restaura el backup y no se elimina el estado antes de completar la recuperación.
+- [ ] Si `lsb-release` no está instalado, comprobar que el helper conserva cualquier estado de recuperación existente.
+- [ ] Simular un fallo al crear el directorio temporal de restauración y comprobar que el backup permanece disponible.
 - [ ] Simular error de escritura o falta de espacio y comprobar que no queda un archivo parcial.
 
 ### Hooks y ciclo de vida

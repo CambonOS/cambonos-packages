@@ -25,7 +25,7 @@ Este paquete proporciona metadatos propios de CambonOS y un helper que mantiene 
 | `/usr/lib/cambonos/restore-release-files` | Helper de mantenimiento/restauración. |
 | `/usr/share/libalpm/hooks/zzzz-cambonos-release.hook` | Hook de reparación tras transacciones relevantes. |
 
-El helper puede mantener `/etc/os-release` como enlace a `../usr/lib/cambonos/os-release`. Para LSB, personaliza `/etc/lsb-release` cuando el paquete opcional `lsb-release` está instalado.
+El helper puede mantener `/etc/os-release` como enlace a `../usr/lib/cambonos/os-release`. El metadato `LOGO=cambonos-logo` referencia el icono publicado por `cambonos-branding`. Para LSB, personaliza `/etc/lsb-release` cuando el paquete opcional `lsb-release` está instalado.
 
 ## Política de configuración
 
@@ -46,6 +46,8 @@ La política es **managed**: CambonOS aplica su identidad predeterminada sin apr
 - Escribe el archivo mediante un temporal y sustitución atómica.
 - Guarda una copia exacta del contenido administrado para detectar modificaciones posteriores.
 - Al desinstalar, restaura el original únicamente si el archivo sigue coincidiendo con el contenido administrado. Si existe `.pacnew`, tiene preferencia sobre la copia anterior.
+- Si el administrador modificó el archivo, o la restauración no puede completarse de forma segura, conserva el archivo actual y los datos de recuperación en `/var/lib/cambonos-release` para intervención manual.
+- Si `lsb-release` no está instalado, el helper no gestiona `/etc/lsb-release` y conserva cualquier estado de recuperación existente.
 
 ## Hook ALPM
 
@@ -102,6 +104,13 @@ sudo find /var/lib/cambonos-release -maxdepth 1 -type f -ls
 - [ ] Las modificaciones administrativas de identidad no se sobrescriben silenciosamente.
 - [ ] `pacman -Qkk cambonos-release` no detecta daños inesperados.
 
-## Punto de atención conocido
+## Recuperación manual
 
-El script `post_remove` elimina `/var/lib/cambonos-release` al final incluso cuando el archivo LSB ya no coincide con el contenido gestionado y, por tanto, no puede restaurarse automáticamente. Antes de cerrar la validación, probar el escenario de edición manual y decidir si el backup debe conservarse para recuperación manual en lugar de eliminarse.
+Si `post_remove` no puede restaurar el archivo con seguridad, revisa el contenido conservado antes de eliminar el estado:
+
+```bash
+sudo ls -la /var/lib/cambonos-release
+sudo diff -u /var/lib/cambonos-release/lsb-release.original /etc/lsb-release
+```
+
+No elimines `/var/lib/cambonos-release` hasta haber recuperado o descartado conscientemente la copia original. Si el archivo original no existía, `lsb-release.was-absent` permite distinguir ese caso de una copia de respaldo.

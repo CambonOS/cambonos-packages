@@ -1,8 +1,8 @@
-# CambonOS Packages — cambios de la primera versión funcional
+# CambonOS Packages — arquitectura de implementación
 
 ## Resumen
 
-Esta versión sustituye el flujo local incremental anterior por un pipeline de publicación completo y modular. Cada push a `dev` o `main` reconstruye ambos canales a partir de snapshots Git inmutables.
+El repositorio utiliza un pipeline modular de validación, construcción, firma y publicación. Cada push a `dev` o `main` fija los commits de ambas ramas y procesa los dos canales a partir de esos snapshots Git inmutables.
 
 ## Cambios principales
 
@@ -56,7 +56,7 @@ El sitio publica `metadata/manifest.json`, con información de ambos canales:
 - Nombre y SHA256 del paquete generado.
 - Imagen y entorno de construcción.
 
-El pipeline recupera el manifiesto anterior desde GitHub Pages. Cada canal se valida únicamente contra su propio manifiesto anterior: no se comparan los conjuntos de paquetes, las versiones ni los hashes de `stable` y `testing`. Para cada paquete dentro de su canal:
+El pipeline recupera el manifiesto anterior firmado desde GitHub Pages y verifica su firma antes de utilizarlo. Cada canal se valida únicamente contra sus propios registros anteriores: no se comparan los conjuntos de paquetes, las versiones ni los hashes de `stable` y `testing`. Esta independencia no se aplica al material público de confianza, cuyos tres archivos sí deben coincidir byte a byte entre `dev` y `main`. Para cada paquete dentro de su canal:
 - Cambio de contenido sin aumento de versión: error.
 - Aumento de versión: permitido.
 - Retroceso de versión según `vercmp`: error.
@@ -140,20 +140,8 @@ Crear el entorno `package-signing`, limitarlo a las ramas `dev` y `main`, y aña
 
 GitHub Pages debe utilizar el origen **GitHub Actions**.
 
-## Comprobaciones realizadas sobre esta entrega
+## Requisitos operativos y límites
 
-- Compilación sintáctica de todos los módulos Python.
-- Pruebas unitarias del parser, mapeo de canales, hashes, versionado y orden de dependencias.
-- Validación estática de los paquetes preexistentes `cambonos-release` y `cambonos-fastfetch`.
-- Validación del nuevo paquete keyring: se espera que falle hasta que se añada el material público GPG real.
+Para ejecutar el pipeline de publicación deben estar configurados el entorno protegido `package-signing`, sus secretos y fingerprint, las variables de Actions, y GitHub Pages con origen **GitHub Actions**. La primera publicación requiere habilitar `CAMBONOS_BOOTSTRAP=true` de forma temporal; tras verificar el manifiesto firmado publicado, debe cambiarse a `false`.
 
-## Limitaciones y pasos previos al primer despliegue
-
-Esta entrega es la primera implementación funcional del flujo, pero no puede realizar una publicación real desde el archivo por sí solo:
-1. Provisionar la clave siguiendo `GPG-SETUP.md`.
-2. Configurar secretos y variables de GitHub.
-3. Configurar GitHub Pages con GitHub Actions.
-4. Confirmar que el paquete keyring se incorpora tanto a `dev` como a `main`.
-5. Ejecutar la primera publicación con `CAMBONOS_BOOTSTRAP=true`.
-
-La compilación en contenedores Arch y la generación real de bases de datos requieren Docker y herramientas Arch. No se afirma que esas operaciones se hayan ejecutado en este entorno de trabajo.
+La construcción requiere Docker y acceso a los repositorios rolling de Arch desde los contenedores. La firma requiere GPG y los secretos del entorno protegido. La suite unitaria y la validación estática no sustituyen una construcción real, la instalación en una máquina Arch ni una prueba de cliente contra el mirror publicado. Registra por separado qué fases se han ejecutado realmente en cada release.

@@ -65,7 +65,7 @@ pacman -Qkk cambonos-keyring
 gpg --show-keys --with-fingerprint /usr/share/pacman/keyrings/cambonos.gpg
 ```
 
-La fingerprint de la clave primaria registrada en la instantánea auditada es:
+Fingerprint de la clave primaria contenida en el material público actual:
 
 `7B6BE3ABE5E7636F9019690C98C362C2C2E22906`
 

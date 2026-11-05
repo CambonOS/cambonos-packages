@@ -1,6 +1,6 @@
 pkgname=cambonos-keyring
 pkgver=0.1.0
-pkgrel=2
+pkgrel=3
 pkgdesc="CambonOS package repository trust anchor for pacman"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"

@@ -77,7 +77,9 @@ Si la integración falla, el scriptlet informa del problema y permite continuar 
 
 ## Compatibilidad de la configuración
 
-La configuración referencia el esquema remoto `dev` de Fastfetch. Conviene validar su compatibilidad con la versión instalada y comprobar que Fastfetch carga el logotipo correctamente.
+El campo `$schema` de `config.jsonc` referencia el esquema publicado en la rama `dev` de Fastfetch. Es una ayuda de validación del editor, no una garantía de compatibilidad con cualquier versión instalada. La configuración debe probarse con la versión de Fastfetch que se distribuya en la imagen o instalación objetivo.
+
+El mantenedor ha comprobado el funcionamiento de la integración en varias sesiones interactivas reales. La matriz de pruebas de este repositorio sigue siendo necesaria para cubrir combinaciones de login/no-login, shells opcionales, sesiones no interactivas y actualizaciones de Bash/Zsh.
 
 ## Instalación y comprobación
 
