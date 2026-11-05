@@ -75,9 +75,9 @@ Los archivos de `/etc/profile.d` y `vendor_conf.d` son payload del paquete. Debe
 
 Si la integración falla, el scriptlet informa del problema y permite continuar la transacción. Después se puede ejecutar `integrate-shells repair` manualmente.
 
-## Incidencia conocida de la configuración
+## Compatibilidad de la configuración
 
-La configuración JSONC de la instantánea auditada contiene una coma final en el objeto `display`. Está prevista su corrección en la próxima versión y no se considera un fallo bloqueante conocido de esta versión. La validación debe realizarse con Fastfetch y no con un parser JSON estricto. La configuración también referencia el esquema remoto `dev` de Fastfetch, por lo que conviene validar compatibilidad con la versión instalada.
+La configuración referencia el esquema remoto `dev` de Fastfetch. Conviene validar su compatibilidad con la versión instalada y comprobar que Fastfetch carga el logotipo correctamente.
 
 ## Instalación y comprobación
 
