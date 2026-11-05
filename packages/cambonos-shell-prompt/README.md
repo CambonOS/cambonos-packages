@@ -23,6 +23,7 @@ Este paquete es propietario de la configuración visual de Starship y de sus int
 | Ruta | Función |
 |---|---|
 | `/usr/share/cambonos/shell-prompt/starship.toml` | Configuración visual predeterminada de CambonOS. |
+| `/usr/bin/cambonos-starship-directory` | Módulo personalizado para colorear y truncar la ruta actual. |
 | `/usr/share/cambonos/shell-prompt/shell/bash` | Fragmento de inicialización Bash. |
 | `/usr/share/cambonos/zsh/conf.d/50-shell-prompt.zsh` | Fragmento para el cargador de `cambonos-zsh`. |
 | `/usr/share/fish/vendor_conf.d/cambonos-shell-prompt.fish` | Integración nativa de Fish. |
@@ -31,7 +32,9 @@ Este paquete es propietario de la configuración visual de Starship y de sus int
 
 ## Configuración predeterminada
 
-La configuración mantiene la paleta `cambonos`, el prompt de dos líneas y los módulos de usuario, host SSH, directorio, Python, Git, estado de salida, trabajos y duración de comandos. No requiere una Nerd Font: los glifos pueden sustituirse visualmente si la fuente de terminal no los incluye.
+La configuración mantiene la paleta `cambonos` y un prompt de dos líneas. La primera línea coloca el directorio y el contexto Git a la izquierda; Python, metadatos de PKGBUILD/paquetes, usuario y host SSH se alinean a la derecha mediante `$fill`. La segunda línea conserva el carácter de entrada a la izquierda y el estado de salida, trabajos y duración a la derecha.
+
+El directorio se representa mediante `cambonos-starship-directory`: muestra hasta cuatro carpetas, con las tres anteriores en `deep_blue` y la carpeta actual en `accent`. El directorio HOME utiliza un icono de casa. El script sanitiza caracteres de control en nombres de carpeta antes de emitir sus secuencias ANSI. No requiere una Nerd Font: los glifos pueden sustituirse visualmente si la fuente de terminal no los incluye.
 
 La configuración personal tiene prioridad:
 

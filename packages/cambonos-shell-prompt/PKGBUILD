@@ -15,6 +15,8 @@ package() {
 
   install -Dm644 "$startdir/files/starship.toml" \
     "$pkgdir/usr/share/cambonos/shell-prompt/starship.toml"
+  install -Dm755 "$startdir/files/cambonos/bin/cambonos-starship-directory" \
+    "$pkgdir/usr/bin/cambonos-starship-directory"
   install -Dm644 "$startdir/files/bash/cambonos-shell-prompt.bash" \
     "$pkgdir/usr/share/cambonos/shell-prompt/shell/bash"
   install -Dm644 "$startdir/files/zsh/conf.d/50-shell-prompt.zsh" \

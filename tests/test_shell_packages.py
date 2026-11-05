@@ -39,15 +39,34 @@ class ShellPackageMetadataTests(unittest.TestCase):
         self.assertNotIn("update_file \"$action\" \"$ZSH_RC\"", helper)
         self.assertIn("remove_legacy_zsh_block", helper)
 
-    def test_starship_toml_parses_and_keeps_cambonos_identity(self):
+    def test_starship_toml_parses_and_keeps_cambonos_layout(self):
         path = ROOT / "packages/cambonos-shell-prompt/files/starship.toml"
         config = tomllib.loads(path.read_text())
         self.assertEqual(config["palette"], "cambonos")
         self.assertEqual(config["palettes"]["cambonos"]["primary"], "#AEFA50")
         self.assertEqual(config["palettes"]["cambonos"]["accent"], "#70E7E6")
-        self.assertIn("$git_branch", config["format"])
-        self.assertIn("$status", config["right_format"])
+        self.assertEqual(config["palettes"]["cambonos"]["deep_blue"], "#019FA7")
+        lines = config["format"].splitlines()
+        self.assertIn("$git_branch", lines[0])
+        self.assertIn("$fill$python", lines[0])
+        self.assertIn("$custom.cambonos_pkgbuild", lines[0])
+        self.assertIn("$package$username$hostname", lines[0])
+        self.assertIn("$character$fill$status$jobs$cmd_duration", lines[1])
+        self.assertNotIn("right_format", config)
         self.assertFalse(config["python"]["detect_files"])
+        self.assertFalse(config["custom"]["cambonos_directory"]["unsafe_no_escape"])
+        self.assertEqual(config["custom"]["cambonos_directory"]["command"],
+                         "/usr/bin/cambonos-starship-directory")
+        self.assertEqual(config["username"]["style_user"], "fg:deep_blue")
+        self.assertEqual(config["username"]["style_root"], "bold fg:accent")
+        self.assertEqual(config["hostname"]["format"],
+                         "[@](fg:deep_blue)[$hostname]($style) ")
+        self.assertEqual(config["hostname"]["style"], "bold fg:accent")
+
+    def test_shell_prompt_installs_custom_directory_renderer(self):
+        package = (ROOT / "packages/cambonos-shell-prompt/PKGBUILD").read_text()
+        self.assertIn("files/cambonos/bin/cambonos-starship-directory", package)
+        self.assertIn("/usr/bin/cambonos-starship-directory", package)
 
     def test_all_managers_use_the_same_bash_lock(self):
         expected = "/run/lock/cambonos-shell-integration.lock"
@@ -229,6 +248,64 @@ class ShellIntegrationHelperTests(unittest.TestCase):
             self.assertIn("# local zsh config", migrated)
             self.assertIn("# >>> CambonOS Zsh configuration >>>", migrated)
             self.assertNotIn("# >>> CambonOS Fastfetch >>>", migrated)
+
+
+class StarshipDirectoryRendererTests(unittest.TestCase):
+    SCRIPT = ROOT / "packages/cambonos-shell-prompt/files/cambonos/bin/cambonos-starship-directory"
+
+    def _render(self, cwd: Path, home: Path) -> str:
+        import os
+        result = subprocess.run(
+            ["bash", str(self.SCRIPT)],
+            cwd=cwd,
+            env={**os.environ, "HOME": str(home), "PWD": str(cwd)},
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+        return result.stdout
+
+    @staticmethod
+    def _plain(output: str) -> str:
+        import re
+        return re.sub(r"\x1b\[[0-9;]*m", "", output)
+
+    def test_home_uses_home_icon(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary) / "home"
+            home.mkdir()
+            output = self._render(home, home)
+            self.assertIn("", self._plain(output))
+            self.assertNotIn("", self._plain(output))
+
+    def test_truncates_to_four_directories_and_keeps_current_directory(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary) / "home"
+            current = home
+            for name in ("one", "two", "three", "four", "five"):
+                current = current / name
+                current.mkdir(parents=True, exist_ok=True)
+            output = self._render(current, home)
+            plain = self._plain(output)
+            self.assertIn("~/…/two/three/four/five", plain)
+            self.assertNotIn("/one/", plain)
+            self.assertIn("\033[38;2;1;159;167m", output)
+            self.assertIn("\033[38;2;112;231;230m", output)
+
+    def test_root_directory_is_rendered(self):
+        output = self._render(Path("/"), Path("/nonexistent-home"))
+        self.assertIn(" /", self._plain(output))
+
+    def test_control_characters_in_directory_names_are_sanitized(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary) / "home"
+            unusual = home / "bad\nname"
+            unusual.mkdir(parents=True)
+            output = self._render(unusual, home)
+            plain = self._plain(output)
+            self.assertIn("bad?name", plain)
+            self.assertNotIn("bad\nname", plain)
 
 
 if __name__ == "__main__":
