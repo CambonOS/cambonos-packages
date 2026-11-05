@@ -1,16 +1,41 @@
 pkgname=cambonos-branding
 pkgver=0.1.0
-pkgrel=3
-pkgdesc="Generic CambonOS logo assets"
+pkgrel=5
+pkgdesc="CambonOS visual identity assets"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
 
 package() {
-  install -Dm644 "$startdir/files/cambonos.svg" \
-    "$pkgdir/usr/share/icons/hicolor/scalable/apps/cambonos.svg"
-  install -Dm644 "$startdir/files/cambonos.png" \
-    "$pkgdir/usr/share/pixmaps/cambonos.png"
+  local branding_dir="$pkgdir/usr/share/cambonos/branding"
+  local icon_dir="$pkgdir/usr/share/icons/hicolor/scalable/apps"
+  local pixmaps_dir="$pkgdir/usr/share/pixmaps"
+
+  # Canonical location: all original branding assets live here.
+  install -Dm644 "$startdir/files/cambonos-icon.svg" \
+    "$branding_dir/cambonos-icon.svg"
+  install -Dm644 "$startdir/files/cambonos-icon-black.svg" \
+    "$branding_dir/cambonos-icon-black.svg"
+  install -Dm644 "$startdir/files/cambonos-icon-white.svg" \
+    "$branding_dir/cambonos-icon-white.svg"
+  install -Dm644 "$startdir/files/cambonos-text.svg" \
+    "$branding_dir/cambonos-text.svg"
+  install -Dm644 "$startdir/files/cambonos-text-black.svg" \
+    "$branding_dir/cambonos-text-black.svg"
+  install -Dm644 "$startdir/files/cambonos-text-white.svg" \
+    "$branding_dir/cambonos-text-white.svg"
+  install -Dm644 "$startdir/files/cambonos-logo.txt" \
+    "$branding_dir/cambonos-logo.txt"
+
   install -Dm644 "$startdir/files/LICENSE" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  # Compatibility paths used by desktop icon themes and existing consumers.
+  install -d "$icon_dir" "$pixmaps_dir"
+  ln -s ../../../../cambonos/branding/cambonos-icon.svg \
+    "$icon_dir/cambonos.svg"
+  ln -s ../cambonos/branding/cambonos-icon.svg \
+    "$pixmaps_dir/cambonos-logo.svg"
+  ln -s ../cambonos/branding/cambonos-text.svg \
+    "$pixmaps_dir/cambonos-logo-text.svg"
 }
