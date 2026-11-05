@@ -244,7 +244,10 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Confirmar que el manifiesto registra commit, rama, imagen, entorno, versiones y hashes.
 - [ ] Confirmar que el cambio de fuente sin aumento de versión falla.
 - [ ] Confirmar que un retroceso de versión falla.
-- [ ] Confirmar que cambio de binario con misma versión bloquea publicación.
+- [ ] Confirmar que una reconstrucción de la misma fuente y versión con un binario diferente permite publicar.
+- [ ] Confirmar que un cambio de fuente con la misma versión bloquea la publicación.
+- [ ] Confirmar que un cambio de fuente con incremento de versión permite publicar.
+- [ ] Confirmar que un artefacto alterado después de generar el manifiesto se rechaza por discrepancia de `package_hash`.
 - [ ] Confirmar que los paquetes de stable y testing se comparan de forma independiente.
 - [ ] Verificar firmas de paquetes, bases de datos, alias y manifiestos.
 - [ ] Confirmar que el job build no recibe secretos de firma.

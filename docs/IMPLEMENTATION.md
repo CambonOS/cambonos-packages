@@ -67,7 +67,9 @@ El pipeline recupera el manifiesto anterior desde GitHub Pages. Cada canal se va
 ### 5. Firma y seguridad
 
 - `SOURCE_DATE_EPOCH` se deriva del último commit que modificó cada directorio de paquete, para normalizar marcas temporales entre reconstrucciones del mismo contenido.
-- Si el SHA256 del binario cambia sin cambiar la versión respecto al manifiesto anterior, la publicación se bloquea y exige incrementar `pkgrel`/`pkgver`. Esto también detecta cambios de salida provocados por el entorno rolling de Arch.
+- La política de versión compara `source_hash` y la versión del paquete con el manifiesto anterior de su propio canal. Si cambia el contenido fuente sin aumentar `pkgrel`/`pkgver`, la publicación se bloquea.
+- Una reconstrucción con la misma fuente y versión puede producir un binario distinto por los cambios del entorno rolling de Arch y está permitida. `package_hash` se utiliza para verificar la integridad del artefacto y registrar exactamente qué binario se ha firmado y publicado; nunca determina por sí solo la obligación de incrementar la versión.
+- La fase de firma verifica los manifiestos de construcción, los artefactos y la política de fuente/versión antes de importar la subclave privada. La política de versionado tiene una única implementación compartida con la validación previa a la construcción.
 - El job `build` no recibe secretos de firma.
 - El job `signing` es el único que importa la subclave privada.
 - El job `signing` no ejecuta PKGBUILD ni scripts de instalación.

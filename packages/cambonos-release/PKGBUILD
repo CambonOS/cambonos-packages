@@ -1,6 +1,6 @@
 pkgname=cambonos-release
 pkgver=0.1.0
-pkgrel=5
+pkgrel=6
 pkgdesc="CambonOS distribution identity and release metadata"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"

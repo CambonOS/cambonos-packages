@@ -12,6 +12,7 @@ from .common import CambonosError, run_command, sha256_file, require_commands
 from .config import REPOSITORY_SECTION
 from .manifest import (
     load_previous_manifest,
+    validate_version_policy,
     verify_build_manifest,
     verify_previous_manifest_signature,
 )
@@ -118,25 +119,15 @@ def _materialize_and_sign_aliases(repository: Path, database_name: str) -> None:
         shutil.copy2(target_signature, Path(str(alias_path) + ".sig"))
 
 
-def validate_binary_immutability(
+def validate_source_version_policy(
     channel_manifests: dict[str, dict],
     previous_manifest: dict,
+    image: str,
 ) -> None:
-    """Reject different package bytes published under an unchanged pacman version."""
+    """Validate package versions using source hashes, never generated binary hashes."""
     for channel in ("stable", "testing"):
-        old_packages = previous_manifest["channels"][channel]["packages"]
-        new_packages = channel_manifests[channel]["packages"]
-        for name, new_record in new_packages.items():
-            old_record = old_packages.get(name)
-            if (
-                old_record
-                and old_record.get("version") == new_record.get("version")
-                and old_record.get("package_hash") != new_record.get("package_hash")
-            ):
-                raise CambonosError(
-                    f"{channel}/{name}: el binario cambió manteniendo la misma versión "
-                    f"({new_record['version']}); incrementa pkgrel/pkgver"
-                )
+        manifest = channel_manifests[channel]
+        validate_version_policy(manifest["packages"], previous_manifest, channel, image)
 
 
 def sign_and_create_site(
@@ -154,11 +145,76 @@ def sign_and_create_site(
     previous_manifest_signature_path: Path | None = None,
 ) -> None:
     require_commands("gpg", "gpgconf", "docker")
-    if not private_key_text.strip() or not passphrase:
-        raise CambonosError("faltan CAMBONOS_SIGNING_KEY o CAMBONOS_SIGNING_PASSPHRASE")
     expected_fingerprint = expected_fingerprint.replace(" ", "").upper()
     if not re.fullmatch(r"[0-9A-F]{40,64}", expected_fingerprint):
         raise CambonosError("CAMBONOS_SIGNING_FINGERPRINT no parece un fingerprint válido")
+
+    if bool(previous_manifest_path) != bool(previous_manifest_signature_path):
+        raise CambonosError("deben proporcionarse juntos el manifiesto anterior y su firma")
+
+    channel_roots = {"testing": testing_root, "stable": stable_root}
+    expected_commits = {
+        "testing": expected_testing_commit,
+        "stable": expected_stable_commit,
+    }
+    channel_manifests: dict[str, dict] = {}
+
+    # Preflight completo antes de importar o utilizar la clave privada.
+    for channel, build_root in channel_roots.items():
+        build_manifest = verify_build_manifest(
+            build_root / "build-manifest.json",
+            build_root / "packages",
+        )
+        if build_manifest.get("channel") != channel:
+            raise CambonosError(f"manifiesto recibido para el canal incorrecto: {channel}")
+        if build_manifest.get("commit") != expected_commits[channel]:
+            raise CambonosError(
+                f"{channel}: el artefacto procede de {build_manifest.get('commit')}, "
+                f"pero se esperaba {expected_commits[channel]}"
+            )
+        expected_branch = "dev" if channel == "testing" else "main"
+        if build_manifest.get("branch") != expected_branch:
+            raise CambonosError(f"{channel}: rama de origen incorrecta")
+        if build_manifest.get("architecture") != "x86_64":
+            raise CambonosError(f"{channel}: arquitectura incorrecta")
+        if build_manifest.get("image") != image:
+            raise CambonosError(f"{channel}: imagen de construcción distinta de la configurada")
+        if "cambonos-keyring" not in build_manifest.get("packages", {}):
+            raise CambonosError(f"{channel}: falta cambonos-keyring")
+
+        material_root = build_root / "keyring-material"
+        material = material_root / "cambonos.gpg"
+        trusted = material_root / "cambonos-trusted"
+        revoked = material_root / "cambonos-revoked"
+        if not material.is_file() or not trusted.is_file() or not revoked.is_file():
+            raise CambonosError(f"{channel}: falta material de cambonos-keyring")
+        _all_fprs, signing_fprs, signing_primaries = _fingerprints(material)
+        if expected_fingerprint not in signing_fprs:
+            raise CambonosError(
+                f"{channel}: cambonos-keyring no contiene la subclave de firma configurada"
+            )
+        signing_primary = signing_primaries.get(expected_fingerprint)
+        trust_text = trusted.read_text(errors="replace")
+        if not signing_primary or not re.search(rf"(?m)^{signing_primary}:6:", trust_text):
+            raise CambonosError(
+                f"{channel}: cambonos-trusted no concede ownertrust ultimate (6) "
+                "a la clave primaria"
+            )
+        channel_manifests[channel] = build_manifest
+
+    if previous_manifest_path is not None:
+        testing_material = testing_root / "keyring-material"
+        verify_previous_manifest_signature(
+            previous_manifest_path,
+            previous_manifest_signature_path,
+            testing_material / "cambonos.gpg",
+            testing_material / "cambonos-trusted",
+        )
+        previous = load_previous_manifest(previous_manifest_path)
+        validate_source_version_policy(channel_manifests, previous, image)
+
+    if not private_key_text.strip() or not passphrase:
+        raise CambonosError("faltan CAMBONOS_SIGNING_KEY o CAMBONOS_SIGNING_PASSPHRASE")
 
     if output_site.exists():
         shutil.rmtree(output_site)
@@ -184,61 +240,13 @@ def sign_and_create_site(
                     "en CAMBONOS_SIGNING_FINGERPRINT"
                 )
 
-            channel_roots = {"testing": testing_root, "stable": stable_root}
-            expected_commits = {
-                "testing": expected_testing_commit,
-                "stable": expected_stable_commit,
-            }
-            channel_manifests: dict[str, dict] = {}
-
             for channel, build_root in channel_roots.items():
-                build_manifest = verify_build_manifest(
-                    build_root / "build-manifest.json",
-                    build_root / "packages",
-                )
-                if build_manifest.get("channel") != channel:
-                    raise CambonosError(f"manifiesto recibido para el canal incorrecto: {channel}")
-                if build_manifest.get("commit") != expected_commits[channel]:
-                    raise CambonosError(
-                        f"{channel}: el artefacto procede de {build_manifest.get('commit')}, "
-                        f"pero se esperaba {expected_commits[channel]}"
-                    )
-                expected_branch = "dev" if channel == "testing" else "main"
-                if build_manifest.get("branch") != expected_branch:
-                    raise CambonosError(f"{channel}: rama de origen incorrecta")
-                if build_manifest.get("architecture") != "x86_64":
-                    raise CambonosError(f"{channel}: arquitectura incorrecta")
-                if build_manifest.get("image") != image:
-                    raise CambonosError(f"{channel}: imagen de construcción distinta de la configurada")
-                if "cambonos-keyring" not in build_manifest.get("packages", {}):
-                    raise CambonosError(f"{channel}: falta cambonos-keyring")
-
+                build_manifest = channel_manifests[channel]
                 for name, record in build_manifest["packages"].items():
                     archive = build_root / "packages" / record["package_file"]
                     _sign_file(archive, expected_fingerprint, gnupghome, passphrase_file)
                     record["signature_file"] = archive.name + ".sig"
                     record["signature_hash"] = sha256_file(Path(str(archive) + ".sig"))
-
-                material_root = build_root / "keyring-material"
-                material = material_root / "cambonos.gpg"
-                trusted = material_root / "cambonos-trusted"
-                revoked = material_root / "cambonos-revoked"
-                if not material.is_file() or not trusted.is_file() or not revoked.is_file():
-                    raise CambonosError(f"{channel}: falta material de cambonos-keyring")
-                _all_fprs, signing_fprs, signing_primaries = _fingerprints(material)
-                if expected_fingerprint not in signing_fprs:
-                    raise CambonosError(
-                        f"{channel}: cambonos-keyring no contiene la subclave de firma configurada"
-                    )
-                signing_primary = signing_primaries.get(expected_fingerprint)
-                trust_text = trusted.read_text(errors="replace")
-                if not signing_primary or not re.search(
-                    rf"(?m)^{signing_primary}:6:", trust_text
-                ):
-                    raise CambonosError(
-                        f"{channel}: cambonos-trusted no concede ownertrust ultimate (6) "
-                        "a la clave primaria"
-                    )
 
                 repository = output_site / channel / "x86_64"
                 create_repository(build_root, repository, channel, image)
@@ -284,20 +292,6 @@ def sign_and_create_site(
                 _sign_file(
                     channel_manifest_path, expected_fingerprint, gnupghome, passphrase_file
                 )
-                channel_manifests[channel] = build_manifest
-
-            if bool(previous_manifest_path) != bool(previous_manifest_signature_path):
-                raise CambonosError("deben proporcionarse juntos el manifiesto anterior y su firma")
-            if previous_manifest_path is not None:
-                testing_material = testing_root / "keyring-material"
-                verify_previous_manifest_signature(
-                    previous_manifest_path,
-                    previous_manifest_signature_path,
-                    testing_material / "cambonos.gpg",
-                    testing_material / "cambonos-trusted",
-                )
-                previous = load_previous_manifest(previous_manifest_path)
-                validate_binary_immutability(channel_manifests, previous)
 
             write_site_metadata(output_site, channel_manifests, pages_url)
             global_manifest_path = output_site / "metadata" / "manifest.json"

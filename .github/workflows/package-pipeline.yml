@@ -128,7 +128,7 @@ jobs:
           fi
           python3 scripts/cambonos.py "${args[@]}"
 
-      - name: Upload verified previous manifest for binary immutability check
+      - name: Upload verified previous manifest for source version policy
         if: steps.previous.outputs.bootstrap == 'false'
         uses: actions/upload-artifact@v7.0.2
         with:

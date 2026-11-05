@@ -80,7 +80,8 @@ Cualquier cambio en los archivos de un paquete debe incrementar `pkgrel` o `pkgv
 - Cambio de fuente sin incremento de versión: rechazado.
 - Retroceso de versión según `vercmp`: rechazado.
 - Paquete nuevo o eliminado: permitido.
-- Cambio del SHA256 del binario con la misma versión respecto a la publicación anterior: rechazado; debe incrementarse la versión.
+- Reconstrucción de la misma fuente y versión con un SHA256 binario diferente: permitida. El entorno rolling puede producir artefactos distintos sin que haya cambiado el contenido fuente.
+- `source_hash` determina la política de versionado; `package_hash` verifica la integridad y permite identificar el artefacto concreto publicado.
 
 `stable` y `testing` se comparan de forma independiente. Es válido que un paquete tenga versiones distintas en ambos canales.
 

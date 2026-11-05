@@ -1,6 +1,6 @@
 pkgname=cambonos-branding
 pkgver=0.1.0
-pkgrel=5
+pkgrel=6
 pkgdesc="CambonOS visual identity assets"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
@@ -33,7 +33,7 @@ package() {
   # Compatibility paths used by desktop icon themes and existing consumers.
   install -d "$icon_dir" "$pixmaps_dir"
   ln -s ../../../../cambonos/branding/cambonos-icon.svg \
-    "$icon_dir/cambonos.svg"
+    "$icon_dir/cambonos-logo.svg"
   ln -s ../cambonos/branding/cambonos-icon.svg \
     "$pixmaps_dir/cambonos-logo.svg"
   ln -s ../cambonos/branding/cambonos-text.svg \

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,7 +9,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from cambonos_lib.site import generate_directory_indexes, write_index
+from cambonos_lib.site import generate_directory_indexes, write_index, write_site_metadata, verify_site
+from cambonos_lib.common import CambonosError, sha256_file
 
 
 class DirectoryIndexTests(unittest.TestCase):
@@ -88,6 +90,115 @@ class DirectoryIndexTests(unittest.TestCase):
             empty.mkdir()
             generate_directory_indexes(site)
             self.assertIn("This directory is empty.", (empty / "index.html").read_text())
+
+
+class SiteVerificationTests(unittest.TestCase):
+    def _site(self, root: Path):
+        package_name = "sample-1-1-any.pkg.tar.zst"
+        for channel, branch, section in (
+            ("stable", "main", "cambonos"),
+            ("testing", "dev", "cambonos-testing"),
+        ):
+            repository = root / channel / "x86_64"
+            repository.mkdir(parents=True)
+            archive = repository / package_name
+            archive.write_bytes((channel + " package").encode())
+            signature = Path(str(archive) + ".sig")
+            signature.write_bytes((channel + " signature").encode())
+            for filename in (
+                f"{section}.db", f"{section}.db.sig",
+                f"{section}.db.tar.gz", f"{section}.db.tar.gz.sig",
+                f"{section}.files", f"{section}.files.sig",
+                f"{section}.files.tar.gz", f"{section}.files.tar.gz.sig",
+            ):
+                (repository / filename).write_bytes(filename.encode())
+            record = {
+                "version": "1-1", "source_hash": "a" * 64,
+                "package_hash": sha256_file(archive),
+                "package_file": package_name,
+                "signature_hash": sha256_file(signature),
+            }
+            channel_manifest = root / channel / "manifest.json"
+            channel_manifest.write_text("{}")
+            Path(str(channel_manifest) + ".sig").write_bytes(b"manifest signature")
+            (root / channel / "index.html").write_text("index")
+            (repository / "index.html").write_text("index")
+            if channel == "stable":
+                stable_record = record
+            else:
+                testing_record = record
+        metadata = root / "metadata"
+        metadata.mkdir()
+        (metadata / "manifest.json").write_text(json.dumps({
+            "channels": {
+                "stable": {"packages": {"sample": stable_record}},
+                "testing": {"packages": {"sample": testing_record}},
+            }
+        }))
+        Path(str(metadata / "manifest.json") + ".sig").write_bytes(b"global signature")
+        (metadata / "index.html").write_text("index")
+        (root / "index.html").write_text("landing")
+
+    def test_verify_site_accepts_complete_consistent_tree(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            site = Path(temporary)
+            self._site(site)
+            verify_site(site)
+
+    def test_verify_site_rejects_package_hash_mismatch(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            site = Path(temporary)
+            self._site(site)
+            (site / "stable" / "x86_64" / "sample-1-1-any.pkg.tar.zst").write_bytes(b"tampered")
+            with self.assertRaisesRegex(CambonosError, "SHA256 incorrecto"):
+                verify_site(site)
+
+    def test_verify_site_rejects_missing_package_signature(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            site = Path(temporary)
+            self._site(site)
+            (site / "testing" / "x86_64" / "sample-1-1-any.pkg.tar.zst.sig").unlink()
+            with self.assertRaisesRegex(CambonosError, "falta la firma"):
+                verify_site(site)
+
+    def test_verify_site_rejects_package_set_mismatch(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            site = Path(temporary)
+            self._site(site)
+            (site / "stable" / "x86_64" / "unexpected-1-1-any.pkg.tar.zst").write_bytes(b"extra")
+            with self.assertRaisesRegex(CambonosError, "no coinciden con el manifiesto"):
+                verify_site(site)
+
+    def test_verify_site_rejects_missing_repository_database_member(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            site = Path(temporary)
+            self._site(site)
+            (site / "stable" / "x86_64" / "cambonos.files.tar.gz.sig").unlink()
+            with self.assertRaisesRegex(CambonosError, "falta el archivo de repositorio"):
+                verify_site(site)
+
+    def test_verify_site_rejects_symlinks(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            site = Path(temporary)
+            self._site(site)
+            (site / "stable" / "x86_64" / "link").symlink_to("sample-1-1-any.pkg.tar.zst")
+            with self.assertRaisesRegex(CambonosError, "enlaces simbólicos"):
+                verify_site(site)
+
+    def test_write_site_metadata_requires_both_channels(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaises(CambonosError):
+                write_site_metadata(Path(temporary), {"stable": {}}, "https://example.invalid")
+
+    def test_write_site_metadata_requires_https(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            channels = {
+                name: {"branch": branch, "commit": "a" * 40, "packages": {},
+                       "build_environment": {}, "image": "arch-image"}
+                for name, branch in (("stable", "main"), ("testing", "dev"))
+            }
+            with self.assertRaises(CambonosError):
+                write_site_metadata(Path(temporary), channels, "http://example.invalid")
 
 
 if __name__ == "__main__":
