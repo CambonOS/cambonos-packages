@@ -338,14 +338,14 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Confirmar que `/etc/default/grub` no forma parte del paquete.
 - [ ] Confirmar que `/etc/default/grub.d/60-cambonos.cfg` está en `backup`.
 - [ ] Validar el tema y todos los recursos referenciados; revisar visualmente en GRUB UEFI y BIOS cuando estén disponibles.
-- [ ] Confirmar que `theme.txt` contiene una sola definición de menú y cuenta atrás, usa la paleta CambonOS y no conserva colores heredados de Vimix.
+- [ ] Confirmar que `theme.txt` contiene una sola definición de menú y cuenta atrás, usa la paleta CambonOS, separa iconos y texto con `item_icon_space = 12` y no conserva colores heredados de Vimix.
 - [ ] Confirmar atribución de Vimix, GPL-3.0, licencia de Unifont y excepción de incrustación distribuidas.
 
 ### Configuración y multiboot
 - [ ] El drop-in conserva IPv6 y los parámetros `splash loglevel=3`.
 - [ ] `GRUB_GFXMODE=auto`; no se define `GRUB_GFXPAYLOAD_LINUX`.
 - [ ] `GRUB_DISABLE_OS_PROBER=false` y `os-prober` detecta otras instalaciones en una VM de prueba multiboot.
-- [ ] Se conservan timeout/menu, módulos GPT/MBR, desactivación de recovery y `BootNext`.
+- [ ] Se conservan timeout/menu y módulos GPT/MBR; las opciones avanzadas aparecen sin submenú, recovery está habilitado y `BootNext` desactivado.
 - [ ] Las modificaciones locales al drop-in sobreviven a actualización o generan `.pacnew` según la política de pacman.
 
 ### Regeneración y ciclo de vida

@@ -28,7 +28,7 @@ La paleta del tema usa azul noche (`#061C31`) como fondo, blanco (`#F7F5EC`) par
 - `GRUB_GFXMODE=auto`; no se fuerza una resolución ni se conserva el modo gráfico del kernel.
 - IPv6 permanece habilitado. Los parámetros de kernel predeterminados son `splash loglevel=3`.
 - `os-prober` está habilitado para sistemas multiboot.
-- Las entradas de recuperación y `BootNext` están deshabilitadas.
+- Las opciones avanzadas se muestran en el menú principal, sin submenú, y las entradas de recuperación están habilitadas; `BootNext` permanece deshabilitado.
 - Se precargan módulos GPT y MBR.
 
 El archivo de configuración principal `/etc/default/grub` pertenece a `grub` y no se reemplaza. Los administradores pueden modificar el drop-in; pacman preserva cambios locales y puede generar `.pacnew`.
