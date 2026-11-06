@@ -4,7 +4,7 @@ palette = "cambonos"
 
 add_newline = true
 command_timeout = 500
-scan_timeout = 30
+scan_timeout = 250
 
 # First line: directory and Git context on the left; runtime, identity and
 # package metadata on the right.
