@@ -289,15 +289,15 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Stable apunta a `https://mirror.cambonos.org/stable/$arch`.
 - [ ] Testing está comentado por defecto y apunta al canal `/testing/$arch`.
 - [ ] Ambos bloques utilizan `SigLevel = Required TrustedOnly`.
-- [ ] Confirmar dependencias obligatorias (`bash`, `coreutils`, `diffutils`, `gawk`, `cambonos-keyring`).
+- [x] Confirmar dependencias obligatorias (`bash`, `coreutils`, `diffutils`, `gawk`, `cambonos-keyring`) en `.PKGINFO` e instalación de `0.1.0-2`.
 - [ ] Confirmar `backup` de ambos ficheros de configuración.
 - [ ] Las opciones diferenciales son exactamente `Color`, `CheckSpace`, `VerbosePkgLists`, `ParallelDownloads = 3` e `ILoveCandy`.
 - [ ] No se duplican `HoldPkg`, `Architecture`, `SigLevel` ni `LocalFileSigLevel`.
 - [ ] No se define `DownloadUser` ni `DisableSandbox`.
 
 ### Helper `manage-pacman-config`
-- [ ] `--ensure` inserta el Include de opciones dentro de `[options]` y el de repositorios al final.
-- [ ] `--ensure` repetido es idempotente.
+- [x] `--ensure` inserta el Include de opciones dentro de `[options]` y el de repositorios al final.
+- [x] `--ensure` repetido es idempotente.
 - [ ] `--ensure` repara ambos bloques administrados ausentes.
 - [ ] Un Include manual de opciones se conserva y no se duplica.
 - [ ] Un Include manual de repositorios se conserva y no se duplica.
@@ -314,18 +314,18 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 
 ### Pacman, hooks y ciclo de vida
 - [ ] Instalar `cambonos-keyring` desde fuente local confiable e inicializar/popular el keyring.
-- [ ] Instalar `cambonos-pacman` y confirmar ambos bloques administrados.
-- [ ] Ejecutar `pacman-conf` y verificar opciones efectivas, especialmente `ParallelDownloads = 3`.
-- [ ] Verificar que `pacman-conf --repo-list` reconoce `cambonos`.
-- [ ] Habilitar testing en una VM de prueba y verificar `cambonos-testing`.
-- [ ] Ejecutar `pacman -Syy` y comprobar descarga/verificación de bases de datos.
+- [x] Instalar `cambonos-pacman` y confirmar ambos bloques administrados.
+- [x] Ejecutar `pacman-conf` y verificar opciones efectivas, especialmente `ParallelDownloads = 3`.
+- [x] Verificar que `pacman-conf --repo-list` reconoce `cambonos`.
+- [x] Habilitar testing en una VM de prueba y verificar `cambonos-testing`.
+- [x] Ejecutar `pacman -Syy` y comprobar descarga/verificación de bases de datos.
 - [ ] Simular actualización de `pacman.conf` y comprobar hook ALPM.
 - [ ] Comprobar comportamiento con `.pacnew` de ambos ficheros de configuración.
 - [ ] Desinstalar `cambonos-pacman` y comprobar retirada de los bloques administrados.
 - [ ] Confirmar preservación de otros repositorios, opciones y comentarios.
 - [ ] Confirmar que los Include manuales permanecen tras la desinstalación.
 - [ ] Probar actualización/reemplazo desde `cambonos-repo`.
-- [ ] `pacman -Qkk cambonos-pacman` sin daños inesperados.
+- [x] `pacman -Qkk cambonos-pacman` sin daños inesperados.
 
 ## 9. cambonos-grub
 
@@ -452,14 +452,18 @@ Una casilla solo debe marcarse cuando exista evidencia reproducible (log, salida
 
 ### Construcción, instalación y ciclo de vida
 
-- [ ] No se construyeron paquetes con `makepkg`; `Docker`, `Podman` y `namcap` no están disponibles en el anfitrión. Las instalaciones usaron los artefactos firmados del mirror `testing`, publicados para el commit exacto indicado arriba.
+- [ ] No se construyeron paquetes con `makepkg`; `Docker`, `Podman` y `namcap` no están disponibles en el anfitrión. Las instalaciones usaron los artefactos firmados del mirror `testing`, publicados para los commits exactos registrados en cada ejecución.
 - [x] Las cinco firmas del baseline `stable` (branding `0.1.0-3`, fastfetch `0.1.0-10`, keyring `0.1.0-2`, release `0.1.0-4`, repo `0.1.0-2`) verificaron con la clave CambonOS.
 - [x] `pacman -Syu` actualizó la base Arch (dos paquetes), instaló el baseline stable y luego actualizó a `testing`: branding `0.1.0-3` → `0.1.1-3`, fastfetch `0.1.0-10` → `0.1.0-14`, keyring `0.1.0-2` → `0.1.0-3`, release `0.1.0-4` → `0.1.0-8`; `cambonos-repo` fue reemplazado por `cambonos-pacman`. GRUB, Plymouth, shell-prompt y Zsh se instalaron por primera vez.
-- [x] Se reinstalaron los nueve paquetes de `testing`; versiones finales: branding `0.1.1-3`, fastfetch `0.1.0-14`, grub `0.1.0-8`, keyring `0.1.0-3`, pacman `0.1.0-1`, plymouth `0.1.0-3`, release `0.1.0-8`, shell-prompt `0.1.0-5`, zsh `0.1.0-3`.
+- [x] Se reinstalaron los nueve paquetes de `testing`; versiones finales tras la primera ejecución: branding `0.1.1-3`, fastfetch `0.1.0-14`, grub `0.1.0-8`, keyring `0.1.0-3`, pacman `0.1.0-1`, plymouth `0.1.0-3`, release `0.1.0-8`, shell-prompt `0.1.0-5`, zsh `0.1.0-3`.
 - [x] `cambonos-fastfetch` mostró la salida CambonOS; `fc-match 'CambonOS Symbols'` seleccionó la fuente CambonOS; `plymouth-set-default-theme` devolvió `cambonos`; el fondo instalado es PNG de 3840 × 2160.
 - [x] Los arranques de prueba de Bash y Zsh ejecutaron Fastfetch y terminaron con código 0. Se ejecutaron sin TTY; no validan interacción visual ni todos los modos login/no-login.
-- [ ] Revisar los `.pacnew` que generó la actualización Arch: `/etc/pacman.d/mirrorlist.pacnew`, `/etc/fstab.pacnew`, dos perfiles TPM2 y `/etc/resolv.conf.pacnew`. No se modificaron.
-- **Incidencia detectada y corrección solicitada:** el helper de `cambonos-pacman` usa `cmp`, pero `0.1.0-1` no declaraba `diffutils`. En la VM mínima, el primer scriptlet mostró `cmp: command not found`; se instaló `diffutils 3.12-2` manualmente para completar las pruebas de esa revisión. La corrección añade la dependencia y aumenta `pkgrel` a `2`; queda pendiente construir e instalar `0.1.0-2` para validar el artefacto corregido.
+- [ ] Revisar los `.pacnew` presentes en la VM restaurada: `/etc/pacman.d/mirrorlist.pacnew`, `/etc/fstab.pacnew`, dos perfiles TPM2 y `/etc/resolv.conf.pacnew`. Se compararon con sus archivos activos: los cinco difieren. No se modificaron; requieren revisión del administrador.
+- [x] Validación posterior de `cambonos-pacman 0.1.0-2`, publicada en `testing` para el commit `1a75c1dbc92f9018c686ec5b683a238e7f578811`: la firma detached verificó correctamente y `.PKGINFO` declara `diffutils` junto a `bash`, `coreutils`, `gawk` y `cambonos-keyring`.
+- [x] En `arch-pruebas`, actualización `0.1.0-1` → `0.1.0-2` e instalación repetida de `0.1.0-2` completadas sin errores de scriptlet. `pacman -Qi` registra `diffutils` como dependencia del paquete; `pacman -Qkk cambonos-pacman` informa 0 archivos alterados.
+- [x] `/usr/lib/cambonos-pacman/manage-pacman-config --ensure` se ejecutó dos veces después de actualizar; el SHA256 de `/etc/pacman.conf` permaneció idéntico.
+- [x] Tras restaurar la snapshot limpia, `diffutils` no estaba instalado. La transacción autorizada `pacman -Syu cambonos-pacman` instaló `diffutils 3.12-2` como dependencia de `cambonos-pacman`; `pacman -Qi diffutils` confirmó `Required By: cambonos-pacman` y `Install Reason: Installed as a dependency for another package`.
+- [ ] No se construyó localmente con `makepkg` el `PKGBUILD` de `cambonos-pacman 0.1.0-2`; se verificó e instaló el artefacto firmado publicado.
 - [ ] En `arch-pruebas` no se validó el arranque real de GRUB/Plymouth: la VM no tiene kernel ni presets de mkinitcpio; allí solo se comprobaron instalación, scriptlets y tema seleccionado. Las pruebas visuales/funcionales realizadas por el usuario están registradas como validadas en las secciones de GRUB y Plymouth. No se ejecutó `grub-install` ni se alteró `/boot` en esta VM.
 
 ### Pruebas que requieren intervención manual
@@ -469,5 +473,17 @@ Una casilla solo debe marcarse cuando exista evidencia reproducible (log, salida
 - [x] Probar GRUB en UEFI/BIOS y multiboot; probar Plymouth durante el arranque, con cifrado, teclado, varios monitores y transición al display manager; validación confirmada por el usuario.
 - [ ] Abrir sesiones con TTY real de Bash y Fish, probar login/no-login y no interactivo, `CAMBONOS_NO_FASTFETCH=1` y la salida visual de sus integraciones.
 - [x] Validar sesiones y comportamiento interactivo de Zsh; validación confirmada por el usuario.
-- [ ] Probar rechazo de firma inválida/clave no confiable y la recuperación de keyring en un cliente aislado; no ensayar rotación ni revocación en producción.
+- [x] En la VM restaurada, pacman rechazó un paquete temporal con su firma detached alterada; no instaló el paquete.
+- [ ] Probar firma válida con clave no confiable y recuperación del keyring en un cliente aislado; no ensayar rotación ni revocación en producción.
 - [ ] Revisar las diferencias de los archivos `backup` detectados por `pacman -Qkk` y confirmar que las pruebas no sustituyen cambios administrativos.
+
+### Revalidación tras restaurar la snapshot (2026-11-07)
+
+- Snapshot inicial: Arch `x86_64`, sin paquetes CambonOS ni `diffutils`; la clave CambonOS seguía presente y confiable. No había kernel ni GRUB en `/boot`.
+- [x] `pacman -Syu cambonos-pacman` instaló exactamente `diffutils`, `cambonos-keyring` y `cambonos-pacman 0.1.0-2`, y actualizó `lz4` y `ca-certificates-mozilla`; no eliminó paquetes. `diffutils` quedó instalado como dependencia de `cambonos-pacman`.
+- [x] Se reinstaló `cambonos-pacman 0.1.0-2`; scriptlet y hooks terminaron sin errores.
+- [x] Firma detached alterada en un directorio temporal: pacman rechazó el paquete (`invalid or corrupted package (PGP signature)`) y no instaló `cambonos-pacman` antes de la transacción válida.
+- [x] Integridad final: `pacman -Qkk cambonos-pacman` informa 0 archivos alterados; versión `0.1.0-2`, dependencia `diffutils` y repositorios `core`, `extra`, `cambonos-testing`, `cambonos` efectivos.
+- [x] `manage-pacman-config --ensure` repetido conservó el mismo SHA256 de `/etc/pacman.conf`; `ParallelDownloads` efectivo es `3`.
+- [ ] Los cinco `.pacnew` (`/etc/fstab.pacnew`, `/etc/pacman.d/mirrorlist.pacnew`, dos perfiles TPM2 y `/etc/resolv.conf.pacnew`) difieren de sus archivos activos. No se editaron; el administrador debe revisarlos.
+- [ ] No se probó una firma de clave no confiable ni recuperación de keyring. No se instaló un kernel ni se validó arranque GRUB/Plymouth; el `/boot` de esta snapshot está vacío.
