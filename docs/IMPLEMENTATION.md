@@ -186,7 +186,7 @@ Los scriptlets regeneran `/boot/grub/grub.cfg` al instalar, actualizar y retirar
 
 ### `cambonos-plymouth`
 
-Proporciona un tema `two-step` con el icono canónico CambonOS, fondo azul noche y barra turquesa. El tema no introduce retardo (`TransitionDuration=0.0`, `ShowDelay=0`) y usa la barra de progreso sin mensajes de instalación o actualización.
+Proporciona un tema `two-step` con el fondo gráfico CambonOS, el icono canónico para diálogos, y barra turquesa. Desactiva las animaciones circulares y mantiene la barra de progreso (`UseAnimation=false`, `UseProgressBar=true`), sin añadir retardo (`TransitionDuration=0.0`, `ShowDelay=0`).
 
 El paquete depende de `plymouth` y `mkinitcpio>=36`. Un drop-in con política `backup` en `/etc/mkinitcpio.conf.d/90-cambonos-plymouth.conf` agrega el hook Plymouth sin reemplazar la configuración principal: se inserta antes de `encrypt`/`sd-encrypt`, o después de `udev`/`systemd` cuando no hay cifrado. Los scriptlets seleccionan el tema al instalar, preservan una elección de tema del administrador durante actualizaciones y restauran el predeterminado al desinstalar si CambonOS sigue seleccionado. Instalar, actualizar o retirar reconstruye los presets presentes; sin presets se informa que hace falta reconstruir tras instalar un kernel.
 

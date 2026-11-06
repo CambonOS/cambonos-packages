@@ -15,33 +15,58 @@ class PlymouthPackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-plymouth", pkgb)
         self.assertIn("pkgver=0.1.0", pkgb)
-        self.assertIn("pkgrel=1", pkgb)
+        self.assertIn("pkgrel=2", pkgb)
         self.assertIn("depends=('plymouth' 'mkinitcpio>=36')", pkgb)
         self.assertIn(
             "backup=('etc/mkinitcpio.conf.d/90-cambonos-plymouth.conf')", pkgb
         )
         self.assertIn('"$pkgdir/usr/share/plymouth/themes/cambonos/"', pkgb)
 
-    def test_all_theme_assets_are_packaged_and_logo_is_canonical_size(self):
+    def test_all_theme_assets_are_packaged_without_spinner_frames(self):
         assets = {path.name for path in THEME.iterdir() if path.is_file()}
+        pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
+        referenced = set(
+            re.findall(r'"\$startdir/files/themes/cambonos/([^"]+)"', pkgb)
+        )
+        self.assertEqual(referenced, assets)
         self.assertIn("cambonos.plymouth", assets)
         self.assertIn("header-image.png", assets)
-        self.assertEqual(len([name for name in assets if name.startswith("throbber-")]), 30)
-        result = subprocess.run(
-            ["file", str(THEME / "header-image.png")],
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("256 x 256", result.stdout)
+        self.assertIn("background.png", assets)
+        self.assertFalse(any(name.startswith(("animation-", "throbber-")) for name in assets))
+        for filename, dimensions in (
+            ("background.png", "1920 x 1080"),
+            ("header-image.png", "256 x 256"),
+        ):
+            result = subprocess.run(
+                ["file", str(THEME / filename)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn(dimensions, result.stdout)
 
-    def test_theme_uses_brand_palette_without_transition_or_show_delay(self):
+    def test_theme_uses_progress_bar_without_spinner(self):
+        theme = (THEME / "cambonos.plymouth").read_text(encoding="utf-8")
+        boot = theme.split("[boot-up]", 1)[1].split("[shutdown]", 1)[0]
+        self.assertIn("ScaleBackgroundImage=true", theme)
+        self.assertIn("UseAnimation=false", boot)
+        self.assertIn("UseProgressBar=true", boot)
+        self.assertNotIn("UseAnimation=true", theme)
+
+    def test_background_and_palette_use_cambonos_brand(self):
         theme = (THEME / "cambonos.plymouth").read_text(encoding="utf-8")
         for value in (
+            "ImageDir=/usr/share/plymouth/themes/cambonos",
             "BackgroundStartColor=0x061C31",
             "BackgroundEndColor=0x061C31",
             "ProgressBarForegroundColor=0x70E7E6",
+        ):
+            self.assertIn(value, theme)
+
+    def test_theme_uses_immediate_transition_without_show_delay(self):
+        theme = (THEME / "cambonos.plymouth").read_text(encoding="utf-8")
+        for value in (
             "Transition=none",
             "TransitionDuration=0.0",
             "UseProgressBar=true",

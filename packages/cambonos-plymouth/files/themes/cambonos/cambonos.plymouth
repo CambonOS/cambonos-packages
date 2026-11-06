@@ -5,6 +5,7 @@ ModuleName=two-step
 
 [two-step]
 ImageDir=/usr/share/plymouth/themes/cambonos
+ScaleBackgroundImage=true
 BackgroundStartColor=0x061C31
 BackgroundEndColor=0x061C31
 HorizontalAlignment=0.5
@@ -21,7 +22,7 @@ MessageBelowAnimation=false
 DialogClearsFirmwareBackground=true
 
 [boot-up]
-UseAnimation=true
+UseAnimation=false
 UseProgressBar=true
 ProgressBarShowPercentComplete=false
 UseEndAnimation=false
@@ -37,25 +38,25 @@ UseProgressBar=false
 UseEndAnimation=false
 
 [updates]
-UseAnimation=true
+UseAnimation=false
 UseProgressBar=true
 ProgressBarShowPercentComplete=true
 SuppressMessages=true
 
 [system-upgrade]
-UseAnimation=true
+UseAnimation=false
 UseProgressBar=true
 ProgressBarShowPercentComplete=true
 SuppressMessages=true
 
 [firmware-upgrade]
-UseAnimation=true
+UseAnimation=false
 UseProgressBar=true
 ProgressBarShowPercentComplete=true
 SuppressMessages=true
 
 [system-reset]
-UseAnimation=true
+UseAnimation=false
 UseProgressBar=true
 ProgressBarShowPercentComplete=true
 SuppressMessages=true

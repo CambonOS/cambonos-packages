@@ -362,8 +362,8 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 ### Construcción y configuración
 - [ ] `makepkg` termina correctamente y el paquete declara `plymouth` y `mkinitcpio>=36`.
 - [ ] Todos los recursos de `files/themes/cambonos/` se instalan en `/usr/share/plymouth/themes/cambonos/`.
-- [ ] El icono de cabecera coincide visualmente con el recurso canónico de branding y mide 256 × 256.
-- [ ] El tema usa el fondo `#061C31`, la barra `#70E7E6` y transición inmediata.
+- [ ] El tema empaqueta el fondo Plymouth como PNG de 1920 × 1080, escala la imagen y conserva el icono de marca para los diálogos.
+- [ ] El tema usa el fondo CambonOS, la barra `#70E7E6`, desactiva el spinner y conserva solo la barra de progreso durante el arranque.
 - [ ] La configuración conserva `ShowDelay=0`; el parámetro `splash` activa el tema sin una espera añadida.
 - [ ] `quiet` está configurado en GRUB para ocultar mensajes de consola; comprobar el parámetro equivalente en otros cargadores.
 

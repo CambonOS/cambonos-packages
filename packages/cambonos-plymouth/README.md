@@ -7,10 +7,12 @@ administrador.
 
 ## Diseño
 
-El tema `two-step` usa el azul noche `#061C31`, turquesa `#70E7E6` y una barra
-de progreso discreta. El logotipo es el icono canónico de CambonOS. La
-transición es inmediata (`TransitionDuration=0.0`) y Plymouth conserva su
-`ShowDelay=0`, por lo que el tema no añade una espera al arranque.
+El tema `two-step` usa el fondo gráfico de CambonOS, el azul noche `#061C31`,
+turquesa `#70E7E6` y una barra de progreso discreta. Mantiene el logotipo
+canónico para los diálogos de desbloqueo, pero desactiva el spinner circular y
+conserva únicamente la barra durante el arranque. La transición es inmediata
+(`TransitionDuration=0.0`) y Plymouth conserva su `ShowDelay=0`, por lo que el
+tema no añade una espera al arranque.
 
 GRUB añade `splash quiet` a sus parámetros predeterminados para activar el
 splash y ocultar los mensajes de consola. Si se usa otro cargador, hay que
