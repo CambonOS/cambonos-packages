@@ -242,6 +242,7 @@ class PacmanIntegrationTests(unittest.TestCase):
         self.assertIn("provides=('cambonos-repo')", pkgb)
         self.assertIn("conflicts=('cambonos-repo')", pkgb)
         self.assertIn("replaces=('cambonos-repo')", pkgb)
+        self.assertIn("depends=('bash' 'coreutils' 'diffutils' 'gawk' 'cambonos-keyring')", pkgb)
         self.assertIn("'cambonos-keyring'", pkgb)
         self.assertIn("backup=('etc/pacman.d/cambonos.conf' 'etc/pacman.d/cambonos-options.conf')", pkgb)
         self.assertIn("https://mirror.cambonos.org/stable/$arch", repo_conf)

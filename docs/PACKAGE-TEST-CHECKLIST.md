@@ -79,8 +79,8 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Bash interactivo de login: Fastfetch aparece una vez.
 - [ ] Bash interactivo no-login: Fastfetch aparece una vez.
 - [ ] Bash no interactivo: no aparece Fastfetch.
-- [ ] Zsh interactivo con `cambonos-zsh`: Fastfetch aparece una vez mediante `conf.d`.
-- [ ] Zsh interactivo sin `cambonos-zsh`: no hay integración automática y el fragmento puede cargarse manualmente.
+- [x] Zsh interactivo con `cambonos-zsh`: Fastfetch aparece una vez mediante `conf.d`.
+- [x] Zsh interactivo sin `cambonos-zsh`: no hay integración automática y el fragmento puede cargarse manualmente.
 - [ ] Zsh no interactivo: no aparece Fastfetch.
 - [ ] Fish interactivo: Fastfetch aparece una vez.
 - [ ] Fish no interactivo: no aparece Fastfetch.
@@ -130,8 +130,8 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 ### Integración
 - [ ] Bash interactivo carga Starship una vez.
 - [ ] Bash no interactivo no carga Starship.
-- [ ] Zsh interactivo con `cambonos-zsh` carga Starship desde `conf.d`.
-- [ ] Zsh sin `cambonos-zsh` no tiene integración automática y puede integrarse manualmente desde `~/.zshrc`.
+- [x] Zsh interactivo con `cambonos-zsh` carga Starship desde `conf.d`.
+- [x] Zsh sin `cambonos-zsh` no tiene integración automática y puede integrarse manualmente desde `~/.zshrc`.
 - [ ] Fish interactivo carga Starship desde `vendor_conf.d`.
 - [ ] Fish no interactivo no carga Starship.
 - [ ] La integración no depende de que Zsh o Fish estén instalados.
@@ -157,33 +157,33 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] No se modifican `/etc/default/useradd`, `/etc/passwd`, root ni shells de usuarios existentes.
 
 ### Configuración y arranque
-- [ ] El helper crea `/etc/zsh/zshrc` si no existe.
-- [ ] El bloque global carga los fragmentos `*.zsh` de `conf.d` en orden lexicográfico.
-- [ ] Los fragmentos base de completions, teclas, historial y plugins están presentes.
-- [ ] `compinit` se inicializa antes de cargar los plugins.
-- [ ] Autosuggestions se carga antes de syntax highlighting.
-- [ ] El modo de edición Emacs está activo.
-- [ ] Home y End mueven el cursor al principio/final de la línea actual.
-- [ ] Delete elimina el carácter bajo el cursor.
-- [ ] PageUp y PageDown buscan en el historial por el prefijo actual.
-- [ ] Historial persistente de 100.000 entradas.
-- [ ] `autocd`, `correct` y aliases acordados funcionan.
-- [ ] No se fuerza `EDITOR` ni se mantiene el alias `tar` que altera su uso normal.
-- [ ] `cambonos-shell-prompt` se carga desde su fragmento Zsh.
-- [ ] Fastfetch se carga si está instalado, sin ser dependencia de Zsh.
-- [ ] Una configuración personal `~/.zshrc` se ejecuta después de la configuración global y puede personalizarla.
-- [ ] Un usuario creado usando `/etc/skel` recibe un `.zshrc` vacío y la configuración global CambonOS sigue cargándose.
+- [x] El helper crea `/etc/zsh/zshrc` si no existe.
+- [x] El bloque global carga los fragmentos `*.zsh` de `conf.d` en orden lexicográfico.
+- [x] Los fragmentos base de completions, teclas, historial y plugins están presentes.
+- [x] `compinit` se inicializa antes de cargar los plugins.
+- [x] Autosuggestions se carga antes de syntax highlighting.
+- [x] El modo de edición Emacs está activo.
+- [x] Home y End mueven el cursor al principio/final de la línea actual.
+- [x] Delete elimina el carácter bajo el cursor.
+- [x] PageUp y PageDown buscan en el historial por el prefijo actual.
+- [x] Historial persistente de 100.000 entradas.
+- [x] `autocd`, `correct` y aliases acordados funcionan.
+- [x] No se fuerza `EDITOR` ni se mantiene el alias `tar` que altera su uso normal.
+- [x] `cambonos-shell-prompt` se carga desde su fragmento Zsh.
+- [x] Fastfetch se carga si está instalado, sin ser dependencia de Zsh.
+- [x] Una configuración personal `~/.zshrc` se ejecuta después de la configuración global y puede personalizarla.
+- [x] Un usuario creado usando `/etc/skel` recibe un `.zshrc` vacío y la configuración global CambonOS sigue cargándose.
 
 ### Gestor y ciclo de vida
-- [ ] `install` crea el bloque sin borrar contenido preexistente.
-- [ ] `repair` es idempotente.
-- [ ] `remove` retira solo el bloque administrado.
-- [ ] Si el helper creó `/etc/zsh/zshrc` y no queda contenido externo, lo elimina al desinstalar.
-- [ ] Si el archivo existía previamente o contiene contenido externo, lo conserva.
-- [ ] Marcadores incompletos, duplicados o desordenados provocan fallo conservador.
-- [ ] Un enlace simbólico o directorio en `/etc/zsh/zshrc` no se reemplaza.
-- [ ] El helper utiliza `/run/lock/cambonos-shell-integration.lock`.
-- [ ] `pacman -Qkk cambonos-zsh` no detecta daños inesperados.
+- [x] `install` crea el bloque sin borrar contenido preexistente.
+- [x] `repair` es idempotente.
+- [x] `remove` retira solo el bloque administrado.
+- [x] Si el helper creó `/etc/zsh/zshrc` y no queda contenido externo, lo elimina al desinstalar.
+- [x] Si el archivo existía previamente o contiene contenido externo, lo conserva.
+- [x] Marcadores incompletos, duplicados o desordenados provocan fallo conservador.
+- [x] Un enlace simbólico o directorio en `/etc/zsh/zshrc` no se reemplaza.
+- [x] El helper utiliza `/run/lock/cambonos-shell-integration.lock`.
+- [x] `pacman -Qkk cambonos-zsh` no detecta daños inesperados.
 
 
 
@@ -289,7 +289,7 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Stable apunta a `https://mirror.cambonos.org/stable/$arch`.
 - [ ] Testing está comentado por defecto y apunta al canal `/testing/$arch`.
 - [ ] Ambos bloques utilizan `SigLevel = Required TrustedOnly`.
-- [ ] Confirmar dependencia de `cambonos-keyring`.
+- [ ] Confirmar dependencias obligatorias (`bash`, `coreutils`, `diffutils`, `gawk`, `cambonos-keyring`).
 - [ ] Confirmar `backup` de ambos ficheros de configuración.
 - [ ] Las opciones diferenciales son exactamente `Color`, `CheckSpace`, `VerbosePkgLists`, `ParallelDownloads = 3` e `ILoveCandy`.
 - [ ] No se duplican `HoldPkg`, `Architecture`, `SigLevel` ni `LocalFileSigLevel`.
@@ -335,48 +335,48 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Confirmar dependencias `grub>=2:2.16`, `os-prober` y `bash`.
 - [ ] Confirmar que `/etc/default/grub` no forma parte del paquete.
 - [ ] Confirmar que `/etc/default/grub.d/60-cambonos.cfg` está en `backup`.
-- [ ] Validar el tema y todos los recursos referenciados; revisar visualmente en GRUB UEFI y BIOS cuando estén disponibles.
+- [x] Validar el tema y todos los recursos referenciados; revisar visualmente en GRUB UEFI y BIOS cuando estén disponibles.
 - [ ] Confirmar que `theme.txt` contiene una sola definición de menú y cuenta atrás, usa la paleta CambonOS, separa iconos y texto con `item_icon_space = 12` y no conserva colores heredados de Vimix.
 - [ ] Confirmar atribución de Vimix, GPL-3.0, licencia de Unifont y excepción de incrustación distribuidas.
 
 ### Configuración y multiboot
-- [ ] El drop-in conserva IPv6 y los parámetros `splash quiet loglevel=3`.
-- [ ] `GRUB_GFXMODE=auto`; no se define `GRUB_GFXPAYLOAD_LINUX`.
-- [ ] `GRUB_DISABLE_OS_PROBER=false` y `os-prober` detecta otras instalaciones en una VM de prueba multiboot.
-- [ ] Se conservan timeout/menu y módulos GPT/MBR; las opciones avanzadas aparecen sin submenú, recovery está habilitado y `BootNext` desactivado.
-- [ ] Las modificaciones locales al drop-in sobreviven a actualización o generan `.pacnew` según la política de pacman.
+- [x] El drop-in conserva IPv6 y los parámetros `splash quiet loglevel=3`.
+- [x] `GRUB_GFXMODE=auto`; no se define `GRUB_GFXPAYLOAD_LINUX`.
+- [x] `GRUB_DISABLE_OS_PROBER=false` y `os-prober` detecta otras instalaciones en una VM de prueba multiboot.
+- [x] Se conservan timeout/menu y módulos GPT/MBR; las opciones avanzadas aparecen sin submenú, recovery está habilitado y `BootNext` desactivado.
+- [x] Las modificaciones locales al drop-in sobreviven a actualización o generan `.pacnew` según la política de pacman.
 
 ### Regeneración y ciclo de vida
-- [ ] El helper no crea `/boot/grub/grub.cfg` si no existe.
-- [ ] El helper rechaza enlaces simbólicos y destinos que no sean archivos regulares.
-- [ ] Instalar/actualizar/retirar un kernel activa el hook `PostTransaction`.
-- [ ] Instalar, actualizar y retirar `cambonos-grub` regenera el menú existente.
-- [ ] La salida generada pasa `grub-script-check`.
-- [ ] Un fallo de regeneración se informa sin ocultarse; se puede ejecutar `grub-mkconfig -o /boot/grub/grub.cfg` manualmente.
-- [ ] No se ejecuta `grub-install` ni se altera la selección de disco o firmware.
-- [ ] Confirmar que `/boot` está montado antes de las pruebas de actualización del kernel.
-- [ ] `pacman -Qkk cambonos-grub` no detecta daños inesperados.
+- [x] El helper no crea `/boot/grub/grub.cfg` si no existe.
+- [x] El helper rechaza enlaces simbólicos y destinos que no sean archivos regulares.
+- [x] Instalar/actualizar/retirar un kernel activa el hook `PostTransaction`.
+- [x] Instalar, actualizar y retirar `cambonos-grub` regenera el menú existente.
+- [x] La salida generada pasa `grub-script-check`.
+- [x] Un fallo de regeneración se informa sin ocultarse; se puede ejecutar `grub-mkconfig -o /boot/grub/grub.cfg` manualmente.
+- [x] No se ejecuta `grub-install` ni se altera la selección de disco o firmware.
+- [x] Confirmar que `/boot` está montado antes de las pruebas de actualización del kernel.
+- [x] `pacman -Qkk cambonos-grub` no detecta daños inesperados.
 
 ## 10. cambonos-plymouth
 
 ### Construcción y configuración
 - [ ] `makepkg` termina correctamente y el paquete declara `plymouth` y `mkinitcpio>=36`.
 - [ ] Todos los recursos de `files/themes/cambonos/` se instalan en `/usr/share/plymouth/themes/cambonos/`.
-- [ ] El tema empaqueta el fondo Plymouth como PNG de 1920 × 1080, escala la imagen y conserva el icono de marca para los diálogos.
-- [ ] El tema usa el fondo CambonOS, la barra `#70E7E6`, desactiva el spinner y conserva solo la barra de progreso durante el arranque.
-- [ ] La configuración conserva `ShowDelay=0`; el parámetro `splash` activa el tema sin una espera añadida.
-- [ ] `quiet` está configurado en GRUB para ocultar mensajes de consola; comprobar el parámetro equivalente en otros cargadores.
+- [ ] El tema empaqueta el fondo Plymouth como PNG de 3840 × 2160, escala la imagen y conserva el icono de marca para los diálogos.
+- [x] El tema usa el fondo CambonOS, la barra `#70E7E6`, desactiva el spinner y conserva solo la barra de progreso durante el arranque.
+- [x] La configuración conserva `ShowDelay=0`; el parámetro `splash` activa el tema sin una espera añadida.
+- [x] `quiet` está configurado en GRUB para ocultar mensajes de consola; comprobar el parámetro equivalente en otros cargadores.
 
 ### mkinitcpio y ciclo de vida
-- [ ] El drop-in se instala en `/etc/mkinitcpio.conf.d/` con política `backup` y no reemplaza `/etc/mkinitcpio.conf`.
-- [ ] Con `udev` o `systemd`, Plymouth se inserta después del hook de init y antes de `encrypt`/`sd-encrypt`.
-- [ ] Sin cifrado, Plymouth se inserta tras `udev`/`systemd`; con un hook preexistente no se duplica.
-- [ ] Revisar presets con `ALL_config`; actualizar los presets antiguos que no carguen drop-ins.
-- [ ] En una VM Arch limpia, instalar con un kernel presente y comprobar selección del tema y regeneración de todos los presets.
-- [ ] Actualizar preservando un tema personalizado y comprobar que el initramfs se reconstruye.
-- [ ] Desinstalar: restaurar el tema predeterminado solo si CambonOS seguía seleccionado, retirar el hook propio y regenerar initramfs.
-- [ ] Probar root cifrado con `encrypt` y `sd-encrypt`, desbloqueo por teclado y fallback de consola.
-- [ ] Comprobar visualmente en UEFI/BIOS y GPU real: aparición temprana, ausencia de líneas de arranque, resolución, varios monitores y transición al display manager.
+- [x] El drop-in se instala en `/etc/mkinitcpio.conf.d/` con política `backup` y no reemplaza `/etc/mkinitcpio.conf`.
+- [x] Con `udev` o `systemd`, Plymouth se inserta después del hook de init y antes de `encrypt`/`sd-encrypt`.
+- [x] Sin cifrado, Plymouth se inserta tras `udev`/`systemd`; con un hook preexistente no se duplica.
+- [x] Revisar presets con `ALL_config`; actualizar los presets antiguos que no carguen drop-ins.
+- [x] En una VM Arch limpia, instalar con un kernel presente y comprobar selección del tema y regeneración de todos los presets.
+- [x] Actualizar preservando un tema personalizado y comprobar que el initramfs se reconstruye.
+- [x] Desinstalar: restaurar el tema predeterminado solo si CambonOS seguía seleccionado, retirar el hook propio y regenerar initramfs.
+- [x] Probar root cifrado con `encrypt` y `sd-encrypt`, desbloqueo por teclado y fallback de consola.
+- [x] Comprobar visualmente en UEFI/BIOS y GPU real: aparición temprana, ausencia de líneas de arranque, resolución, varios monitores y transición al display manager.
 
 ## 11. Validación del repositorio y publicación
 
@@ -423,3 +423,51 @@ Por cada paquete, guardar:
 - Incidencias encontradas y decisión adoptada.
 
 Una casilla solo debe marcarse cuando exista evidencia reproducible (log, salida de comando, captura o resultado de prueba). Las pruebas no ejecutadas deben quedar sin marcar; no inferir su éxito a partir de la suite unitaria.
+
+## 13. Registro de validación de `dev`
+
+### Ejecución del 2026-11-06
+
+- Rama y commit probados: `dev`, `9e75fb15db9c2518e2fdd920326dc8383dbbb309`.
+- Referencia comparada: `main`, `c79c5f90bea97079bdaea80976869b7614e7a2f9`; `dev` contiene 28 commits exclusivos y `main` 4. No se realizó merge.
+- Entorno local: CambonOS rolling, arquitectura `x86_64`; árbol de trabajo limpio.
+- Versiones instaladas en el anfitrión: branding `0.1.1-3`, fastfetch `0.1.0-14`, grub `0.1.0-7`, keyring `0.1.0-3`, pacman `0.1.0-1`, plymouth `0.1.0-2`, release `0.1.0-8`, shell-prompt `0.1.0-5`, zsh `0.1.0-3`.
+- `cambonos-grub` y `cambonos-plymouth` están una revisión por detrás de `dev` (`0.1.0-8` y `0.1.0-3`, respectivamente). No se actualizaron en el anfitrión.
+- Entorno de paquetes: VM Arch `x86_64` `arch-pruebas`, raíz ZFS `local-ssd/subvol-110-disk-0`; el usuario confirmó que es desechable/restaurable. No había kernel, GRUB, mkinitcpio, Plymouth ni presets, y `/boot` estaba vacío. No hay comando `zfs` para comprobar el snapshot independientemente.
+- El manifiesto público de `testing` apunta exactamente al commit de `dev` `9e75fb15db9c2518e2fdd920326dc8383dbbb309` y contiene los nueve paquetes instalados.
+- Las casillas visuales/funcionales de GRUB, Plymouth y Zsh marcadas en sus secciones se basan en la confirmación del usuario de que esas pruebas se realizaron fuera de esta VM; no se atribuyen al ensayo de `arch-pruebas`.
+
+### Comprobaciones automáticas ejecutadas
+
+- [x] `python3 -m unittest discover -s tests -v`: 183 tests, resultado `OK`.
+- [x] `python3 -m compileall -q scripts`: correcto; el bytecode temporal se mantuvo fuera del repositorio.
+- [x] `python3 scripts/cambonos.py validate --source-root . --channel testing --branch dev --commit 9e75fb15db9c2518e2fdd920326dc8383dbbb309`: validación estática correcta para 9 paquetes. No se proporcionó manifiesto anterior, por lo que esta ejecución no valida la política de versiones contra una publicación previa.
+- [x] `bash -n` sobre los archivos `.sh`, `.bash` y `.install` de `packages/`: correcto.
+- [x] `xmllint --noout` sobre los SVG de `packages/`: correcto. Esto no sustituye la comprobación visual de renderizado.
+- [x] `pacman -Syy` sincronizó `core`, `extra`, `cambonos` y `cambonos-testing` bajo la política de firma requerida; la clave CambonOS se verificó contra el fingerprint confirmado independientemente.
+- [x] `pacman -Qkk` después de la reinstalación: 0 archivos alterados en cada uno de los nueve paquetes en `arch-pruebas`.
+- [x] `pacman-conf --repo-list` mostró `core`, `extra`, `cambonos-testing` y `cambonos`; `ParallelDownloads` efectivo fue `3`.
+- [x] El gestor `/usr/lib/cambonos-pacman/manage-pacman-config --ensure` se ejecutó dos veces; el hash de `/etc/pacman.conf` permaneció idéntico.
+- [ ] En el anfitrión, `pacman -Qkk` no encontró archivos de paquete alterados, pero sí diferencias de backup en `/etc/default/grub.d/60-cambonos.cfg`, `/etc/pacman.d/cambonos.conf` y `/etc/skel/.zshrc`. No se sobrescribieron; revisar si son cambios administrativos esperados.
+
+### Construcción, instalación y ciclo de vida
+
+- [ ] No se construyeron paquetes con `makepkg`; `Docker`, `Podman` y `namcap` no están disponibles en el anfitrión. Las instalaciones usaron los artefactos firmados del mirror `testing`, publicados para el commit exacto indicado arriba.
+- [x] Las cinco firmas del baseline `stable` (branding `0.1.0-3`, fastfetch `0.1.0-10`, keyring `0.1.0-2`, release `0.1.0-4`, repo `0.1.0-2`) verificaron con la clave CambonOS.
+- [x] `pacman -Syu` actualizó la base Arch (dos paquetes), instaló el baseline stable y luego actualizó a `testing`: branding `0.1.0-3` → `0.1.1-3`, fastfetch `0.1.0-10` → `0.1.0-14`, keyring `0.1.0-2` → `0.1.0-3`, release `0.1.0-4` → `0.1.0-8`; `cambonos-repo` fue reemplazado por `cambonos-pacman`. GRUB, Plymouth, shell-prompt y Zsh se instalaron por primera vez.
+- [x] Se reinstalaron los nueve paquetes de `testing`; versiones finales: branding `0.1.1-3`, fastfetch `0.1.0-14`, grub `0.1.0-8`, keyring `0.1.0-3`, pacman `0.1.0-1`, plymouth `0.1.0-3`, release `0.1.0-8`, shell-prompt `0.1.0-5`, zsh `0.1.0-3`.
+- [x] `cambonos-fastfetch` mostró la salida CambonOS; `fc-match 'CambonOS Symbols'` seleccionó la fuente CambonOS; `plymouth-set-default-theme` devolvió `cambonos`; el fondo instalado es PNG de 3840 × 2160.
+- [x] Los arranques de prueba de Bash y Zsh ejecutaron Fastfetch y terminaron con código 0. Se ejecutaron sin TTY; no validan interacción visual ni todos los modos login/no-login.
+- [ ] Revisar los `.pacnew` que generó la actualización Arch: `/etc/pacman.d/mirrorlist.pacnew`, `/etc/fstab.pacnew`, dos perfiles TPM2 y `/etc/resolv.conf.pacnew`. No se modificaron.
+- **Incidencia detectada y corrección solicitada:** el helper de `cambonos-pacman` usa `cmp`, pero `0.1.0-1` no declaraba `diffutils`. En la VM mínima, el primer scriptlet mostró `cmp: command not found`; se instaló `diffutils 3.12-2` manualmente para completar las pruebas de esa revisión. La corrección añade la dependencia y aumenta `pkgrel` a `2`; queda pendiente construir e instalar `0.1.0-2` para validar el artefacto corregido.
+- [ ] En `arch-pruebas` no se validó el arranque real de GRUB/Plymouth: la VM no tiene kernel ni presets de mkinitcpio; allí solo se comprobaron instalación, scriptlets y tema seleccionado. Las pruebas visuales/funcionales realizadas por el usuario están registradas como validadas en las secciones de GRUB y Plymouth. No se ejecutó `grub-install` ni se alteró `/boot` en esta VM.
+
+### Pruebas que requieren intervención manual
+
+- [ ] Revisar visualmente branding y Fastfetch en el hardware/resoluciones previstos.
+- [x] Revisar visualmente el tema GRUB y el splash Plymouth en el hardware/resoluciones previstos; validación confirmada por el usuario.
+- [x] Probar GRUB en UEFI/BIOS y multiboot; probar Plymouth durante el arranque, con cifrado, teclado, varios monitores y transición al display manager; validación confirmada por el usuario.
+- [ ] Abrir sesiones con TTY real de Bash y Fish, probar login/no-login y no interactivo, `CAMBONOS_NO_FASTFETCH=1` y la salida visual de sus integraciones.
+- [x] Validar sesiones y comportamiento interactivo de Zsh; validación confirmada por el usuario.
+- [ ] Probar rechazo de firma inválida/clave no confiable y la recuperación de keyring en un cliente aislado; no ensayar rotación ni revocación en producción.
+- [ ] Revisar las diferencias de los archivos `backup` detectados por `pacman -Qkk` y confirmar que las pruebas no sustituyen cambios administrativos.
