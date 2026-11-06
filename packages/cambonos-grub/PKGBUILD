@@ -1,6 +1,6 @@
 pkgname=cambonos-grub
 pkgver=0.1.0
-pkgrel=6
+pkgrel=7
 pkgdesc="CambonOS GRUB configuration and Vimix-derived theme"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"

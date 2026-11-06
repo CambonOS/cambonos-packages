@@ -26,7 +26,7 @@ La paleta del tema usa azul noche (`#061C31`) como fondo, blanco (`#F7F5EC`) par
 
 - Menú visible durante 5 segundos, con CambonOS como distribuidor.
 - `GRUB_GFXMODE=auto`; no se fuerza una resolución ni se conserva el modo gráfico del kernel.
-- IPv6 permanece habilitado. Los parámetros de kernel predeterminados son `splash loglevel=3`.
+- IPv6 permanece habilitado. Los parámetros de kernel predeterminados son `splash quiet loglevel=3`; `quiet` oculta los mensajes de arranque y `splash` activa Plymouth.
 - `os-prober` está habilitado para sistemas multiboot.
 - Las opciones avanzadas se muestran en el menú principal, sin submenú, y las entradas de recuperación están habilitadas; `BootNext` permanece deshabilitado.
 - Se precargan módulos GPT y MBR.

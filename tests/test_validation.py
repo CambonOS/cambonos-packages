@@ -25,6 +25,7 @@ class ValidationTests(unittest.TestCase):
         packages = discover_packages(ROOT)
         for name in (
             "cambonos-release", "cambonos-fastfetch", "cambonos-pacman", "cambonos-grub",
+            "cambonos-plymouth",
         ):
             self.assertEqual(validate_package(packages[name]), [], name)
 

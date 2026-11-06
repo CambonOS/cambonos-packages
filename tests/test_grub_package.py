@@ -15,7 +15,7 @@ class GrubPackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-grub", pkgb)
         self.assertIn("pkgver=0.1.0", pkgb)
-        self.assertIn("pkgrel=6", pkgb)
+        self.assertIn("pkgrel=7", pkgb)
         self.assertIn("'GPL-3.0-only'", pkgb)
         self.assertIn("'GPL-2.0-or-later WITH Font-exception-2.0'", pkgb)
         self.assertIn("'grub>=2:2.16'", pkgb)
@@ -60,7 +60,7 @@ class GrubPackageTests(unittest.TestCase):
     def test_grub_defaults_keep_ipv6_and_multiboot_enabled(self):
         config = (FILES / "defaults" / "60-cambonos.cfg").read_text(encoding="utf-8")
         self.assertIn('GRUB_DISTRIBUTOR="CambonOS"', config)
-        self.assertIn('GRUB_CMDLINE_LINUX_DEFAULT="splash loglevel=3"', config)
+        self.assertIn('GRUB_CMDLINE_LINUX_DEFAULT="splash quiet loglevel=3"', config)
         self.assertIn("GRUB_GFXMODE=auto", config)
         self.assertIn("GRUB_DISABLE_OS_PROBER=false", config)
         self.assertIn("GRUB_DISABLE_SUBMENU=true", config)

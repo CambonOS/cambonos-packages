@@ -184,6 +184,14 @@ El tema de `/usr/share/grub/themes/CambonOS/` deriva de Vimix de Vinceliuice. Ma
 
 Los scriptlets regeneran `/boot/grub/grub.cfg` al instalar, actualizar y retirar el paquete. Un hook `PostTransaction` detecta Install/Upgrade/Remove sobre `usr/lib/modules/*/vmlinuz` y regenera el menú después de cambios de kernel. El helper omite sistemas sin un `grub.cfg` existente y rechaza enlaces simbólicos y rutas no regulares. El paquete no ejecuta `grub-install` ni decide el destino UEFI/BIOS; las ediciones directas en `grub.cfg` se pierden al regenerarlo.
 
+### `cambonos-plymouth`
+
+Proporciona un tema `two-step` con el icono canónico CambonOS, fondo azul noche y barra turquesa. El tema no introduce retardo (`TransitionDuration=0.0`, `ShowDelay=0`) y usa la barra de progreso sin mensajes de instalación o actualización.
+
+El paquete depende de `plymouth` y `mkinitcpio>=36`. Un drop-in con política `backup` en `/etc/mkinitcpio.conf.d/90-cambonos-plymouth.conf` agrega el hook Plymouth sin reemplazar la configuración principal: se inserta antes de `encrypt`/`sd-encrypt`, o después de `udev`/`systemd` cuando no hay cifrado. Los scriptlets seleccionan el tema al instalar, preservan una elección de tema del administrador durante actualizaciones y restauran el predeterminado al desinstalar si CambonOS sigue seleccionado. Instalar, actualizar o retirar reconstruye los presets presentes; sin presets se informa que hace falta reconstruir tras instalar un kernel.
+
+GRUB añade `splash quiet loglevel=3` para activar el splash y suprimir mensajes de consola. Otros cargadores requieren configurar esos parámetros por separado. El paquete no modifica `/etc/mkinitcpio.conf`, los presets de kernel ni configuraciones de otros cargadores. Presets que fuerzan `ALL_config` deben actualizarse para cargar archivos drop-in.
+
 ## Configuración requerida en GitHub
 
 Crear el entorno `package-signing`, limitarlo a las ramas `dev` y `main`, y añadir:

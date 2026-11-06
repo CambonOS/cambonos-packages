@@ -340,7 +340,7 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Confirmar atribución de Vimix, GPL-3.0, licencia de Unifont y excepción de incrustación distribuidas.
 
 ### Configuración y multiboot
-- [ ] El drop-in conserva IPv6 y los parámetros `splash loglevel=3`.
+- [ ] El drop-in conserva IPv6 y los parámetros `splash quiet loglevel=3`.
 - [ ] `GRUB_GFXMODE=auto`; no se define `GRUB_GFXPAYLOAD_LINUX`.
 - [ ] `GRUB_DISABLE_OS_PROBER=false` y `os-prober` detecta otras instalaciones en una VM de prueba multiboot.
 - [ ] Se conservan timeout/menu y módulos GPT/MBR; las opciones avanzadas aparecen sin submenú, recovery está habilitado y `BootNext` desactivado.
@@ -357,7 +357,28 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Confirmar que `/boot` está montado antes de las pruebas de actualización del kernel.
 - [ ] `pacman -Qkk cambonos-grub` no detecta daños inesperados.
 
-## 10. Validación del repositorio y publicación
+## 10. cambonos-plymouth
+
+### Construcción y configuración
+- [ ] `makepkg` termina correctamente y el paquete declara `plymouth` y `mkinitcpio>=36`.
+- [ ] Todos los recursos de `files/themes/cambonos/` se instalan en `/usr/share/plymouth/themes/cambonos/`.
+- [ ] El icono de cabecera coincide visualmente con el recurso canónico de branding y mide 256 × 256.
+- [ ] El tema usa el fondo `#061C31`, la barra `#70E7E6` y transición inmediata.
+- [ ] La configuración conserva `ShowDelay=0`; el parámetro `splash` activa el tema sin una espera añadida.
+- [ ] `quiet` está configurado en GRUB para ocultar mensajes de consola; comprobar el parámetro equivalente en otros cargadores.
+
+### mkinitcpio y ciclo de vida
+- [ ] El drop-in se instala en `/etc/mkinitcpio.conf.d/` con política `backup` y no reemplaza `/etc/mkinitcpio.conf`.
+- [ ] Con `udev` o `systemd`, Plymouth se inserta después del hook de init y antes de `encrypt`/`sd-encrypt`.
+- [ ] Sin cifrado, Plymouth se inserta tras `udev`/`systemd`; con un hook preexistente no se duplica.
+- [ ] Revisar presets con `ALL_config`; actualizar los presets antiguos que no carguen drop-ins.
+- [ ] En una VM Arch limpia, instalar con un kernel presente y comprobar selección del tema y regeneración de todos los presets.
+- [ ] Actualizar preservando un tema personalizado y comprobar que el initramfs se reconstruye.
+- [ ] Desinstalar: restaurar el tema predeterminado solo si CambonOS seguía seleccionado, retirar el hook propio y regenerar initramfs.
+- [ ] Probar root cifrado con `encrypt` y `sd-encrypt`, desbloqueo por teclado y fallback de consola.
+- [ ] Comprobar visualmente en UEFI/BIOS y GPU real: aparición temprana, ausencia de líneas de arranque, resolución, varios monitores y transición al display manager.
+
+## 11. Validación del repositorio y publicación
 
 - [ ] Validar snapshots `dev` y `main` con `cambonos.py validate`.
 - [ ] Confirmar igualdad del material keyring entre canales.
@@ -388,7 +409,7 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Confirmar que una publicación fallida no sustituye la publicación anterior.
 - [ ] Confirmar que los índices del sitio y el manifiesto coinciden con los artefactos desplegados.
 
-## 11. Evidencias de cierre
+## 12. Evidencias de cierre
 
 Por cada paquete, guardar:
 - Commit auditado.

@@ -25,6 +25,7 @@ El proceso utiliza los repositorios rolling de Arch durante la construcción. Po
 |---|---|
 | [`cambonos-branding`](packages/cambonos-branding/README.md) | Recursos gráficos genéricos de CambonOS. |
 | [`cambonos-grub`](packages/cambonos-grub/README.md) | Configuración GRUB, multiboot y tema CambonOS derivado de Vimix. |
+| [`cambonos-plymouth`](packages/cambonos-plymouth/README.md) | Tema de arranque Plymouth e integración con mkinitcpio. |
 | [`cambonos-fastfetch`](packages/cambonos-fastfetch/README.md) | Perfil de Fastfetch e integración automática con shells. |
 | [`cambonos-shell-prompt`](packages/cambonos-shell-prompt/README.md) | Configuración e integración de Starship en Zsh, Bash y Fish. |
 | [`cambonos-zsh`](packages/cambonos-zsh/README.md) | Configuración global de Zsh y punto de entrada para integraciones. |
@@ -43,6 +44,7 @@ cambonos-packages/
 ├── packages/
 │   ├── cambonos-branding/
 │   ├── cambonos-grub/
+│   ├── cambonos-plymouth/
 │   ├── cambonos-fastfetch/
 │   ├── cambonos-shell-prompt/
 │   ├── cambonos-zsh/
