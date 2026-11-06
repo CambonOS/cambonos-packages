@@ -14,6 +14,148 @@ from .config import MIRROR_BASE_URL, REPOSITORY_SECTION
 
 INDEX_MARKER = "<!-- generated-by: cambonos-index -->"
 INDEX_TITLE = "CambonOS Package Repository"
+_SITE_CSS = """
+:root {
+    color-scheme: light;
+    --lime: #aefa50;
+    --aqua: #70e7e6;
+    --navy: #061c31;
+    --ink: #102537;
+    --muted: #526371;
+    --accent: #006f78;
+    --line: #d7e0e4;
+    --surface: #f4f8f8;
+    --page: #f7f5ec;
+    font-family: "DM Sans", "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--ink);
+}
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --ink: #e4edf2;
+    --muted: #b6c7d1;
+    --accent: #70e7e6;
+    --line: #294354;
+    --surface: #102b3d;
+    --page: #0a1d2b;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --ink: #e4edf2;
+        --muted: #b6c7d1;
+        --accent: #70e7e6;
+        --line: #294354;
+        --surface: #102b3d;
+        --page: #0a1d2b;
+    }
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; line-height: 1.6; }
+a { color: inherit; }
+a:focus-visible { outline: 3px solid #019fa7; outline-offset: 3px; }
+.skip-link { position: absolute; z-index: 2; top: 10px; left: 10px; padding: 8px 12px; transform: translateY(-150%); color: var(--navy); background: var(--lime); font-weight: 700; }
+.skip-link:focus { transform: translateY(0); }
+.site-header {
+    color: #f7f5ec;
+    background-color: var(--navy);
+    background-image: repeating-linear-gradient(130deg, transparent 0 58px, rgb(112 231 230 / 5%) 59px 60px), linear-gradient(115deg, rgb(20 146 70 / 19%), transparent 58%);
+}
+.header-inner, main, .site-footer { width: min(1120px, calc(100% - 48px)); margin-inline: auto; }
+.header-inner { padding: 48px 0 36px; }
+.header-topline { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 12px; }
+.eyebrow, .section-label { margin: 0 0 12px; color: var(--lime); font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.header-topline .eyebrow { margin: 0; }
+.theme-toggle { width: 42px; height: 42px; display: grid; flex: 0 0 auto; place-items: center; padding: 0; border: 1px solid rgb(255 255 255 / 35%); color: #f7f5ec; background: rgb(255 255 255 / 6%); cursor: pointer; }
+.theme-toggle:hover { border-color: var(--lime); color: var(--lime); }
+.theme-toggle svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.theme-icon-moon { display: none; }
+:root[data-theme="dark"] .theme-icon-sun { display: none; }
+:root[data-theme="dark"] .theme-icon-moon { display: block; }
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-icon-sun { display: none; }
+    :root:not([data-theme="light"]) .theme-icon-moon { display: block; }
+}
+h1, h2 { font-family: "Space Grotesk", "Segoe UI", sans-serif; line-height: 1.12; }
+h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.25rem); font-weight: 600; }
+.lede { max-width: 720px; margin: 14px 0 0; color: #d0e0e6; }
+main { padding-block: 34px 72px; }
+.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 14px; }
+.section-heading h2 { margin: 0; font-size: 1.4rem; }
+.section-label { margin-bottom: 7px; color: var(--accent); }
+.table-wrap { overflow-x: auto; border-top: 2px solid var(--navy); }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { padding: 13px 15px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { color: var(--muted); font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+tbody tr:hover td { background: rgb(112 231 230 / 12%); }
+td a { text-decoration-color: #019fa7; text-underline-offset: 3px; }
+td a:hover { color: var(--accent); }
+.kind { width: 92px; color: var(--accent); font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.name { overflow-wrap: anywhere; font-weight: 600; }
+.size { width: 125px; color: var(--muted); text-align: right; white-space: nowrap; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.parent td { background: var(--surface); }
+.parent a { color: var(--accent); font-weight: 700; }
+.breadcrumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 24px; color: #d0e0e6; font-size: .86rem; }
+.breadcrumbs a { text-decoration-color: var(--aqua); text-underline-offset: 3px; }
+.breadcrumbs .separator { color: var(--aqua); }
+.breadcrumbs [aria-current="page"] { color: white; font-weight: 700; overflow-wrap: anywhere; }
+.channel-link { display: inline-flex; align-items: center; gap: 9px; font-weight: 700; text-decoration: none; }
+.channel-link::before { width: 8px; height: 8px; content: ""; background: var(--aqua); }
+.channel-link.testing::before { background: var(--lime); }
+.branch, code { font-family: "SFMono-Regular", Consolas, monospace; font-size: .88em; overflow-wrap: anywhere; }
+.config { overflow-x: auto; padding: 20px 22px; color: #e4edf2; background: var(--navy); border-left: 4px solid var(--lime); line-height: 1.65; }
+.muted { color: var(--muted); }
+.site-footer { display: flex; justify-content: space-between; gap: 18px; padding: 18px 0 26px; border-top: 1px solid var(--line); color: var(--muted); font-size: .78rem; }
+.site-footer p { margin: 0; }
+@media (max-width: 640px) {
+    .header-inner, main, .site-footer { width: min(100% - 36px, 560px); }
+    .header-inner { padding: 34px 0 28px; }
+    .header-topline { gap: 12px; }
+    main { padding-block: 25px 48px; }
+    .section-heading { align-items: start; flex-direction: column; gap: 4px; }
+    th, td { padding: 11px 9px; }
+    .kind { width: 55px; }
+    .size { width: 78px; }
+    .site-footer { flex-direction: column; }
+}
+"""
+_THEME_SCRIPT = """
+(() => {
+    const root = document.documentElement;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    let preference = "system";
+    try { preference = localStorage.getItem("cambonos-theme") || "system"; } catch {}
+    if (!["system", "light", "dark"].includes(preference)) preference = "system";
+    if (preference === "system") delete root.dataset.theme;
+    else root.dataset.theme = preference;
+
+    const initializeToggle = () => {
+        const toggle = document.querySelector(".theme-toggle");
+        if (!toggle) return;
+        const update = () => {
+            const isDark = preference === "dark" || (preference === "system" && media.matches);
+            const label = isDark ? "Switch to light theme" : "Switch to dark theme";
+            toggle.setAttribute("aria-pressed", String(isDark));
+            toggle.setAttribute("aria-label", label);
+            toggle.title = label;
+        };
+        update();
+        toggle.addEventListener("click", () => {
+            const isDark = preference === "dark" || (preference === "system" && media.matches);
+            preference = isDark ? "light" : "dark";
+            try { localStorage.setItem("cambonos-theme", preference); } catch {}
+            root.dataset.theme = preference;
+            update();
+        });
+        media.addEventListener("change", () => {
+            if (preference === "system") update();
+        });
+    };
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initializeToggle, { once: true });
+    } else initializeToggle();
+})();
+"""
 
 
 def _human_size(size: int) -> str:
@@ -78,44 +220,51 @@ def generate_directory_indexes(site: Path) -> tuple[int, int]:
         if not dirs and not files:
             rows.append('<tr><td colspan="3">This directory is empty.</td></tr>')
 
+        parts = relative.parts if relative != Path(".") else ()
+        breadcrumbs = [f'<a href="{"../" * len(parts) or "./"}">Packages</a>']
+        for index, part in enumerate(parts):
+            breadcrumbs.append('<span class="separator" aria-hidden="true">/</span>')
+            if index == len(parts) - 1:
+                breadcrumbs.append(f'<span aria-current="page">{escape(part)}/</span>')
+            else:
+                href = "../" * (len(parts) - index - 1)
+                breadcrumbs.append(f'<a href="{escape(href, quote=True)}">{escape(part)}/</a>')
+
         page = f"""<!doctype html>
 {INDEX_MARKER}
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>Index of {escape(display_path)}</title>
+    <title>CambonOS Packages | {escape(display_path)}</title>
+    <script>{_THEME_SCRIPT}</script>
   <style>
-    :root {{ color-scheme: dark light; font-family: system-ui, sans-serif; }}
-    body {{ max-width: 960px; margin: 3rem auto; padding: 0 1.25rem; line-height: 1.6; }}
-    header {{ margin-bottom: 1.5rem; }}
-    h1 {{ margin-bottom: .15rem; font-size: 1.65rem; }}
-    .path {{ color: GrayText; overflow-wrap: anywhere; }}
-    table {{ width: 100%; border-collapse: collapse; }}
-    th, td {{ padding: .55rem .75rem; border-bottom: 1px solid color-mix(in srgb, CanvasText 15%, transparent); text-align: left; }}
-    th {{ font-size: .85rem; color: GrayText; }}
-    tr:hover td {{ background: color-mix(in srgb, CanvasText 6%, transparent); }}
-    a {{ color: LinkText; text-decoration: none; }}
-    a:hover {{ text-decoration: underline; }}
-    .kind {{ width: 7rem; color: GrayText; font-size: .85rem; }}
-    .size {{ width: 7rem; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }}
-    footer {{ margin-top: 1.5rem; color: GrayText; font-size: .85rem; }}
-    @media (max-width: 600px) {{ body {{ margin: 1.5rem auto; }} th, td {{ padding: .45rem .35rem; }} .kind {{ width: auto; }} }}
+        {_SITE_CSS}
   </style>
 </head>
 <body>
-  <header>
-    <h1>{INDEX_TITLE}</h1>
-    <div class="path">Index of {escape(display_path)}</div>
-  </header>
-  <table>
-    <thead><tr><th>Type</th><th>Name</th><th class="size">Size</th></tr></thead>
-    <tbody>
-      {''.join(rows)}
-    </tbody>
-  </table>
-  <footer>Directory listing generated automatically by CambonOS package pipeline.</footer>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="header-topline"><p class="eyebrow">CambonOS / Official repositories</p>
+                <button class="theme-toggle" type="button" aria-label="Change color theme" title="Change color theme" aria-pressed="false">
+                    <svg class="theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+                    <svg class="theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"/></svg>
+                </button>
+            </div>
+            <h1>Repository files</h1>
+            <nav class="breadcrumbs" aria-label="Breadcrumb">{''.join(breadcrumbs)}</nav>
+        </div>
+    </header>
+    <main id="main-content">
+        <div class="section-heading"><div><p class="section-label">Directory contents</p><h2>{escape(display_path)}</h2></div></div>
+        <div class="table-wrap"><table>
+            <thead><tr><th>Type</th><th>Name</th><th class="size">Size</th></tr></thead>
+            <tbody>{''.join(rows)}</tbody>
+        </table></div>
+    </main>
+    <footer class="site-footer"><p>{INDEX_TITLE}</p><p>Official CambonOS package mirror.</p></footer>
 </body>
 </html>
 """
@@ -162,40 +311,52 @@ def write_index(site: Path, manifest: dict, pages_url: str) -> None:
     rows = []
     for channel, label in (("stable", "Stable"), ("testing", "Testing")):
         data = manifest["channels"][channel]
-        browse = f'<a href="{channel}/">Browse {label.lower()}</a>'
+        browse = f'<a class="channel-link {channel}" href="{channel}/">{label}</a>'
         rows.append(
             f"<tr><td>{browse}</td><td><code>{data['branch']}</code></td>"
             f"<td><code>{data['commit'][:12]}</code></td>"
-            f"<td>{len(data['packages'])}</td></tr>"
+            f"<td class=\"size\">{len(data['packages'])}</td></tr>"
         )
     import html as html_module
     pages_canonical_url = html_module.escape(pages_url.rstrip("/"), quote=True)
     mirror_base_url = html_module.escape(MIRROR_BASE_URL, quote=True)
-    html = """<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    html = f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CambonOS Packages</title><link rel="canonical" href="{pages_canonical_url}">
-<style>
-:root{color-scheme:dark light;font-family:system-ui,sans-serif}body{max-width:920px;margin:4rem auto;padding:0 1.25rem;line-height:1.6}
-table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:.7rem;border-bottom:1px solid #8885}
-code{overflow-wrap:anywhere}a{color:inherit} .muted{opacity:.75}
-</style></head><body><h1>CambonOS Packages</h1>
-<p>Repositorios oficiales de paquetes para CambonOS, basados en Arch Linux.</p>
-<h2>Canales</h2><table><thead><tr><th>Canal</th><th>Rama</th><th>Commit</th><th>Paquetes</th></tr></thead>
-<tbody>""" + "".join(rows) + """</tbody></table>
-<h2>Configuración de pacman</h2>
-<pre><code>#[cambonos-testing]
+<meta name="description" content="Official CambonOS package repositories, with signed stable and testing channels.">
+<script>{_THEME_SCRIPT}</script>
+<style>{_SITE_CSS}</style></head><body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner">
+<div class="header-topline"><p class="eyebrow">CambonOS / Arch Linux</p>
+<button class="theme-toggle" type="button" aria-label="Change color theme" title="Change color theme" aria-pressed="false">
+<svg class="theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+<svg class="theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"/></svg>
+</button></div><h1>CambonOS Packages</h1>
+<p class="lede">Official CambonOS package repositories.</p>
+</div></header>
+<main id="main-content">
+<section aria-labelledby="channels-title">
+<div class="section-heading"><div><p class="section-label">Repository channels</p><h2 id="channels-title">Channels</h2></div></div>
+<div class="table-wrap"><table><thead><tr><th>Channel</th><th>Branch</th><th>Commit</th><th class="size">Packages</th></tr></thead>
+<tbody>{''.join(rows)}</tbody></table></div>
+</section>
+<section aria-labelledby="pacman-title" style="margin-top:42px">
+<div class="section-heading"><div><p class="section-label">Pacman</p><h2 id="pacman-title">Repository configuration</h2></div></div>
+<pre class="config"><code>#[cambonos-testing]
 #SigLevel = Required TrustedOnly
 #Server = {mirror_base_url}/testing/$arch
 
 [cambonos]
 SigLevel = Required TrustedOnly
 Server = {mirror_base_url}/stable/$arch</code></pre>
-<p class="muted">Testing está deshabilitado por defecto. Explora los canales desde la tabla superior.
-Manifiesto: <a href="metadata/manifest.json">metadata/manifest.json</a>.</p>
+<p class="muted">Testing is disabled by default. Use the channel links above to browse the repositories.
+Signed global manifest: <a href="metadata/manifest.json">metadata/manifest.json</a>.</p>
+</section>
+</main>
+<footer class="site-footer"><p>{INDEX_TITLE}</p><p>Official packages / x86_64</p></footer>
 </body></html>
-""".replace("{pages_canonical_url}", pages_canonical_url).replace(
-        "{mirror_base_url}", mirror_base_url
-    )
+"""
     (site / "index.html").write_text(html, encoding="utf-8")
 
 
