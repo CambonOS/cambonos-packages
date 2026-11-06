@@ -16,6 +16,7 @@ No instala ni configura directamente Fastfetch. Starship se proporciona mediante
 - `zsh-syntax-highlighting`
 - `cambonos-shell-prompt`
 - `util-linux` (proporciona `flock` para la gestión segura del punto de entrada)
+- `sudo` (elevación automática de operaciones de pacman)
 
 ## Archivos instalados
 
@@ -27,6 +28,7 @@ No instala ni configura directamente Fastfetch. Starship se proporciona mediante
 | `/usr/share/cambonos/zsh/conf.d/20-keybindings.zsh` | Modo Emacs y teclas Home, End, Delete, PageUp y PageDown. |
 | `/usr/share/cambonos/zsh/conf.d/30-history.zsh` | Historial, opciones y aliases predeterminados. |
 | `/usr/share/cambonos/zsh/conf.d/40-plugins.zsh` | Autosuggestions y syntax highlighting. |
+| `/usr/share/cambonos/zsh/conf.d/45-pacman-sudo.zsh` | Eleva automáticamente con sudo las operaciones de pacman que modifican el sistema. |
 | `/usr/lib/cambonos/zsh/integrate-zsh` | Gestor idempotente del bloque global. |
 
 Los paquetes que necesiten integrar componentes en Zsh instalan sus propios fragmentos en `/usr/share/cambonos/zsh/conf.d/`. No deben modificar `/etc/zsh/zshrc`.
@@ -79,3 +81,20 @@ Si el helper creó `/etc/zsh/zshrc` y, al retirar el bloque, no queda contenido 
 sudo /usr/lib/cambonos/zsh/integrate-zsh check
 pacman -Qkk cambonos-zsh
 ```
+
+
+## Elevación automática de pacman
+
+En sesiones interactivas, `pacman` se envuelve para ejecutar con `sudo` las operaciones que modifican el estado del sistema. Las consultas (`-Q`, `-T` y las búsquedas e informes de `-S`/`-F`) se ejecutan sin elevación. Si la sesión ya pertenece a `root`, se invoca siempre `pacman` directamente.
+
+Ejemplos:
+
+```zsh
+pacman -S firefox       # sudo pacman -S firefox
+pacman -Syu             # sudo pacman -Syu
+pacman -Q firefox       # pacman -Q firefox
+pacman -Ss firefox      # pacman -Ss firefox
+pacman -Fy              # sudo pacman -Fy
+```
+
+La función conserva los argumentos originales y no reconstruye órdenes mediante `eval`. Las operaciones de sincronización desconocidas o ambiguas se tratan de forma conservadora según las opciones reconocidas; las consultas conocidas no se elevan.
