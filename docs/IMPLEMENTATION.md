@@ -178,6 +178,14 @@ La configuración de shells se divide por responsabilidad:
 
 Los gestores que modifican `/etc/bash.bashrc` utilizan marcadores distintos y el mismo bloqueo `/run/lock/cambonos-shell-integration.lock`, escrituras atómicas y rechazo de archivos no regulares, enlaces simbólicos y marcadores ambiguos. Cada paquete elimina exclusivamente su propio bloque.
 
+### `cambonos-grub`
+
+El paquete depende de `grub>=2:2.16`, versión mínima que proporciona el soporte de `/etc/default/grub.d/*.cfg`, y de `os-prober` para multiboot. Instala sus opciones en `/etc/default/grub.d/60-cambonos.cfg`, sin reemplazar `/etc/default/grub`, propiedad del paquete `grub`. Pacman conserva cambios locales mediante `backup` y `.pacnew`.
+
+El tema de `/usr/share/grub/themes/CambonOS/` deriva de Vimix de Vinceliuice. Mantiene el fondo y recursos de Vimix con colores de CambonOS, el icono de distribución, aviso de atribución y licencia GPL-3.0. La fuente Unifont incluida se redistribuye bajo GPL-2.0-or-later con la excepción GNU de incrustación; ambas licencias y avisos se incluyen en el paquete. La configuración conserva IPv6, usa `GRUB_GFXMODE=auto`, habilita `os-prober` y no define `GRUB_GFXPAYLOAD_LINUX`.
+
+Los scriptlets regeneran `/boot/grub/grub.cfg` al instalar, actualizar y retirar el paquete. Un hook `PostTransaction` detecta Install/Upgrade/Remove sobre `usr/lib/modules/*/vmlinuz` y regenera el menú después de cambios de kernel. El helper omite sistemas sin un `grub.cfg` existente y rechaza enlaces simbólicos y rutas no regulares. El paquete no ejecuta `grub-install` ni decide el destino UEFI/BIOS; las ediciones directas en `grub.cfg` se pierden al regenerarlo.
+
 ## Configuración requerida en GitHub
 
 Crear el entorno `package-signing`, limitarlo a las ramas `dev` y `main`, y añadir:
