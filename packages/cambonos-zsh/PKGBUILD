@@ -1,6 +1,6 @@
 pkgname=cambonos-zsh
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="CambonOS default Zsh configuration and interactive shell integration"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
@@ -13,9 +13,13 @@ depends=(
   'cambonos-shell-prompt'
   'util-linux'
 )
+backup=('etc/skel/.zshrc')
 install=cambonos-zsh.install
 
 package() {
+  install -Dm644 "$startdir/files/etc/skel/.zshrc" \
+    "$pkgdir/etc/skel/.zshrc"
+
   install -Dm644 "$startdir/files/LICENSE" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 

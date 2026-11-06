@@ -1,0 +1,27 @@
+pkgname=cambonos-pacman
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="CambonOS pacman repository configuration and behavioral customizations"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('GPL-3.0-only')
+depends=('bash' 'coreutils' 'gawk' 'cambonos-keyring')
+provides=('cambonos-repo')
+conflicts=('cambonos-repo')
+replaces=('cambonos-repo')
+backup=('etc/pacman.d/cambonos.conf' 'etc/pacman.d/cambonos-options.conf')
+install=cambonos-pacman.install
+
+package() {
+  install -Dm644 "$startdir/files/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  install -Dm644 "$startdir/files/cambonos.conf" \
+    "$pkgdir/etc/pacman.d/cambonos.conf"
+  install -Dm644 "$startdir/files/cambonos-options.conf" \
+    "$pkgdir/etc/pacman.d/cambonos-options.conf"
+  install -Dm755 "$startdir/files/lib/manage-pacman-config" \
+    "$pkgdir/usr/lib/cambonos-pacman/manage-pacman-config"
+  install -Dm644 "$startdir/files/hooks/cambonos-pacman-conf.hook" \
+    "$pkgdir/usr/share/libalpm/hooks/cambonos-pacman-conf.hook"
+}

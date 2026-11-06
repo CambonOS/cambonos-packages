@@ -153,7 +153,7 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] `makepkg` termina correctamente.
 - [ ] Confirmar dependencias obligatorias (`zsh`, `zsh-completions`, `zsh-autosuggestions`, `zsh-syntax-highlighting`, `cambonos-shell-prompt`, `util-linux`).
 - [ ] No se declara Fastfetch como dependencia.
-- [ ] No se instalan archivos en `/etc/skel`.
+- [ ] Se instala `/etc/skel/.zshrc` vacío y con permisos adecuados.
 - [ ] No se modifican `/etc/default/useradd`, `/etc/passwd`, root ni shells de usuarios existentes.
 
 ### Configuración y arranque
@@ -172,7 +172,7 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] `cambonos-shell-prompt` se carga desde su fragmento Zsh.
 - [ ] Fastfetch se carga si está instalado, sin ser dependencia de Zsh.
 - [ ] Una configuración personal `~/.zshrc` se ejecuta después de la configuración global y puede personalizarla.
-- [ ] Un usuario sin `~/.zshrc` recibe igualmente la configuración CambonOS.
+- [ ] Un usuario creado usando `/etc/skel` recibe un `.zshrc` vacío y la configuración global CambonOS sigue cargándose.
 
 ### Gestor y ciclo de vida
 - [ ] `install` crea el bloque sin borrar contenido preexistente.
@@ -281,53 +281,51 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Revisar logs de helper ante errores.
 - [ ] `pacman -Qkk cambonos-release` sin daños inesperados.
 
-## 8. cambonos-repo
+## 8. cambonos-pacman
 
 ### Construcción y configuración
 - [ ] `makepkg` termina correctamente.
-- [ ] El paquete contiene `cambonos.conf`, helper, hook y scriptlet.
+- [ ] El paquete contiene `cambonos.conf`, `cambonos-options.conf`, helper, hook y scriptlet.
 - [ ] Stable apunta a `https://mirror.cambonos.org/stable/$arch`.
 - [ ] Testing está comentado por defecto y apunta al canal `/testing/$arch`.
 - [ ] Ambos bloques utilizan `SigLevel = Required TrustedOnly`.
 - [ ] Confirmar dependencia de `cambonos-keyring`.
-- [ ] Confirmar `backup=('etc/pacman.d/cambonos.conf')`.
+- [ ] Confirmar `backup` de ambos ficheros de configuración.
+- [ ] Las opciones diferenciales son exactamente `Color`, `CheckSpace`, `VerbosePkgLists`, `ParallelDownloads = 3` e `ILoveCandy`.
+- [ ] No se duplican `HoldPkg`, `Architecture`, `SigLevel` ni `LocalFileSigLevel`.
+- [ ] No se define `DownloadUser` ni `DisableSandbox`.
 
-### Helper `manage-pacman-include`
-- [ ] `--ensure` añade el bloque al final de un `pacman.conf` normal.
+### Helper `manage-pacman-config`
+- [ ] `--ensure` inserta el Include de opciones dentro de `[options]` y el de repositorios al final.
 - [ ] `--ensure` repetido es idempotente.
-- [ ] `--ensure` repara un bloque administrado ausente.
-- [ ] Include manual idéntico fuera del bloque: se conserva y no se adopta.
-- [ ] Include manual junto con bloque administrado duplicado: se conserva el manual y se elimina el bloque administrado.
-- [ ] `--remove` elimina exclusivamente el bloque administrado.
-- [ ] `--remove` sin bloque devuelve éxito sin modificar el archivo.
-- [ ] Marcador de inicio sin final: error y archivo intacto.
-- [ ] Marcador final sin inicio: error y archivo intacto.
-- [ ] Marcadores desordenados o duplicados: error y archivo intacto.
+- [ ] `--ensure` repara ambos bloques administrados ausentes.
+- [ ] Un Include manual de opciones se conserva y no se duplica.
+- [ ] Un Include manual de repositorios se conserva y no se duplica.
+- [ ] `--remove` elimina exclusivamente ambos bloques administrados.
+- [ ] Los marcadores antiguos de `cambonos-repo` se migran a los nuevos.
+- [ ] Marcadores incompletos, anidados o desordenados provocan error y el archivo permanece intacto.
+- [ ] La ausencia o duplicidad de `[options]` provoca fallo seguro cuando es necesario insertar su Include.
 - [ ] Archivo sin salto final: comportamiento correcto.
-- [ ] Archivo vacío: comportamiento correcto.
 - [ ] Ruta inexistente: error sin crear archivo.
 - [ ] Ruta simbólica: error sin modificar destino.
 - [ ] Ruta directorio: error.
 - [ ] Preservación de modo y propietario.
-- [ ] Comprobar ACL/xattrs si son relevantes para el entorno objetivo.
 - [ ] Ejecutar pruebas de concurrencia y fallo inducido durante escritura temporal.
 
 ### Pacman, hooks y ciclo de vida
-- [ ] Instalar `cambonos-keyring` desde fuente local confiable.
-- [ ] Inicializar/popular keyring.
-- [ ] Instalar `cambonos-repo`.
-- [ ] Confirmar bloque administrado en `/etc/pacman.conf`.
-- [ ] Ejecutar `pacman-conf` y verificar que reconoce el repositorio `cambonos`.
+- [ ] Instalar `cambonos-keyring` desde fuente local confiable e inicializar/popular el keyring.
+- [ ] Instalar `cambonos-pacman` y confirmar ambos bloques administrados.
+- [ ] Ejecutar `pacman-conf` y verificar opciones efectivas, especialmente `ParallelDownloads = 3`.
+- [ ] Verificar que `pacman-conf --repo-list` reconoce `cambonos`.
 - [ ] Habilitar testing en una VM de prueba y verificar `cambonos-testing`.
 - [ ] Ejecutar `pacman -Syy` y comprobar descarga/verificación de bases de datos.
-- [ ] Instalar un paquete desde stable con firmas válidas.
 - [ ] Simular actualización de `pacman.conf` y comprobar hook ALPM.
-- [ ] Comprobar comportamiento con `.pacnew`.
-- [ ] Confirmar que edición manual arbitraria no queda prometida como detectada por el hook.
-- [ ] Desinstalar `cambonos-repo` y comprobar retirada del bloque gestionado.
+- [ ] Comprobar comportamiento con `.pacnew` de ambos ficheros de configuración.
+- [ ] Desinstalar `cambonos-pacman` y comprobar retirada de los bloques administrados.
 - [ ] Confirmar preservación de otros repositorios, opciones y comentarios.
-- [ ] Confirmar que un Include manual permanece tras la desinstalación.
-- [ ] `pacman -Qkk cambonos-repo` sin daños inesperados.
+- [ ] Confirmar que los Include manuales permanecen tras la desinstalación.
+- [ ] Probar actualización/reemplazo desde `cambonos-repo`.
+- [ ] `pacman -Qkk cambonos-pacman` sin daños inesperados.
 
 ## 9. cambonos-grub
 

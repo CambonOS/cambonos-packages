@@ -154,25 +154,23 @@ Añade el certificado público y la información de confianza de pacman en:
 
 El paquete instala el material público en `/usr/share/pacman/keyrings/` y ejecuta `pacman-key --populate cambonos` cuando el keyring local ya está inicializado. El repositorio contiene el certificado público y los datos de confianza; nunca debe contener claves privadas.
 
-### `cambonos-repo`
+### `cambonos-pacman`
 
 Distribuye `/etc/pacman.d/cambonos.conf` con el mirror canónico `https://mirror.cambonos.org`, habilita stable y deja testing comentado. Declara `cambonos-keyring` como dependencia y configura `SigLevel = Required TrustedOnly` para ambos canales. El paquete es opcional: cada canal puede incluirlo o no, sin exigir que esté presente en el otro canal. El único paquete obligatorio en ambos canales es `cambonos-keyring`, necesario para la verificación de firmas.
 
-El paquete integra el fichero mediante un bloque marcado al final de `/etc/pacman.conf`. Su script `.install`:
-- `post_install()`: añade el bloque administrado si no existe.
-- `post_upgrade()`: comprueba y repara el bloque.
-- `pre_remove()`: elimina exclusivamente el bloque administrado.
+También distribuye `/etc/pacman.d/cambonos-options.conf`, que contiene únicamente las diferencias acordadas respecto a la configuración de referencia de Arch: `Color`, `CheckSpace`, `VerbosePkgLists`, `ParallelDownloads = 3` e `ILoveCandy`. No redefine `HoldPkg`, `Architecture`, `SigLevel` ni modifica `DownloadUser` o el sandbox.
 
-El helper realiza escrituras atómicas, evita duplicados y conserva cualquier `Include` manual preexistente. Si encuentra marcadores incompletos, falla de forma conservadora y no reescribe el archivo.
+El helper `/usr/lib/cambonos-pacman/manage-pacman-config` administra dos bloques independientes: incluye las opciones desde dentro de `[options]` y añade el Include de repositorios al final para conservar la prioridad de los repositorios oficiales. Reconoce y migra los marcadores antiguos de `cambonos-repo`. Realiza escrituras atómicas, evita duplicados, conserva los Include manuales y falla de forma conservadora ante marcadores incompletos o una sección `[options]` ambigua.
 
-El hook `cambonos-repo-pacman-conf.hook` usa un disparador `Type = Path` sobre `etc/pacman.conf`, para operaciones `Install` y `Upgrade`. Se ejecuta después de transacciones que incluyen ese archivo y llama al mismo helper. ALPM también utiliza la ruta original como objetivo cuando el archivo se instala como `.pacnew`. El hook no detecta modificaciones manuales arbitrarias ni cambios realizados por scriptlets que no formen parte de la lista de archivos de la transacción.
+El script `.install` ejecuta `--ensure` en `post_install` y `post_upgrade`, y `--remove` en `pre_remove`. El hook `cambonos-pacman-conf.hook` usa un disparador `Type = Path` sobre `etc/pacman.conf`, para operaciones `Install` y `Upgrade`, y vuelve a garantizar la integración tras esas transacciones. El hook no detecta modificaciones manuales arbitrarias ni cambios realizados por scriptlets que no formen parte de la lista de archivos de la transacción.
 
+El paquete declara la transición desde `cambonos-repo` mediante `provides`, `conflicts` y `replaces`.
 
 ### `cambonos-zsh`, `cambonos-shell-prompt` y `cambonos-fastfetch`
 
 La configuración de shells se divide por responsabilidad:
 
-- `cambonos-zsh` depende de `zsh`, `zsh-completions`, `zsh-autosuggestions`, `zsh-syntax-highlighting` y `cambonos-shell-prompt`. Mantiene el único bloque administrado de `/etc/zsh/zshrc` y carga en orden lexicográfico los fragmentos `*.zsh` de `/usr/share/cambonos/zsh/conf.d/`. No distribuye `~/.zshrc` en `/etc/skel` ni cambia shells de cuentas; esa decisión pertenece al instalador ISO.
+- `cambonos-zsh` depende de `zsh`, `zsh-completions`, `zsh-autosuggestions`, `zsh-syntax-highlighting` y `cambonos-shell-prompt`. Mantiene el único bloque administrado de `/etc/zsh/zshrc` y carga en orden lexicográfico los fragmentos `*.zsh` de `/usr/share/cambonos/zsh/conf.d/`. Proporciona un `/etc/skel/.zshrc` vacío para nuevos usuarios, sin modificar archivos personales existentes ni cambiar shells de cuentas; la selección de shell pertenece al instalador ISO.
 - `cambonos-shell-prompt` depende de `starship`, `bash` y `util-linux`, pero no depende de Zsh ni de Fish. Proporciona la configuración CambonOS y las integraciones Bash, Zsh y Fish. Zsh utiliza un fragmento en el directorio `conf.d` de `cambonos-zsh`; sin ese paquete la integración Zsh requiere configuración manual. Bash utiliza un bloque propio en `/etc/bash.bashrc`; Fish utiliza `vendor_conf.d`.
 - `cambonos-fastfetch` mantiene sus integraciones Bash, Fish y POSIX de login. Su fragmento Zsh se instala en `conf.d`; no modifica `/etc/zsh/zshrc`. Al actualizar desde versiones anteriores retira su antiguo bloque Zsh de forma conservadora, preservando el cargador y el contenido ajeno.
 

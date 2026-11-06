@@ -182,7 +182,7 @@ Solo deben aparecer los archivos públicos. Si aparece `cambonos-signing-subkey.
 
 El paquete instala los tres archivos en `/usr/share/pacman/keyrings/` y ejecuta `pacman-key --populate cambonos` después de instalarse o actualizarse, siempre que el keyring de pacman ya esté inicializado.
 
-La ISO debe inicializar `pacman-key` e instalar `cambonos-keyring` desde el medio local antes de habilitar la confianza obligatoria del repositorio remoto. Después debe instalar `cambonos-repo`, que depende del keyring y configura el Include administrado en `/etc/pacman.conf`. Ese bootstrap pertenece al proceso de instalación de la ISO, no a este pipeline.
+La ISO debe inicializar `pacman-key` e instalar `cambonos-keyring` desde el medio local antes de habilitar la confianza obligatoria del repositorio remoto. Después debe instalar `cambonos-pacman`, que depende del keyring y configura los Include administrados de opciones y repositorios en `/etc/pacman.conf`. Ese bootstrap pertenece al proceso de instalación de la ISO, no a este pipeline.
 
 ## 7. Probar y publicar
 

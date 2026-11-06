@@ -30,7 +30,7 @@ El proceso utiliza los repositorios rolling de Arch durante la construcción. Po
 | [`cambonos-zsh`](packages/cambonos-zsh/README.md) | Configuración global de Zsh y punto de entrada para integraciones. |
 | [`cambonos-keyring`](packages/cambonos-keyring/README.md) | Raíz pública de confianza para los repositorios CambonOS en pacman. |
 | [`cambonos-release`](packages/cambonos-release/README.md) | Identidad de distribución y metadatos release/LSB. |
-| [`cambonos-repo`](packages/cambonos-repo/README.md) | Configuración e integración de repositorios CambonOS en pacman. |
+| [`cambonos-pacman`](packages/cambonos-pacman/README.md) | Repositorios CambonOS y personalizaciones diferenciales de pacman. |
 
 Cada paquete tiene una responsabilidad independiente. `cambonos-zsh` proporciona el cargador global de fragmentos Zsh en `/usr/share/cambonos/zsh/conf.d/`; `cambonos-shell-prompt` y `cambonos-fastfetch` instalan ahí sus fragmentos sin modificar `/etc/zsh/zshrc`. Para bloques de Bash, los componentes utilizan marcadores independientes y el bloqueo compartido `/run/lock/cambonos-shell-integration.lock`. Los metapaquetes futuros, cuando existan, deberán agrupar dependencias; no asumirán la propiedad ni la configuración de los componentes que agrupen.
 
@@ -48,7 +48,7 @@ cambonos-packages/
 │   ├── cambonos-zsh/
 │   ├── cambonos-keyring/
 │   ├── cambonos-release/
-│   └── cambonos-repo/
+│   └── cambonos-pacman/
 ├── scripts/
 │   ├── cambonos.py
 │   └── cambonos_lib/
@@ -122,7 +122,7 @@ El repositorio remoto exige firmas (`SigLevel = Required TrustedOnly`). Por ello
 1. Inicializar el keyring de pacman.
 2. Instalar `cambonos-keyring` desde el medio local confiable.
 3. Ejecutar `pacman-key --populate cambonos`.
-4. Instalar `cambonos-repo`.
+4. Instalar `cambonos-pacman`.
 5. Habilitar y sincronizar el repositorio remoto.
 
 No se debe intentar descargar el primer `cambonos-keyring` desde el repositorio que depende de ese mismo keyring para ser verificado.

@@ -20,7 +20,11 @@ class ShellPackageMetadataTests(unittest.TestCase):
         ):
             self.assertIn(f"'{dependency}'", text)
         self.assertNotIn("cambonos-fastfetch", text)
-        self.assertFalse((ROOT / "packages/cambonos-zsh/files/etc/skel/.zshrc").exists())
+        skel_zshrc = ROOT / "packages/cambonos-zsh/files/etc/skel/.zshrc"
+        self.assertTrue(skel_zshrc.is_file())
+        self.assertEqual(skel_zshrc.read_bytes(), b"")
+        self.assertIn("backup=('etc/skel/.zshrc')", (ROOT / "packages/cambonos-zsh/PKGBUILD").read_text())
+        self.assertIn('"$pkgdir/etc/skel/.zshrc"', (ROOT / "packages/cambonos-zsh/PKGBUILD").read_text())
 
     def test_shell_prompt_is_independent_of_zsh_and_fish(self):
         text = (ROOT / "packages/cambonos-shell-prompt/PKGBUILD").read_text()

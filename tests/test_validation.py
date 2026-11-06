@@ -24,7 +24,7 @@ class ValidationTests(unittest.TestCase):
     def test_existing_packages_are_statically_valid(self):
         packages = discover_packages(ROOT)
         for name in (
-            "cambonos-release", "cambonos-fastfetch", "cambonos-repo", "cambonos-grub",
+            "cambonos-release", "cambonos-fastfetch", "cambonos-pacman", "cambonos-grub",
         ):
             self.assertEqual(validate_package(packages[name]), [], name)
 

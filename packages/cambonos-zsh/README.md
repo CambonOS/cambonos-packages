@@ -6,7 +6,7 @@ Configuración global de Zsh para CambonOS.
 
 Este paquete instala Zsh y la experiencia interactiva predeterminada de CambonOS. Mantiene el único punto de entrada global de Zsh y proporciona el directorio compartido `conf.d` para que otros paquetes puedan añadir integraciones independientes.
 
-No instala ni configura directamente Fastfetch. Starship se proporciona mediante `cambonos-shell-prompt`, que es una dependencia obligatoria.
+No instala ni configura directamente Fastfetch. Starship se proporciona mediante `cambonos-shell-prompt`, que es una dependencia obligatoria. Instala un `.zshrc` vacío en `/etc/skel` para que los nuevos usuarios reciban un archivo personal inicial sin imponer ajustes adicionales.
 
 ## Dependencias
 
@@ -22,6 +22,7 @@ No instala ni configura directamente Fastfetch. Starship se proporciona mediante
 | Ruta | Función |
 |---|---|
 | `/etc/zsh/zshrc` | Bloque de entrada global administrado por el paquete; se crea si no existe. |
+| `/etc/skel/.zshrc` | Archivo vacío que se copia al crear nuevos usuarios mediante `/etc/skel`. |
 | `/usr/share/cambonos/zsh/conf.d/10-completion.zsh` | Inicialización de completions y caché por usuario. |
 | `/usr/share/cambonos/zsh/conf.d/20-keybindings.zsh` | Modo Emacs y teclas Home, End, Delete, PageUp y PageDown. |
 | `/usr/share/cambonos/zsh/conf.d/30-history.zsh` | Historial, opciones y aliases predeterminados. |
@@ -32,7 +33,7 @@ Los paquetes que necesiten integrar componentes en Zsh instalan sus propios frag
 
 ## Configuración
 
-El bloque global se ejecuta antes de `~/.zshrc`. Por tanto, los usuarios pueden crear o mantener su propio `~/.zshrc` para personalizar opciones, aliases, funciones, variables y comportamiento del prompt. El paquete no crea ni modifica archivos personales ni instala una plantilla en `/etc/skel`.
+El bloque global se ejecuta antes de `~/.zshrc`. Por tanto, los usuarios pueden personalizar opciones, aliases, funciones, variables y comportamiento del prompt desde su archivo personal. El paquete proporciona un `.zshrc` vacío en `/etc/skel`; no modifica los archivos personales de usuarios existentes.
 
 La configuración incluye:
 
