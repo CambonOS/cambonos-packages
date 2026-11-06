@@ -16,7 +16,7 @@ class ShellPackageMetadataTests(unittest.TestCase):
         text = (ROOT / "packages/cambonos-zsh/PKGBUILD").read_text()
         for dependency in (
             "zsh", "zsh-completions", "zsh-autosuggestions",
-            "zsh-syntax-highlighting", "cambonos-shell-prompt", "util-linux",
+            "zsh-syntax-highlighting", "cambonos-shell-prompt", "util-linux", "sudo",
         ):
             self.assertIn(f"'{dependency}'", text)
         self.assertNotIn("cambonos-fastfetch", text)
@@ -25,6 +25,17 @@ class ShellPackageMetadataTests(unittest.TestCase):
         self.assertEqual(skel_zshrc.read_bytes(), b"")
         self.assertIn("backup=('etc/skel/.zshrc')", (ROOT / "packages/cambonos-zsh/PKGBUILD").read_text())
         self.assertIn('"$pkgdir/etc/skel/.zshrc"', (ROOT / "packages/cambonos-zsh/PKGBUILD").read_text())
+        self.assertIn("45-pacman-sudo.zsh", (ROOT / "packages/cambonos-zsh/PKGBUILD").read_text())
+
+    def test_pacman_privilege_fragment_documents_and_installs_policy(self):
+        package = ROOT / "packages/cambonos-zsh"
+        fragment = package / "files/zsh/conf.d/45-pacman-sudo.zsh"
+        self.assertTrue(fragment.is_file())
+        source = fragment.read_text()
+        self.assertIn("(( EUID == 0 ))", source)
+        self.assertIn("command sudo pacman", source)
+        self.assertIn("_cambonos_pacman_needs_sudo", source)
+        self.assertIn("pacman -Syu", (package / "README.md").read_text())
 
     def test_shell_prompt_is_independent_of_zsh_and_fish(self):
         text = (ROOT / "packages/cambonos-shell-prompt/PKGBUILD").read_text()
@@ -104,6 +115,42 @@ class ShellPackageMetadataTests(unittest.TestCase):
             ROOT / "packages/cambonos-fastfetch/files/cambonos/lib/integrate-shells",
         ):
             self.assertIn(expected, path.read_text())
+
+
+class PacmanPrivilegePolicyTests(unittest.TestCase):
+    ZSH = shutil.which("zsh")
+    FRAGMENT = ROOT / "packages/cambonos-zsh/files/zsh/conf.d/45-pacman-sudo.zsh"
+
+    @unittest.skipUnless(ZSH, "Zsh is required for pacman wrapper tests")
+    def test_pacman_operation_classification(self):
+        cases = (
+            (("-S", "firefox"), 0),
+            (("-Syu",), 0),
+            (("-Fy",), 0),
+            (("--sync", "--refresh"), 0),
+            (("-R", "firefox"), 0),
+            (("-U", "package.pkg.tar.zst"), 0),
+            (("-Q", "firefox"), 1),
+            (("-Qs", "firefox"), 1),
+            (("-Si", "firefox"), 1),
+            (("-Sg",), 1),
+            (("-Sp", "firefox"), 1),
+            (("-F", "kernel"), 1),
+            (("-T", "bash"), 1),
+            (("--version",), 1),
+            (("--help",), 1),
+        )
+        for arguments, expected in cases:
+            with self.subTest(arguments=arguments):
+                result = subprocess.run(
+                    [
+                        self.ZSH, "-f", "-c",
+                        'source "$1"; shift; _cambonos_pacman_needs_sudo "$@"',
+                        "zsh", str(self.FRAGMENT), *arguments,
+                    ],
+                    text=True, capture_output=True,
+                )
+                self.assertEqual(result.returncode, expected, result.stderr)
 
 
 class ShellIntegrationHelperTests(unittest.TestCase):

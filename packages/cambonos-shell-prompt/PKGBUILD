@@ -1,6 +1,6 @@
 pkgname=cambonos-shell-prompt
 pkgver=0.1.0
-pkgrel=4
+pkgrel=5
 pkgdesc="CambonOS Starship prompt configuration and shell integrations"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"

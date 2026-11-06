@@ -44,6 +44,14 @@ La configuración personal tiene prioridad:
 
 La variable se establece durante el inicio de la shell y puede redefinirse posteriormente desde la configuración personal.
 
+## Exploración del directorio
+
+Starship utiliza `scan_timeout = 250` ms para limitar el tiempo dedicado a
+examinar el directorio actual y detectar el contexto de los módulos. El límite
+se amplía respecto al valor predeterminado de 30 ms para reducir advertencias
+`Scanning current directory timed out` en directorios cuyo acceso o exploración
+requiere algo más de tiempo. Este valor es un máximo, no una espera fija.
+
 ## Integración por shell
 
 - **Bash:** bloque delimitado en `/etc/bash.bashrc`, que carga el fragmento del paquete.
