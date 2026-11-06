@@ -9,17 +9,17 @@
       "right": 3
     },
     "color": {
-      "1": "black",
-      "2": "green",
-      "3": "white",
-      "4": "blue"
+      "1": "#061C31",
+      "2": "#AEFA50",
+      "3": "#F7F5EC",
+      "4": "#70E7E6"
     }
   },
   "display": {
     "separator": ": ",
     "color": {
-      "keys": "green",
-      "title": "blue"
+      "keys": "#AEFA50",
+      "title": "#70E7E6"
     }
   },
   "modules": [

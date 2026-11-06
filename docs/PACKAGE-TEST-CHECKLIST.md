@@ -25,21 +25,44 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 
 ### Construcción y contenido
 - [ ] `makepkg` termina correctamente.
-- [ ] El paquete contiene la licencia y los recursos de `files/` instalados por el `PKGBUILD`.
-- [ ] Los seis SVG y `cambonos-logo.txt` se instalan en `/usr/share/cambonos/branding/`.
-- [ ] El enlace `/usr/share/icons/hicolor/scalable/apps/cambonos-logo.svg` apunta al SVG canónico `cambonos-icon.svg`.
-- [ ] No se publica el nombre histórico `/usr/share/icons/hicolor/scalable/apps/cambonos.svg`; se considera obsoleto y no se mantiene como alias.
-- [ ] Los enlaces `/usr/share/pixmaps/cambonos-logo.svg` y `/usr/share/pixmaps/cambonos-logo-text.svg` apuntan a `cambonos-icon.svg` y `cambonos-text.svg`, respectivamente.
-- [ ] `xmllint --noout` valida los seis SVG instalados.
-- [ ] Confirmar que los SVG distribuidos son los artefactos aprobados por el equipo de diseño.
-- [ ] La validación visual, la paleta, la legibilidad y las variantes de tamaño se verifican en el flujo del equipo de diseño, no en este repositorio de empaquetado.
+- [ ] El paquete contiene los cuatro recursos gráficos (`cambonos-icon.svg`,
+  `cambonos-text.svg`, `cambonos-icon.png` y `cambonos-text.png`), los recursos
+  de `files/ttf/` y la licencia.
+- [ ] Los cuatro recursos gráficos se instalan en
+  `/usr/share/cambonos/branding/`.
+- [ ] Los SVG se validan con `xmllint --noout` y se renderizan correctamente.
+- [ ] `cambonos-icon.png` tiene 1024 × 1024 píxeles y
+  `cambonos-text.png` tiene 3792 × 1024 píxeles; ambos se visualizan
+  correctamente.
+- [ ] Confirmar que los cuatro recursos distribuidos son los artefactos
+  aprobados por el equipo de diseño.
+- [ ] `CambonOS-Symbols.ttf` se instala en `/usr/share/fonts/TTF/`.
+- [ ] `65-cambonos-symbols.conf` se instala en `conf.avail` y se habilita
+  mediante el enlace en `conf.default`.
+- [ ] La licencia se instala en
+  `/usr/share/licenses/cambonos-branding/LICENSE`.
+- [ ] No se incluyen `cambonos-icon-black.svg`, `cambonos-icon-white.svg`,
+  `cambonos-text-black.svg`, `cambonos-text-white.svg` ni `cambonos-logo.txt`.
+- [ ] No se crean enlaces simbólicos en `/usr/share/icons/` ni
+  `/usr/share/pixmaps/`.
+- [ ] Validar la cabecera TrueType y comprobar `fc-match 'CambonOS Symbols'`.
+- [ ] Fontconfig antepone `CambonOS Symbols` para solicitudes que incluyan
+  `U+10FFFD`.
 
-### Ciclo de vida
-- [ ] Instalar el paquete en una VM limpia.
-- [ ] Actualizar a una compilación con recursos modificados e incrementar `pkgrel`/`pkgver`.
-- [ ] Confirmar que la actualización reemplaza los recursos por los nuevos.
-- [ ] Desinstalar y confirmar que solo se eliminan archivos propiedad del paquete.
-- [ ] Confirmar que no se modifican `/etc`, `$HOME` ni configuraciones de escritorio.
+### Rutas y ciclo de vida
+- [ ] Los consumidores CambonOS utilizan directamente los recursos
+  canónicos SVG o PNG según sus necesidades.
+- [ ] No se depende de rutas antiguas ni se crean aliases de compatibilidad.
+- [ ] Instalar en una VM limpia y comprobar el contenido real con `pacman -Qlp`.
+- [ ] Actualizar desde la versión publicada anterior (`0.1.1-1`) a la nueva
+  versión (`0.1.1-3`) y confirmar que pacman elimina las variantes SVG y
+  `cambonos-logo.txt` que ya no pertenecen al paquete.
+- [ ] Confirmar que la actualización instala los dos PNG y conserva la fuente
+  y la integración Fontconfig.
+- [ ] Desinstalar y confirmar que solo se eliminan archivos propiedad del
+  paquete.
+- [ ] Confirmar que no se modifican `/etc`, `$HOME` ni configuraciones de
+  escritorio.
 
 ## 3. cambonos-fastfetch
 
@@ -237,13 +260,18 @@ Checklist operativa para verificar los paquetes del repositorio en un entorno Ar
 - [ ] Probar enlace simbólico preexistente.
 - [ ] Probar directorio preexistente y confirmar que se conserva.
 - [ ] Modificar manualmente el archivo después de aplicar CambonOS.
-- [ ] Desinstalar y confirmar que se conserva la modificación manual y que `/var/lib/cambonos-release` mantiene el backup y el estado gestionado.
+- [ ] Desinstalar y confirmar que se conserva la modificación manual y todo el estado de recuperación (`lsb-release.original`, `.was-absent` y `.managed`).
 - [ ] Desinstalar sin modificación manual y confirmar restauración del original y limpieza del estado solo tras una restauración satisfactoria.
-- [ ] Probar presencia de `/etc/lsb-release.pacnew` y verificar prioridad.
-- [ ] Si `/etc/lsb-release` ha desaparecido pero existe un backup original, comprobar que se restaura el backup y no se elimina el estado antes de completar la recuperación.
+- [ ] Probar presencia de `/etc/lsb-release.pacnew` y verificar prioridad, tanto con backup original como con marcador de ausencia.
+- [ ] Probar `.pacnew` que sea enlace simbólico o directorio: no debe instalarse y el estado debe conservarse.
+- [ ] Probar backup que sea directorio: rechazarlo y conservar el estado.
+- [ ] Probar que el directorio de estado sea un enlace simbólico o que `.was-absent` sea un directorio: rechazar metadatos y conservarlos.
+- [ ] Probar ausencia de `/etc/lsb-release` durante la desinstalación: no eliminar los datos de recuperación.
+- [ ] Probar ausencia de backup y marcador `.was-absent`: conservar el estado.
+- [ ] Probar backup y marcador `.was-absent` simultáneos: detectar conflicto y conservar el estado.
+- [ ] Simular fallos de `mktemp`, `cp` y `mv`; confirmar que el archivo gestionado y los datos originales siguen disponibles.
+- [ ] Comprobar que un backup de directorio se rechaza de forma conservadora.
 - [ ] Si `lsb-release` no está instalado, comprobar que el helper conserva cualquier estado de recuperación existente.
-- [ ] Simular un fallo al crear el directorio temporal de restauración y comprobar que el backup permanece disponible.
-- [ ] Simular error de escritura o falta de espacio y comprobar que no queda un archivo parcial.
 
 ### Hooks y ciclo de vida
 - [ ] Instalar/actualizar/eliminar `lsb-release` y comprobar hook.

@@ -10,65 +10,103 @@ post_remove() {
     # Restore Arch's standard os-release link only when ours is still active.
     if [[ -L /etc/os-release ]] &&
        [[ "$(readlink -- /etc/os-release)" == "../usr/lib/cambonos/os-release" ]]; then
-        ln -sfnT -- ../usr/lib/os-release /etc/os-release
+        if ! ln -sfnT -- ../usr/lib/os-release /etc/os-release; then
+            printf 'cambonos-release: could not restore /etc/os-release; preserving the current link.\n' >&2
+        fi
     fi
 
-    # Restore the original lsb-release file only if it still contains the
-    # CambonOS-managed content. Preserve administrator edits made afterwards.
-    state_dir="/var/lib/cambonos-release"
-    backup="$state_dir/lsb-release.original"
-    was_absent="$state_dir/lsb-release.was-absent"
-    managed="$state_dir/lsb-release.managed"
-    pacnew="/etc/lsb-release.pacnew"
+    local state_dir="/var/lib/cambonos-release"
+    local backup="$state_dir/lsb-release.original"
+    local was_absent="$state_dir/lsb-release.was-absent"
+    local managed="$state_dir/lsb-release.managed"
+    local pacnew="/etc/lsb-release.pacnew"
+    local temporary_dir=""
 
-    restored=0
-    temporary_dir=""
-
-    # Restore only when the current file is still the exact version managed by
-    # CambonOS. If an administrator changed it, keep both that file and the
-    # recovery data so the original can still be recovered manually.
-    if [[ -f "$managed" ]] &&
-       [[ -f /etc/lsb-release && ! -L /etc/lsb-release ]] &&
-       cmp -s -- /etc/lsb-release "$managed"; then
-        if [[ -f "$pacnew" ]]; then
-            # If pacman preserved a newer upstream default as .pacnew, prefer it.
-            if mv -fT -- "$pacnew" /etc/lsb-release; then
-                restored=1
-            fi
-        elif [[ -e "$backup" || -L "$backup" ]]; then
-            # Restore through a temporary directory on /etc's filesystem so
-            # the original metadata is retained and the replacement is atomic.
-            temporary_dir="$(mktemp -d /etc/.lsb-release.restore.XXXXXX)" || temporary_dir=""
-            if [[ -n "$temporary_dir" ]] &&
-               cp -a -- "$backup" "$temporary_dir/restored" &&
-               mv -fT -- "$temporary_dir/restored" /etc/lsb-release; then
-                restored=1
-            fi
-            [[ -z "$temporary_dir" ]] || rmdir -- "$temporary_dir" 2>/dev/null || true
-        elif [[ -e "$was_absent" ]]; then
-            if rm -f -- /etc/lsb-release; then
-                restored=1
-            fi
+    # Nothing to recover when this package never managed the optional file.
+    if [[ ! -d "$state_dir" || -L "$state_dir" ]]; then
+        if [[ -e "$state_dir" || -L "$state_dir" ]]; then
+            printf 'cambonos-release: %s is not a real directory; preserving it.\n' "$state_dir" >&2
         fi
-    elif [[ ! -e /etc/lsb-release && ! -L /etc/lsb-release ]] &&
-         [[ -e "$backup" || -L "$backup" ]]; then
-        # The managed file may have been removed independently. The saved
-        # original is still recoverable and must not be discarded.
-        temporary_dir="$(mktemp -d /etc/.lsb-release.restore.XXXXXX)"
-        if cp -a -- "$backup" "$temporary_dir/restored" &&
-           mv -fT -- "$temporary_dir/restored" /etc/lsb-release; then
-            restored=1
-        fi
-        rmdir -- "$temporary_dir" 2>/dev/null || true
-    elif [[ ! -e /etc/lsb-release && ! -L /etc/lsb-release ]] &&
-         [[ -e "$was_absent" ]]; then
-        restored=1
+        return 0
     fi
 
-    if (( restored )); then
-        rm -rf -- "$state_dir"
-    elif [[ -d "$state_dir" ]]; then
-        printf 'cambonos-release: no se pudo restaurar %s de forma segura; se conserva %s para recuperación manual.\n' \
-            /etc/lsb-release "$state_dir" >&2
+    # The managed snapshot is required to distinguish our file from an
+    # administrator-owned replacement. Missing or invalid metadata is kept.
+    if [[ ! -f "$managed" || -L "$managed" ]]; then
+        printf 'cambonos-release: missing or invalid managed snapshot; keeping %s for manual recovery.\n' "$state_dir" >&2
+        return 0
+    fi
+
+    if [[ ! -f /etc/lsb-release || -L /etc/lsb-release ]]; then
+        printf 'cambonos-release: /etc/lsb-release is missing or is not a regular file; preserving recovery state.\n' >&2
+        return 0
+    fi
+
+    if ! cmp -s -- /etc/lsb-release "$managed"; then
+        printf 'cambonos-release: /etc/lsb-release was modified; preserving it and %s.\n' "$state_dir" >&2
+        return 0
+    fi
+
+    # Exactly one original-state marker must exist. Reject ambiguous metadata.
+    if [[ -e "$backup" || -L "$backup" ]]; then
+        if [[ -d "$backup" && ! -L "$backup" ]]; then
+            printf 'cambonos-release: invalid backup directory; keeping %s.\n' "$state_dir" >&2
+            return 0
+        fi
+        if [[ -e "$was_absent" || -L "$was_absent" ]]; then
+            printf 'cambonos-release: conflicting original-state markers; keeping %s.\n' "$state_dir" >&2
+            return 0
+        fi
+
+        if [[ -e "$pacnew" || -L "$pacnew" ]]; then
+            if [[ ! -f "$pacnew" || -L "$pacnew" ]]; then
+                printf 'cambonos-release: %s is not a regular file; keeping %s.\n' "$pacnew" "$state_dir" >&2
+                return 0
+            fi
+            if ! mv -fT -- "$pacnew" /etc/lsb-release; then
+                printf 'cambonos-release: could not restore %s; keeping %s.\n' "$pacnew" "$state_dir" >&2
+                return 0
+            fi
+        else
+            # Stage the original on /etc's filesystem and atomically replace
+            # the managed file. cp -a preserves the original metadata.
+            temporary_dir="$(mktemp -d /etc/.lsb-release.restore.XXXXXX)" || {
+                printf 'cambonos-release: could not create a temporary restore directory; keeping %s.\n' "$state_dir" >&2
+                return 0
+            }
+            if ! cp -a -- "$backup" "$temporary_dir/lsb-release"; then
+                rm -rf -- "$temporary_dir"
+                printf 'cambonos-release: could not stage the original file; keeping %s.\n' "$state_dir" >&2
+                return 0
+            fi
+            if ! mv -fT -- "$temporary_dir/lsb-release" /etc/lsb-release; then
+                rm -rf -- "$temporary_dir"
+                printf 'cambonos-release: could not install the original file; keeping %s.\n' "$state_dir" >&2
+                return 0
+            fi
+            rmdir -- "$temporary_dir" 2>/dev/null || true
+        fi
+    elif [[ -f "$was_absent" && ! -L "$was_absent" ]]; then
+        if [[ -e "$pacnew" || -L "$pacnew" ]]; then
+            if [[ ! -f "$pacnew" || -L "$pacnew" ]]; then
+                printf 'cambonos-release: %s is not a regular file; keeping %s.\n' "$pacnew" "$state_dir" >&2
+                return 0
+            fi
+            if ! mv -fT -- "$pacnew" /etc/lsb-release; then
+                printf 'cambonos-release: could not restore %s; keeping %s.\n' "$pacnew" "$state_dir" >&2
+                return 0
+            fi
+        elif ! rm -f -- /etc/lsb-release; then
+            printf 'cambonos-release: could not remove the managed file; keeping %s.\n' "$state_dir" >&2
+            return 0
+        fi
+    else
+        printf 'cambonos-release: original-state metadata is missing or invalid; keeping %s.\n' "$state_dir" >&2
+        return 0
+    fi
+
+    # Remove recovery material only after a complete, verified restoration.
+    if ! rm -rf -- "$state_dir"; then
+        printf 'cambonos-release: restoration succeeded but could not clean %s; it was retained.\n' "$state_dir" >&2
     fi
 }

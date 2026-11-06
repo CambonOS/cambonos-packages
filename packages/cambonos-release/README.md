@@ -46,7 +46,9 @@ La política es **managed**: CambonOS aplica su identidad predeterminada sin apr
 - Escribe el archivo mediante un temporal y sustitución atómica.
 - Guarda una copia exacta del contenido administrado para detectar modificaciones posteriores.
 - Al desinstalar, restaura el original únicamente si el archivo sigue coincidiendo con el contenido administrado. Si existe `.pacnew`, tiene preferencia sobre la copia anterior.
-- Si el administrador modificó el archivo, o la restauración no puede completarse de forma segura, conserva el archivo actual y los datos de recuperación en `/var/lib/cambonos-release` para intervención manual.
+- Si el administrador modificó el archivo, faltan los metadatos originales, existen marcadores contradictorios o la restauración no puede completarse de forma segura, conserva el archivo actual y los datos de recuperación en `/var/lib/cambonos-release` para intervención manual.
+- Un `.pacnew` regular tiene prioridad tanto si se guardó un backup como si el archivo no existía originalmente. Un `.pacnew` que sea enlace simbólico o directorio se rechaza y conserva el estado.
+- El estado solo se elimina después de completar la restauración. Los fallos de `mktemp`, `cp` o `mv` no deben provocar la eliminación del backup ni del snapshot gestionado.
 - Si `lsb-release` no está instalado, el helper no gestiona `/etc/lsb-release` y conserva cualquier estado de recuperación existente.
 
 ## Hook ALPM
@@ -114,3 +116,6 @@ sudo diff -u /var/lib/cambonos-release/lsb-release.original /etc/lsb-release
 ```
 
 No elimines `/var/lib/cambonos-release` hasta haber recuperado o descartado conscientemente la copia original. Si el archivo original no existía, `lsb-release.was-absent` permite distinguir ese caso de una copia de respaldo.
+
+
+La implementación de esta política se distribuye en `pkgver=0.1.0`, `pkgrel=8`.

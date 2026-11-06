@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import tempfile
@@ -31,6 +32,25 @@ class ShellPackageMetadataTests(unittest.TestCase):
         self.assertIn("vendor_conf.d/cambonos-shell-prompt.fish", text)
         self.assertIn("conf.d/50-shell-prompt.zsh", text)
 
+    def test_fastfetch_uses_simplified_four_color_logo_palette(self):
+        package = ROOT / "packages/cambonos-fastfetch"
+        config = json.loads((package / "files/cambonos/fastfetch/config.jsonc").read_text())
+        self.assertEqual(
+            config["logo"]["color"],
+            {
+                "1": "#061C31",
+                "2": "#AEFA50",
+                "3": "#F7F5EC",
+                "4": "#70E7E6",
+            },
+        )
+        self.assertEqual(
+            config["display"]["color"],
+            {"keys": "#AEFA50", "title": "#70E7E6"},
+        )
+        pkgb = (package / "PKGBUILD").read_text()
+        self.assertIn("pkgrel=14", pkgb)
+
     def test_fastfetch_uses_zsh_conf_d_and_shared_lock(self):
         package = (ROOT / "packages/cambonos-fastfetch/PKGBUILD").read_text()
         helper = (ROOT / "packages/cambonos-fastfetch/files/cambonos/lib/integrate-shells").read_text()
@@ -49,19 +69,23 @@ class ShellPackageMetadataTests(unittest.TestCase):
         lines = config["format"].splitlines()
         self.assertIn("$git_branch", lines[0])
         self.assertIn("$fill$python", lines[0])
-        self.assertIn("$custom.cambonos_pkgbuild", lines[0])
+        self.assertIn("${custom.cambonos_directory}", lines[0])
+        self.assertIn("${custom.cambonos_pkgbuild}", lines[0])
         self.assertIn("$package$username$hostname", lines[0])
-        self.assertIn("$character$fill$status$jobs$cmd_duration", lines[1])
-        self.assertNotIn("right_format", config)
+        self.assertEqual(lines[1], "[╰─](fg:primary) $character")
+        self.assertEqual(
+            config["right_format"].strip(),
+            "$status$jobs$cmd_duration",
+        )
         self.assertFalse(config["python"]["detect_files"])
         self.assertFalse(config["custom"]["cambonos_directory"]["unsafe_no_escape"])
         self.assertEqual(config["custom"]["cambonos_directory"]["command"],
                          "/usr/bin/cambonos-starship-directory")
-        self.assertEqual(config["username"]["style_user"], "fg:deep_blue")
-        self.assertEqual(config["username"]["style_root"], "bold fg:accent")
+        self.assertEqual(config["username"]["style_user"], "fg:secondary")
+        self.assertEqual(config["username"]["style_root"], "bold fg:secondary")
         self.assertEqual(config["hostname"]["format"],
                          "[@](fg:deep_blue)[$hostname]($style) ")
-        self.assertEqual(config["hostname"]["style"], "bold fg:accent")
+        self.assertEqual(config["hostname"]["style"], "bold fg:secondary")
 
     def test_shell_prompt_installs_custom_directory_renderer(self):
         package = (ROOT / "packages/cambonos-shell-prompt/PKGBUILD").read_text()

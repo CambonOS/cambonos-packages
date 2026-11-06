@@ -32,6 +32,25 @@ Este paquete instala la configuración y el logotipo utilizados por Fastfetch, e
 | `/usr/lib/cambonos/fastfetch/integrate-shells` | Gestor de integración Bash y migración de la antigua integración Zsh. |
 | `/usr/share/libalpm/hooks/cambonos-fastfetch.hook` | Reparación tras actualizaciones de Bash. |
 
+## Identidad cromática
+
+`config.jsonc` utiliza una selección simplificada de cuatro colores HEX
+oficiales para el logotipo ASCII. Esta combinación conserva mejor su legibilidad
+y sus detalles que una asignación con más colores:
+
+| Uso | Color | HEX |
+|---|---|---|
+| Logotipo, índice 1 | Azul noche profundo | `#061C31` |
+| Logotipo, índice 2 | Verde lima eléctrico | `#AEFA50` |
+| Logotipo, índice 3 | Blanco cálido | `#F7F5EC` |
+| Logotipo, índice 4 | Turquesa luminoso | `#70E7E6` |
+| Claves de módulos | Verde lima eléctrico | `#AEFA50` |
+| Título | Turquesa luminoso | `#70E7E6` |
+
+Los valores se declaran como colores HEX directamente en la configuración de
+Fastfetch, sin depender de los colores ANSI definidos por el tema de la
+terminal.
+
 ## Comportamiento
 
 - Se ejecuta únicamente en sesiones interactivas.

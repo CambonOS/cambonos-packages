@@ -98,6 +98,50 @@ El despliegue utiliza `actions/upload-pages-artifact` y `actions/deploy-pages`. 
 
 ## Paquetes de integración del sistema
 
+### `cambonos-branding`
+
+El paquete distribuye cuatro recursos gráficos en
+`/usr/share/cambonos/branding/`: `cambonos-icon.svg`,
+`cambonos-text.svg`, `cambonos-icon.png` y `cambonos-text.png`. Los SVG son
+los recursos vectoriales y los PNG sus exportaciones rasterizadas
+(1024 × 1024 para el icono y 3792 × 1024 para el logotipo textual). También
+instala la fuente `CambonOS-Symbols.ttf` en `/usr/share/fonts/TTF/`, la regla
+Fontconfig de `files/ttf/` y la licencia.
+
+Se eliminan las variantes `cambonos-icon-black.svg`,
+`cambonos-icon-white.svg`, `cambonos-text-black.svg`,
+`cambonos-text-white.svg` y `cambonos-logo.txt`. No se crean enlaces
+simbólicos en `/usr/share/icons/` ni `/usr/share/pixmaps/`, ni se mantiene
+compatibilidad con las rutas anteriores: los consumidores propios de
+CambonOS deben utilizar directamente los cuatro recursos gráficos canónicos.
+Se conserva exclusivamente el enlace Fontconfig `conf.default` → `conf.avail`
+necesario para activar el fallback de `CambonOS Symbols` para `U+10FFFD`.
+El cambio de contenido incrementa `pkgrel` de 1 a 3, manteniendo
+`pkgver=0.1.1`.
+
+
+### `cambonos-release`: recuperación al desinstalar
+
+El `post_remove` restaura `/etc/os-release` únicamente si todavía apunta al
+enlace administrado por CambonOS. Para `/etc/lsb-release`, exige que el archivo
+siga siendo regular y coincida con `lsb-release.managed`; no sobrescribe
+cambios administrativos, enlaces simbólicos ni directorios.
+
+La restauración valida que exista exactamente un marcador del estado original
+(`lsb-release.original` o `lsb-release.was-absent`) y que el snapshot gestionado
+sea válido. Un `/etc/lsb-release.pacnew` regular tiene prioridad tanto si había
+backup como si el archivo original no existía. Sin `.pacnew`, el backup se copia
+con `cp -a` a un directorio temporal en `/etc` y se instala mediante `mv`
+atómico; el marcador de ausencia permite retirar únicamente el archivo
+gestionado.
+
+`/var/lib/cambonos-release` se elimina solo después de completar la
+restauración. Si hay cambios manuales, metadatos incompletos/contradictorios,
+rutas inesperadas o errores de `mktemp`, `cp` o `mv`, se conservan los datos de
+recuperación para intervención manual. Este cambio incrementa `pkgrel` de 7 a
+8, manteniendo `pkgver=0.1.0`. La regresión se cubre con
+`tests/test_release_install.py`.
+
 ### `cambonos-keyring`
 
 Añade el certificado público y la información de confianza de pacman en:
