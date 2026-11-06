@@ -15,7 +15,7 @@ class GrubPackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-grub", pkgb)
         self.assertIn("pkgver=0.1.0", pkgb)
-        self.assertIn("pkgrel=7", pkgb)
+        self.assertIn("pkgrel=8", pkgb)
         self.assertIn("'GPL-3.0-only'", pkgb)
         self.assertIn("'GPL-2.0-or-later WITH Font-exception-2.0'", pkgb)
         self.assertIn("'grub>=2:2.16'", pkgb)
