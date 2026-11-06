@@ -14,6 +14,11 @@ from .config import MIRROR_BASE_URL, REPOSITORY_SECTION
 
 INDEX_MARKER = "<!-- generated-by: cambonos-index -->"
 INDEX_TITLE = "CambonOS Package Repository"
+FAVICON_NAME = "cambonos-icon.svg"
+FAVICON_SOURCE = (
+    Path(__file__).resolve().parents[2]
+    / "packages" / "cambonos-branding" / "files" / FAVICON_NAME
+)
 _SITE_CSS = """
 :root {
     color-scheme: light;
@@ -221,6 +226,7 @@ def generate_directory_indexes(site: Path) -> tuple[int, int]:
             rows.append('<tr><td colspan="3">This directory is empty.</td></tr>')
 
         parts = relative.parts if relative != Path(".") else ()
+        favicon_href = "../" * len(parts) + FAVICON_NAME
         breadcrumbs = [f'<a href="{"../" * len(parts) or "./"}">Packages</a>']
         for index, part in enumerate(parts):
             breadcrumbs.append('<span class="separator" aria-hidden="true">/</span>')
@@ -237,6 +243,7 @@ def generate_directory_indexes(site: Path) -> tuple[int, int]:
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
+    <link rel="icon" type="image/svg+xml" href="{favicon_href}">
     <title>CambonOS Packages | {escape(display_path)}</title>
     <script>{_THEME_SCRIPT}</script>
   <style>
@@ -308,6 +315,9 @@ def write_site_metadata(
 
 
 def write_index(site: Path, manifest: dict, pages_url: str) -> None:
+    if not FAVICON_SOURCE.is_file():
+        raise CambonosError(f"no se encuentra el favicon de marca: {FAVICON_SOURCE}")
+    (site / FAVICON_NAME).write_bytes(FAVICON_SOURCE.read_bytes())
     rows = []
     for channel, label in (("stable", "Stable"), ("testing", "Testing")):
         data = manifest["channels"][channel]
@@ -324,6 +334,7 @@ def write_index(site: Path, manifest: dict, pages_url: str) -> None:
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CambonOS Packages</title><link rel="canonical" href="{pages_canonical_url}">
 <meta name="description" content="Official CambonOS package repositories, with signed stable and testing channels.">
+<link rel="icon" type="image/svg+xml" href="{FAVICON_NAME}">
 <script>{_THEME_SCRIPT}</script>
 <style>{_SITE_CSS}</style></head><body>
 <a class="skip-link" href="#main-content">Skip to content</a>
@@ -363,6 +374,7 @@ Signed global manifest: <a href="metadata/manifest.json">metadata/manifest.json<
 def verify_site(site: Path) -> None:
     required = (
         site / "index.html",
+        site / FAVICON_NAME,
         site / "metadata" / "manifest.json",
         site / "metadata" / "manifest.json.sig",
         site / "stable" / "x86_64",

@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+FAVICON_SOURCE = ROOT / "packages" / "cambonos-branding" / "files" / "cambonos-icon.svg"
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from cambonos_lib.site import generate_directory_indexes, write_index, write_site_metadata, verify_site
@@ -20,6 +21,7 @@ class DirectoryIndexTests(unittest.TestCase):
             (site / "index.html").write_text("<h1>Branded landing page</h1>", encoding="utf-8")
             repository = site / "stable" / "x86_64"
             repository.mkdir(parents=True)
+            (site / "cambonos-icon.svg").write_bytes(FAVICON_SOURCE.read_bytes())
             (repository / "cambonos-1.0-1-any.pkg.tar.zst").write_bytes(b"package")
             (repository / "cambonos.db.tar.gz").write_bytes(b"database archive")
             (repository / "file with spaces.txt").write_text("content", encoding="utf-8")
@@ -40,6 +42,7 @@ class DirectoryIndexTests(unittest.TestCase):
             self.assertIn('href="cambonos-1.0-1-any.pkg.tar.zst"', html)
             self.assertIn('href="cambonos.db.tar.gz"', html)
             self.assertIn('href="../../">Packages</a>', html)
+            self.assertIn('href="../../cambonos-icon.svg"', html)
             self.assertIn('href="../">stable/</a>', html)
             self.assertIn('<html lang="en">', html)
             self.assertIn("CambonOS Packages | /stable/x86_64/", html)
@@ -101,6 +104,10 @@ class DirectoryIndexTests(unittest.TestCase):
             self.assertIn("https://mirror.cambonos.org/testing/$arch", html)
             self.assertIn('href="metadata/manifest.json"', html)
             self.assertIn('rel="canonical" href="https://example.github.io/repo"', html)
+            self.assertIn('<link rel="icon" type="image/svg+xml" href="cambonos-icon.svg">', html)
+            self.assertEqual(
+                (site / "cambonos-icon.svg").read_bytes(), FAVICON_SOURCE.read_bytes()
+            )
             self.assertIn('<html lang="en">', html)
             self.assertIn('name="description" content="Official CambonOS package repositories, with signed stable and testing channels."', html)
             self.assertIn("Official CambonOS package repositories.", html)
@@ -169,6 +176,7 @@ class SiteVerificationTests(unittest.TestCase):
                 testing_record = record
         metadata = root / "metadata"
         metadata.mkdir()
+        (root / "cambonos-icon.svg").write_bytes(FAVICON_SOURCE.read_bytes())
         (metadata / "manifest.json").write_text(json.dumps({
             "channels": {
                 "stable": {"packages": {"sample": stable_record}},
@@ -184,6 +192,14 @@ class SiteVerificationTests(unittest.TestCase):
             site = Path(temporary)
             self._site(site)
             verify_site(site)
+
+    def test_verify_site_rejects_missing_favicon(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            site = Path(temporary)
+            self._site(site)
+            (site / "cambonos-icon.svg").unlink()
+            with self.assertRaisesRegex(CambonosError, "sitio incompleto.*cambonos-icon.svg"):
+                verify_site(site)
 
     def test_verify_site_rejects_package_hash_mismatch(self):
         with tempfile.TemporaryDirectory() as temporary:
