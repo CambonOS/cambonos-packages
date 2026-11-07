@@ -2,7 +2,7 @@
 
 Este documento registra las funciones de los paquetes y si han sido verificadas en un entorno real. No es una guía de instalación ni una lista de tareas de publicación.
 
-Marca una función únicamente cuando se haya comprobado su funcionamiento en un sistema Arch de pruebas. Una función implementada pero no probada debe permanecer pendiente. Antes de fusionar `dev` en `main`, todas las funciones de esta checklist deben estar verificadas. Toda función nueva debe añadirse aquí y probarse antes de ese merge.
+Marca una función únicamente cuando se haya comprobado su funcionamiento en un sistema Arch de pruebas. Una función implementada pero no probada debe permanecer pendiente. Antes de fusionar `dev` en `main`, deben estar verificadas todas las funciones que formen parte del alcance soportado de esa versión. Las pruebas que dependan de capacidades todavía no soportadas pueden permanecer pendientes únicamente si la limitación está documentada y su exclusión del alcance ha sido aceptada expresamente; no deben marcarse como verificadas. Toda función nueva debe añadirse aquí y probarse antes de ese merge.
 
 - `[ ]` Pendiente de verificación funcional.
 - `[x]` Verificada en un entorno real.
@@ -77,8 +77,8 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 - [x] La animación y la barra de progreso se muestran correctamente durante el arranque.
 - [x] La integración con mkinitcpio incorpora Plymouth a las imágenes initramfs.
 - [x] La selección de tema del administrador se conserva durante las actualizaciones.
-- [ ] La configuración de Plymouth funciona con el orden de hooks previsto, también en sistemas cifrados. (No se realizan pruebas con cifrado por el momento)
-- [ ] Los diálogos de teclado y desbloqueo muestran los recursos gráficos esperados. (No se realizan pruebas con cifrado por el momento)
+- [ ] La configuración de Plymouth funciona con el orden de hooks previsto, también en sistemas cifrados. (Pendiente: CambonOS todavía no soporta instalaciones cifradas; estas pruebas quedan fuera del alcance funcional actual.)
+- [ ] Los diálogos de teclado y desbloqueo muestran los recursos gráficos esperados. (Pendiente: CambonOS todavía no soporta instalaciones cifradas; estas pruebas quedan fuera del alcance funcional actual.)
 
 ## cambonos-keyring
 
