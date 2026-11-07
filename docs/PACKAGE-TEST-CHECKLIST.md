@@ -11,90 +11,90 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 
 ## cambonos-branding
 
-- [ ] Los recursos SVG de identidad se muestran correctamente.
-- [ ] Los recursos PNG de identidad se muestran correctamente.
-- [ ] La fuente CambonOS Symbols se reconoce y sus glifos se representan correctamente.
-- [ ] Fontconfig encuentra y aplica la configuración de la fuente.
+- [x] Los recursos SVG de identidad se muestran correctamente.
+- [x] Los recursos PNG de identidad se muestran correctamente.
+- [x] La fuente CambonOS Symbols se reconoce y sus glifos se representan correctamente.
+- [x] Fontconfig encuentra y aplica la configuración de la fuente.
 
 ## cambonos-fastfetch
 
-- [ ] Fastfetch muestra la identidad y el logotipo de CambonOS.
-- [ ] Fastfetch muestra correctamente la información principal del sistema.
-- [ ] Fastfetch se ejecuta en las sesiones de login compatibles mediante `/etc/profile.d/`.
-- [ ] La integración automática funciona en sesiones interactivas de Bash.
-- [ ] La integración automática funciona en sesiones interactivas de Zsh cuando está instalado `cambonos-zsh`.
-- [ ] La integración automática funciona en sesiones interactivas de Fish.
-- [ ] La integración de shells puede activarse y retirarse sin alterar configuraciones ajenas.
+- [x] Fastfetch muestra la identidad y el logotipo de CambonOS.
+- [x] Fastfetch muestra correctamente la información principal del sistema.
+- [x] Fastfetch se ejecuta en las sesiones de login compatibles mediante `/etc/profile.d/`.
+- [x] La integración automática funciona en sesiones interactivas de Bash.
+- [x] La integración automática funciona en sesiones interactivas de Zsh cuando está instalado `cambonos-zsh`.
+- [x] La integración automática funciona en sesiones interactivas de Fish.
+- [x] La integración de shells puede activarse y retirarse sin alterar configuraciones ajenas.
 
 ## cambonos-shell-prompt
 
-- [ ] Starship utiliza la configuración visual predeterminada de CambonOS.
-- [ ] El prompt funciona en sesiones interactivas de Bash.
-- [ ] El prompt funciona en sesiones interactivas de Zsh cuando está instalado `cambonos-zsh`.
-- [ ] El prompt funciona en sesiones interactivas de Fish.
-- [ ] El directorio actual y sus directorios padre se representan correctamente.
-- [ ] Se respeta la configuración personal de Starship del usuario.
+- [x] Starship utiliza la configuración visual predeterminada de CambonOS.
+- [x] El prompt funciona en sesiones interactivas de Bash.
+- [x] El prompt funciona en sesiones interactivas de Zsh cuando está instalado `cambonos-zsh`.
+- [x] El prompt funciona en sesiones interactivas de Fish.
+- [x] El directorio actual y sus directorios padre se representan correctamente.
+- [x] Se respeta la configuración personal de Starship del usuario.
 
 ## cambonos-zsh
 
-- [ ] Zsh carga la configuración global de CambonOS.
-- [ ] El sistema de autocompletado funciona.
-- [ ] Los atajos de teclado configurados funcionan.
-- [ ] El historial persistente funciona.
-- [ ] Autosuggestions y syntax highlighting funcionan.
-- [ ] Los fragmentos de integración de otros paquetes se cargan en el orden previsto.
-- [ ] La configuración personal del usuario se mantiene independiente de la configuración global.
-- [ ] Las operaciones de pacman que modifican el sistema solicitan privilegios cuando corresponde.
+- [x] Zsh carga la configuración global de CambonOS.
+- [x] El sistema de autocompletado funciona.
+- [x] Los atajos de teclado configurados funcionan.
+- [x] El historial persistente funciona.
+- [x] Autosuggestions y syntax highlighting funcionan.
+- [x] Los fragmentos de integración de otros paquetes se cargan.
+- [x] La configuración personal del usuario se mantiene independiente de la configuración global.
+- [x] Las operaciones de pacman que modifican el sistema solicitan privilegios cuando corresponde.
 
 ## cambonos-release
 
-- [ ] El sistema muestra la identidad CambonOS mediante `/etc/os-release`.
-- [ ] Los metadatos LSB de CambonOS están disponibles cuando se instala el componente correspondiente.
-- [ ] La identidad CambonOS se mantiene tras las transacciones de paquetes que afectan a los archivos de identidad.
-- [ ] La retirada del paquete restaura la identidad anterior cuando corresponde.
+- [x] El sistema muestra la identidad CambonOS mediante `/etc/os-release`.
+- [x] Los metadatos LSB de CambonOS están disponibles cuando se instala el componente correspondiente.
+- [x] La identidad CambonOS se mantiene tras las transacciones de paquetes que afectan a los archivos de identidad.
+- [x] La retirada del paquete restaura la identidad anterior cuando corresponde.
 
 ## cambonos-pacman
 
-- [ ] El repositorio stable de CambonOS aparece configurado y habilitado.
-- [ ] El repositorio testing puede habilitarse mediante su configuración.
-- [ ] Pacman aplica las opciones diferenciales de CambonOS.
-- [ ] Pacman conserva la verificación obligatoria de firmas de los repositorios CambonOS.
-- [ ] La integración con `/etc/pacman.conf` funciona sin eliminar configuraciones manuales del administrador.
-- [ ] La transición desde la configuración anterior `cambonos-repo` conserva el funcionamiento esperado.
+- [x] El repositorio stable de CambonOS aparece configurado y habilitado.
+- [x] El repositorio testing puede habilitarse mediante su configuración.
+- [x] Pacman aplica las opciones diferenciales de CambonOS.
+- [x] Pacman conserva la verificación obligatoria de firmas de los repositorios CambonOS.
+- [x] La integración con `/etc/pacman.conf` funciona sin eliminar configuraciones manuales del administrador.
+- [x] La transición desde la configuración anterior `cambonos-repo` conserva el funcionamiento esperado.
 
 ## cambonos-grub
 
-- [ ] GRUB aplica la configuración predeterminada de CambonOS.
-- [ ] El menú de GRUB muestra correctamente el tema CambonOS.
-- [ ] Los iconos de los sistemas operativos se muestran correctamente.
-- [ ] GRUB detecta otros sistemas operativos cuando `os-prober` está disponible.
-- [ ] La configuración del menú se regenera después de los cambios de kernel.
-- [ ] El sistema puede arrancar correctamente con la configuración generada.
+- [x] GRUB aplica la configuración predeterminada de CambonOS.
+- [x] El menú de GRUB muestra correctamente el tema CambonOS.
+- [x] Los iconos de los sistemas operativos se muestran correctamente.
+- [x] GRUB detecta otros sistemas operativos cuando `os-prober` está disponible.
+- [x] La configuración del menú se regenera después de los cambios de kernel.
+- [x] El sistema puede arrancar correctamente con la configuración generada.
 
 ## cambonos-plymouth
 
-- [ ] Plymouth selecciona y muestra el tema CambonOS.
-- [ ] La animación y la barra de progreso se muestran correctamente durante el arranque.
-- [ ] Los diálogos de teclado y desbloqueo muestran los recursos gráficos esperados.
-- [ ] La integración con mkinitcpio incorpora Plymouth a las imágenes initramfs.
-- [ ] La configuración de Plymouth funciona con el orden de hooks previsto, también en sistemas cifrados.
-- [ ] La selección de tema del administrador se conserva durante las actualizaciones.
+- [x] Plymouth selecciona y muestra el tema CambonOS.
+- [x] La animación y la barra de progreso se muestran correctamente durante el arranque.
+- [x] La integración con mkinitcpio incorpora Plymouth a las imágenes initramfs.
+- [x] La selección de tema del administrador se conserva durante las actualizaciones.
+- [ ] La configuración de Plymouth funciona con el orden de hooks previsto, también en sistemas cifrados. (No se realizan pruebas con cifrado por el momento)
+- [ ] Los diálogos de teclado y desbloqueo muestran los recursos gráficos esperados. (No se realizan pruebas con cifrado por el momento)
 
 ## cambonos-keyring
 
-- [ ] Pacman incorpora la clave pública de CambonOS.
-- [ ] Pacman reconoce el material de confianza de CambonOS.
-- [ ] Pacman acepta paquetes y bases de datos firmados por la clave autorizada.
-- [ ] Pacman rechaza paquetes y bases de datos con firmas inválidas o no confiables.
-- [ ] La instalación o actualización ejecuta `pacman-key --populate cambonos` cuando el keyring local está inicializado.
-- [ ] La actualización del paquete aplica el material de confianza vigente.
+- [x] Pacman incorpora la clave pública de CambonOS.
+- [x] Pacman reconoce el material de confianza de CambonOS.
+- [x] Pacman acepta paquetes y bases de datos firmados por la clave autorizada.
+- [x] Pacman rechaza paquetes y bases de datos con firmas inválidas o no confiables.
+- [x] La instalación o actualización ejecuta `pacman-key --populate cambonos` cuando el keyring local está inicializado.
+- [x] La actualización del paquete aplica el material de confianza vigente.
 
 ## cambonos-base
 
-- [ ] La instalación de `cambonos-base` resuelve e instala sus siete dependencias CambonOS.
-- [ ] El metapaquete no instala archivos, ejecuta scripts ni proporciona hooks ALPM.
-- [ ] La instalación o retirada del metapaquete no cambia la shell de inicio de sesión de usuarios existentes.
-- [ ] `cambonos-grub` y `cambonos-plymouth` permanecen independientes.
+- [x] La instalación de `cambonos-base` resuelve e instala sus siete dependencias CambonOS.
+- [x] El metapaquete no instala archivos, ejecuta scripts ni proporciona hooks ALPM.
+- [x] La instalación o retirada del metapaquete no cambia la shell de inicio de sesión de usuarios existentes.
+- [x] `cambonos-grub` y `cambonos-plymouth` permanecen independientes.
 
 ## Registro de verificación
 
@@ -102,13 +102,13 @@ Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última
 
 | Paquete | Entorno de prueba | Fecha | Observaciones |
 |---|---|---|---|
-| `cambonos-branding` | Pendiente | — | — |
-| `cambonos-fastfetch` | Pendiente | — | — |
-| `cambonos-shell-prompt` | Pendiente | — | — |
-| `cambonos-zsh` | Pendiente | — | — |
-| `cambonos-release` | Pendiente | — | — |
-| `cambonos-pacman` | Pendiente | — | — |
-| `cambonos-grub` | Pendiente | — | — |
-| `cambonos-plymouth` | Pendiente | — | — |
-| `cambonos-base` | Pendiente | — | — |
-| `cambonos-keyring` | Pendiente | — | — |
+| `cambonos-branding` | VM (iso-install) | 07/11/2026 | — |
+| `cambonos-fastfetch` | VM (iso-install) | 07/11/2026 | — |
+| `cambonos-shell-prompt` | VM (iso-install) | 07/11/2026 | — |
+| `cambonos-zsh` | VM (iso-install) | 07/11/2026 | — |
+| `cambonos-release` | VM (iso-install) | 07/11/2026 | — |
+| `cambonos-pacman` | VM (iso-install) | 07/11/2026 | — |
+| `cambonos-grub` | VM (iso-install) | 07/11/2026 | — |
+| `cambonos-plymouth` | VM (iso-install) | 07/11/2026 | Faltan pruebas con disco cifrado |
+| `cambonos-base` | VM (iso-install) | 07/11/2026 | — |
+| `cambonos-keyring` | VM (iso-install) | 07/11/2026 | — |
