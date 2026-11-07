@@ -29,6 +29,55 @@ class ValidationTests(unittest.TestCase):
         ):
             self.assertEqual(validate_package(packages[name]), [], name)
 
+    def test_all_package_versions_use_valid_arch_format(self):
+        packages = discover_packages(ROOT)
+        for name, package in packages.items():
+            with self.subTest(package=name):
+                errors = validate_package(package)
+                version_errors = [
+                    error for error in errors
+                    if error.startswith(("pkgver", "pkgrel"))
+                ]
+                self.assertEqual(version_errors, [], name)
+
+    def test_validate_package_accepts_valid_arch_version_components(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            package = self._package(
+                temporary,
+                pkgver="1.2.3_rc1+git.20261107",
+                pkgrel="12",
+                epoch="2",
+            )
+            errors = validate_package(package)
+            version_errors = [
+                error for error in errors
+                if error.startswith(("pkgver", "pkgrel"))
+            ]
+            self.assertEqual(version_errors, [])
+
+    def test_validate_package_rejects_invalid_pkgver_and_pkgrel_formats(self):
+        invalid_cases = (
+            ("1.0-rc1", "1"),
+            ("1.0/rc1", "1"),
+            ("1.0", "0"),
+            ("1.0", "1.2"),
+        )
+        for pkgver, pkgrel in invalid_cases:
+            with self.subTest(pkgver=pkgver, pkgrel=pkgrel):
+                with tempfile.TemporaryDirectory() as temporary:
+                    package = self._package(
+                        temporary, pkgver=pkgver, pkgrel=pkgrel
+                    )
+                    errors = validate_package(package)
+                    if pkgver != "1.0":
+                        self.assertTrue(
+                            any("pkgver no tiene" in error for error in errors)
+                        )
+                    if pkgrel in {"0", "1.2"}:
+                        self.assertTrue(
+                            any("pkgrel debe ser" in error for error in errors)
+                        )
+
     def test_keyring_material_validation_is_consistent(self):
         packages = discover_packages(ROOT)
         keyring = packages["cambonos-keyring"]

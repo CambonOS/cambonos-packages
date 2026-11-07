@@ -14,8 +14,6 @@ class PlymouthPackageTests(unittest.TestCase):
     def test_metadata_dependencies_and_mkinitcpio_backup(self):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-plymouth", pkgb)
-        self.assertIn("pkgver=0.1.0", pkgb)
-        self.assertIn("pkgrel=4", pkgb)
         self.assertIn("depends=('plymouth' 'mkinitcpio>=36')", pkgb)
         self.assertIn(
             "backup=('etc/mkinitcpio.conf.d/90-cambonos-plymouth.conf')", pkgb

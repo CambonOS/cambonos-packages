@@ -62,8 +62,6 @@ class ShellPackageMetadataTests(unittest.TestCase):
             config["display"]["color"],
             {"keys": "#AEFA50", "title": "#70E7E6"},
         )
-        pkgb = (package / "PKGBUILD").read_text()
-        self.assertIn("pkgrel=14", pkgb)
 
     def test_fastfetch_uses_zsh_conf_d_and_shared_lock(self):
         package = (ROOT / "packages/cambonos-fastfetch/PKGBUILD").read_text()

@@ -16,6 +16,8 @@ from .models import Package
 
 
 NAME_RE = re.compile(r"^[A-Za-z0-9@._+:-]+$")
+PKGVER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+]*$")
+PKGREL_RE = re.compile(r"^[1-9][0-9]*$")
 EXTERNAL_SOURCES = {
     "https://github.com/CambonOS/installer": "cambonos-installer",
     "https://github.com/CambonOS/iso": "cambonos-mkiso",
@@ -298,8 +300,10 @@ def validate_package(package: Package) -> list[str]:
     if not good:
         errors.append(f"sintaxis Bash incorrecta en PKGBUILD: {message}")
         return errors
-    if not package.pkgver or not package.pkgrel:
-        errors.append("faltan pkgver o pkgrel")
+    if not PKGVER_RE.fullmatch(package.pkgver):
+        errors.append("pkgver no tiene un formato válido de Arch")
+    if not PKGREL_RE.fullmatch(package.pkgrel):
+        errors.append("pkgrel debe ser un entero positivo")
     if "$" in package.pkgver or "$" in package.pkgrel or "$" in package.epoch:
         errors.append("pkgver, pkgrel y epoch deben ser valores estáticos")
     if not package.epoch.isdigit():
