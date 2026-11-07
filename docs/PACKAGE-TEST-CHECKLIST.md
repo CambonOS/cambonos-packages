@@ -5,10 +5,13 @@ Checklist breve para validar un candidato de `dev` antes de integrarlo en `main`
 ## 1. Gate de release
 
 - [ ] Registrar SHA exactos de `dev` y `main`, fecha, arquitectura, versión Arch y snapshot utilizado.
+- [ ] Registrar los SHA upstream exactos de `CambonOS/installer` y `CambonOS/iso`; comprobar que coinciden entre validación y build y aparecen en los manifiestos.
 - [ ] Ejecutar `python3 -m unittest discover -s tests -v`; validar estáticamente ambos snapshots y la política de versiones.
 - [ ] Confirmar que CI valida y construye los snapshots fijados; registrar los resultados de `validate`, `build` y `signing`.
 - [ ] Para cada paquete cambiado, revisar `pkgver`/`pkgrel`, arquitectura, `depends`, `makedepends`, `checkdepends`, `backup` y rutas instaladas.
 - [ ] Construir los paquetes afectados en el entorno Arch aislado del pipeline e inspeccionar contenido y dependencias.
+- [ ] Para `cambonos-installer`, comprobar que el paquete conserva `cambonos-fs/` y que su launcher resuelve las rutas relativas desde `/usr/share/cambonos-installer/`.
+- [ ] Para `cambonos-mkiso`, comprobar que instala el perfil y lo resuelve desde cualquier cwd sin cambiar el destino predeterminado; ejecutar el smoke de limpieza solo en una VM desechable por el `rm -rf /iso` existente.
 - [ ] Confirmar que los tres ficheros públicos de `cambonos-keyring` son idénticos entre ramas y que no se incluye material secreto.
 - [ ] Verificar firmas de bases de datos y paquetes desde un cliente con `Required TrustedOnly`; no relajar `SigLevel`.
 

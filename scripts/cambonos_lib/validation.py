@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 import shlex
 import subprocess
+import json
 from pathlib import Path
 
 from .common import CambonosError
@@ -12,6 +13,25 @@ from .models import Package
 
 
 NAME_RE = re.compile(r"^[A-Za-z0-9@._+:-]+$")
+EXTERNAL_SOURCES = {
+    "https://github.com/CambonOS/installer": "cambonos-installer",
+    "https://github.com/CambonOS/iso": "cambonos-mkiso",
+}
+
+
+def _external_source_metadata(directory: Path) -> dict | None:
+    path = directory / ".cambonos-source.json"
+    if not path.exists():
+        return None
+    try:
+        metadata = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(metadata, dict):
+        return {}
+    return metadata
+
+
 def extract_scalar(text: str, name: str) -> str | None:
     match = re.search(rf"(?m)^\s*{re.escape(name)}\s*=\s*([^\n#]+)", text)
     if not match:
@@ -127,6 +147,18 @@ def validate_package(package: Package) -> list[str]:
     directory = package.directory
     pkgb = directory / "PKGBUILD"
     text = pkgb.read_text(encoding="utf-8")
+    external_source = _external_source_metadata(directory)
+    if external_source is not None:
+        expected_name = EXTERNAL_SOURCES.get(external_source.get("repository"))
+        if (
+            expected_name != package.name
+            or not isinstance(external_source.get("commit"), str)
+            or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", external_source["commit"])
+            or not isinstance(external_source.get("source_date_epoch"), int)
+            or isinstance(external_source.get("source_date_epoch"), bool)
+            or external_source["source_date_epoch"] < 0
+        ):
+            errors.append("metadata de origen externo ausente o inválida")
     good, message = bash_syntax(pkgb)
     if not good:
         errors.append(f"sintaxis Bash incorrecta en PKGBUILD: {message}")
@@ -155,18 +187,26 @@ def validate_package(package: Package) -> list[str]:
     if body is None:
         errors.append("no se encuentra package()")
         return errors
-    refs = re.findall(r"""\$startdir/files/([^\s"']+)""", body)
-    if re.search(r"\$startdir/files/(?:\$|\{)", body):
-        errors.append("package() contiene rutas dinámicas bajo files/; utiliza rutas estáticas")
+    refs = re.findall(r"""\$startdir/([^\s"']+)""", body)
+    if re.search(r"\$startdir/(?:files/)?(?:\$|\{)", body):
+        errors.append("package() contiene rutas dinámicas bajo startdir; utiliza rutas estáticas")
     if re.search(r"\$\{?(?:srcdir)\}?", body):
-        errors.append("package() debe leer los payloads locales desde $startdir/files")
+        errors.append("package() debe leer los payloads locales desde startdir")
     for raw in refs:
-        source = (directory / "files" / raw.rstrip("\\")).resolve()
-        files_root = (directory / "files").resolve()
-        if not source.is_relative_to(files_root):
+        source_path = Path(raw.rstrip("\\"))
+        if source_path.is_absolute() or ".." in source_path.parts:
+            errors.append(f"referencia insegura bajo startdir: {raw}")
+            continue
+        uses_files = source_path.parts[0] == "files"
+        if not uses_files and external_source is None:
             errors.append(f"referencia fuera de files/: {raw}")
-        elif not source.is_file():
-            errors.append(f"no existe el archivo fuente: files/{raw}")
+            continue
+        source_base = directory / "files" if uses_files else directory
+        source = (source_base / source_path.relative_to("files") if uses_files else source_base / source_path).resolve()
+        if not source.is_relative_to(directory.resolve()):
+            errors.append(f"referencia fuera del paquete: {raw}")
+        elif not source.exists():
+            errors.append(f"no existe el archivo fuente: {raw}")
     destinations = re.findall(r"""\$pkgdir(/[^\s"']+)""", body)
     for destination in destinations:
         if "/../" in destination or destination.endswith("/.."):
@@ -182,7 +222,9 @@ def validate_package(package: Package) -> list[str]:
             ok, message = bash_syntax(install_path)
             if not ok:
                 errors.append(f"sintaxis incorrecta en {install_script}: {message}")
-    for script in sorted((directory / "files").rglob("*")) if (directory / "files").exists() else []:
+    for script in sorted(directory.rglob("*")):
+        if script.is_symlink():
+            continue
         if script.is_file():
             try:
                 with script.open("r", encoding="utf-8") as stream:
@@ -193,7 +235,7 @@ def validate_package(package: Package) -> list[str]:
                 ok, message = bash_syntax(script)
                 if not ok:
                     errors.append(f"sintaxis incorrecta en {script.relative_to(directory)}: {message}")
-    for hook in sorted((directory / "files").rglob("*.hook")) if (directory / "files").exists() else []:
+    for hook in sorted(directory.rglob("*.hook")):
         hook_text = hook.read_text(encoding="utf-8")
         required = ("[Trigger]", "[Action]", "Operation =", "Type =", "Target =", "When =", "Exec =")
         missing = [field for field in required if field not in hook_text]

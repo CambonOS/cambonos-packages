@@ -32,6 +32,8 @@ El proceso utiliza los repositorios rolling de Arch durante la construcción. Po
 | [`cambonos-keyring`](packages/cambonos-keyring/README.md) | Raíz pública de confianza para los repositorios CambonOS en pacman. |
 | [`cambonos-release`](packages/cambonos-release/README.md) | Identidad de distribución y metadatos release/LSB. |
 | [`cambonos-pacman`](packages/cambonos-pacman/README.md) | Repositorios CambonOS y personalizaciones diferenciales de pacman. |
+| `cambonos-installer` | Instalador del entorno live; su fuente y PKGBUILD se mantienen en el repositorio independiente `CambonOS/installer`. |
+| `cambonos-mkiso` | Builder y perfil ArchISO; su fuente y PKGBUILD se mantienen en el repositorio independiente `CambonOS/iso`. |
 
 Cada paquete tiene una responsabilidad independiente. `cambonos-zsh` proporciona el cargador global de fragmentos Zsh en `/usr/share/cambonos/zsh/conf.d/`; `cambonos-shell-prompt` y `cambonos-fastfetch` instalan ahí sus fragmentos sin modificar `/etc/zsh/zshrc`. Para bloques de Bash, los componentes utilizan marcadores independientes y el bloqueo compartido `/run/lock/cambonos-shell-integration.lock`. Los metapaquetes futuros, cuando existan, deberán agrupar dependencias; no asumirán la propiedad ni la configuración de los componentes que agrupen.
 
@@ -63,6 +65,7 @@ cambonos-packages/
 ```
 
 - `packages/`: un directorio por paquete, con `PKGBUILD`, recursos y, cuando corresponda, script `.install`.
+- `cambonos-installer` y `cambonos-mkiso` se mantienen en sus repositorios fuente independientes y se incorporan a cada build como snapshots Git temporales.
 - `scripts/`: gestor Python para validar, construir, firmar y generar la publicación.
 - `tests/`: pruebas automatizadas del gestor y de la integración de repositorio.
 - `docs/`: procedimientos y documentación técnica.
@@ -72,7 +75,7 @@ cambonos-packages/
 
 El workflow `.github/workflows/package-pipeline.yml` se ejecuta en `push` a `dev` o `main` y contiene cuatro jobs:
 
-1. **validate**: fija los SHA de ambas ramas, ejecuta las pruebas y valida ambos snapshots frente al manifiesto publicado.
+1. **validate**: fija los SHA de ambas ramas y de los repos externos, ejecuta las pruebas y valida ambos snapshots frente al manifiesto publicado.
 2. **build**: construye `testing` y `stable` en matrices independientes, sin secretos de firma.
 3. **signing**: valida artefactos, importa la subclave operativa, firma paquetes y bases de datos y ensambla el sitio.
 4. **publish**: despliega el artefacto completo en GitHub Pages.
@@ -92,6 +95,8 @@ Cualquier cambio en los archivos de un paquete debe incrementar `pkgrel` o `pkgv
 - `source_hash` determina la política de versionado; `package_hash` verifica la integridad y permite identificar el artefacto concreto publicado.
 
 `stable` y `testing` se comparan de forma independiente. Es válido que un paquete tenga versiones distintas en ambos canales.
+
+Para los dos paquetes externos, el workflow fija `main` para `stable`; para `testing` usa `dev` si existe y, si aún no existe esa rama en el repo fuente, cae a `main`. Reutiliza esos SHA completos durante validación y construcción. El staging rechaza un checkout con otro origen, otro SHA, cambios locales o symlinks que escapen del repo; registra repositorio/commit en el manifiesto de build. El contenido staged entra en `source_hash`, por lo que un cambio upstream sin aumentar `pkgrel`/`pkgver` bloquea la publicación. Los repositorios no se clonan dentro de `packages/` ni se mantienen copias sincronizadas manualmente.
 
 `SOURCE_DATE_EPOCH` se deriva del último commit que modificó el directorio del paquete. Esto normaliza marcas temporales, pero **no pretende garantizar reproducibilidad bit a bit** ante cambios del entorno rolling.
 

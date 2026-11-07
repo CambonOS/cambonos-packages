@@ -62,6 +62,19 @@ class BuildGraphTests(unittest.TestCase):
             )
             self.assertEqual(_package_source_date_epoch(pkg, commit), expected)
 
+    def test_source_date_epoch_uses_external_commit_metadata(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            package_dir = Path(temporary) / "packages" / "cambonos-installer"
+            package_dir.mkdir(parents=True)
+            (package_dir / ".cambonos-source.json").write_text(
+                '{"source_date_epoch":1234567890}\n'
+            )
+            pkg = Package(
+                name="cambonos-installer", directory=package_dir,
+                pkgver="1", pkgrel="1",
+            )
+            self.assertEqual(_package_source_date_epoch(pkg, "a" * 40), 1234567890)
+
     def test_build_dependency_cycle_fails(self):
         packages = {
             "cambonos-a": package("cambonos-a", makedepends=("cambonos-b",)),
@@ -107,6 +120,10 @@ class BuildGraphTests(unittest.TestCase):
                 "pkgname=cambonos-sample\npkgver=1.2\npkgrel=3\n"
                 "package() { :; }\ncheck() { :; }\n"
             )
+            (package_dir / ".cambonos-source.json").write_text(
+                '{"repository":"https://github.com/CambonOS/installer",'
+                '"commit":"' + "a" * 40 + '","source_date_epoch":123}\n'
+            )
             output = root / "out"
             internal = root / "internal.pkg.tar.zst"
             internal.write_bytes(b"dependency")
@@ -129,6 +146,7 @@ class BuildGraphTests(unittest.TestCase):
             self.assertTrue(archive.is_file())
             self.assertEqual(record["source_hash"], sha256_directory(package_dir))
             self.assertEqual(record["package_hash"], sha256_file(archive))
+            self.assertEqual(record["source_commit"], "a" * 40)
             self.assertTrue((output / ".internal" / internal.name).is_file())
 
     @patch("cambonos_lib.build.require_commands")
