@@ -89,6 +89,13 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 - [ ] La instalación o actualización ejecuta `pacman-key --populate cambonos` cuando el keyring local está inicializado.
 - [ ] La actualización del paquete aplica el material de confianza vigente.
 
+## cambonos-base
+
+- [ ] La instalación de `cambonos-base` resuelve e instala sus siete dependencias CambonOS.
+- [ ] El metapaquete no instala archivos, ejecuta scripts ni proporciona hooks ALPM.
+- [ ] La instalación o retirada del metapaquete no cambia la shell de inicio de sesión de usuarios existentes.
+- [ ] `cambonos-grub` y `cambonos-plymouth` permanecen independientes.
+
 ## Registro de verificación
 
 Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última comprobación funcional. No es necesario repetir las pruebas de funciones que no hayan podido verse afectadas por un cambio.
@@ -103,4 +110,5 @@ Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última
 | `cambonos-pacman` | Pendiente | — | — |
 | `cambonos-grub` | Pendiente | — | — |
 | `cambonos-plymouth` | Pendiente | — | — |
+| `cambonos-base` | Pendiente | — | — |
 | `cambonos-keyring` | Pendiente | — | — |
