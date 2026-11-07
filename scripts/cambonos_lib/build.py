@@ -13,6 +13,22 @@ from .models import Package
 from .validation import dependency_name, extract_function
 
 
+PACMAN_TESTING_OVERLAY = r'''
+if [[ "${EXPECTED_PACKAGE}" == "cambonos-pacman" && "${CHANNEL}" == "testing" ]]; then
+    config="${PACMAN_CONFIG:-/build/package/files/cambonos.conf}"
+    test "$(grep -Fxc '#[cambonos-testing]' "${config}")" -eq 1
+    test "$(grep -Fxc '#SigLevel = Required TrustedOnly' "${config}")" -eq 1
+    test "$(grep -Fxc '#Server = https://mirror.cambonos.org/testing/$arch' "${config}")" -eq 1
+    test "$(grep -Fxc '[cambonos]' "${config}")" -eq 1
+    test "$(grep -Fxc 'SigLevel = Required TrustedOnly' "${config}")" -eq 1
+    test "$(grep -Fxc 'Server = https://mirror.cambonos.org/stable/$arch' "${config}")" -eq 1
+    sed -i \
+        -e '/^#\[cambonos-testing\]$/ { s/^#\[cambonos-testing\]$/[cambonos-testing]/; n; s/^#SigLevel = Required TrustedOnly$/SigLevel = Required TrustedOnly/; n; s|^#Server = https://mirror.cambonos.org/testing/\$arch$|Server = https://mirror.cambonos.org/testing/$arch|; }' \
+        -e '/^\[cambonos\]$/ { s/^\[cambonos\]$/#[cambonos]/; n; s/^SigLevel = Required TrustedOnly$/#SigLevel = Required TrustedOnly/; n; s|^Server = https://mirror.cambonos.org/stable/\$arch$|#Server = https://mirror.cambonos.org/stable/$arch|; }' \
+        "${config}"
+fi
+'''
+
 CONTAINER_BUILD_SCRIPT = r"""
 set -Eeuo pipefail
 pacman -Syu --noconfirm
@@ -68,6 +84,7 @@ if [[ ! " ${BUILDENV[*]} " =~ (^|[[:space:]])check([[:space:]]|$) ]]; then
 fi
 EOF
 chown builder:builder /tmp/cambonos-makepkg.conf
+__PACMAN_TESTING_OVERLAY__
 runuser -u builder -- env SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH}" bash -lc \
     'cd /build/package && makepkg --config /tmp/cambonos-makepkg.conf --nodeps --cleanbuild --clean --noconfirm'
 mapfile -t built_packages < <(find /out -maxdepth 1 -type f -name '*.pkg.tar.*' ! -name '*.sig' -print | sort)
@@ -151,6 +168,7 @@ def build_order(packages: dict[str, Package]) -> list[str]:
 
 def _build_one(
     package: Package,
+    channel: str,
     image: str,
     output: Path,
     internal_artifacts: list[tuple[str, Path]],
@@ -171,6 +189,7 @@ def _build_one(
     command = [
         "docker", "run", "--rm", "--platform", "linux/amd64",
         "-e", f"CHECK_PRESENT={check_present}",
+        "-e", f"CHANNEL={channel}",
         "-e", f"INTERNAL_NAMES={internal_names}",
         "-e", f"EXPECTED_PACKAGE={package.name}",
         "-e", f"EXPECTED_VERSION={package.epoch + ':' if package.epoch != '0' else ''}{package.pkgver}-{package.pkgrel}",
@@ -182,7 +201,8 @@ def _build_one(
         "-v", f"{package.directory.resolve()}:/input:ro",
         "-v", f"{output.resolve()}:/out",
         "-v", f"{internal_dir.resolve()}:/internal:ro",
-        image, "bash", "-euc", CONTAINER_BUILD_SCRIPT,
+        image, "bash", "-euc",
+        CONTAINER_BUILD_SCRIPT.replace("__PACMAN_TESTING_OVERLAY__", PACMAN_TESTING_OVERLAY),
     ]
     run_command(command)
     archives = sorted(
@@ -283,7 +303,7 @@ def build_channel(
             shutil.rmtree(per_package_output)
         source_date_epoch = _package_source_date_epoch(package, commit)
         archive, record = _build_one(
-            package, image, per_package_output, internal, source_date_epoch
+            package, channel, image, per_package_output, internal, source_date_epoch
         )
         destination = package_output / archive.name
         shutil.copy2(archive, destination)

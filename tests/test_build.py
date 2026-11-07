@@ -1,5 +1,6 @@
 import sys
 import unittest
+import os
 from unittest.mock import patch
 import tempfile
 import subprocess
@@ -8,7 +9,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from cambonos_lib.build import build_order, _package_source_date_epoch, _build_one
+from cambonos_lib.build import (
+    PACMAN_TESTING_OVERLAY, build_order, _package_source_date_epoch, _build_one,
+)
 from cambonos_lib.common import CambonosError, sha256_directory, sha256_file
 from cambonos_lib.models import Package
 
@@ -22,6 +25,66 @@ def package(name, depends=(), makedepends=(), checkdepends=()):
 
 
 class BuildGraphTests(unittest.TestCase):
+    def test_testing_overlay_enables_only_testing_repository(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            config = Path(temporary) / "cambonos.conf"
+            config.write_text(
+                "#[cambonos-testing]\n"
+                "#SigLevel = Required TrustedOnly\n"
+                "#Server = https://mirror.cambonos.org/testing/$arch\n\n"
+                "[cambonos]\n"
+                "SigLevel = Required TrustedOnly\n"
+                "Server = https://mirror.cambonos.org/stable/$arch\n",
+                encoding="utf-8",
+            )
+            script = PACMAN_TESTING_OVERLAY.replace(
+                'config="${PACMAN_CONFIG:-/build/package/files/cambonos.conf}"',
+                'config="${PACMAN_CONFIG}"',
+            )
+            result = subprocess.run(
+                ["bash", "-euc", script],
+                env={
+                    **os.environ,
+                    "EXPECTED_PACKAGE": "cambonos-pacman",
+                    "CHANNEL": "testing",
+                    "PACMAN_CONFIG": str(config),
+                },
+                text=True, capture_output=True, check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                config.read_text(encoding="utf-8"),
+                "[cambonos-testing]\n"
+                "SigLevel = Required TrustedOnly\n"
+                "Server = https://mirror.cambonos.org/testing/$arch\n\n"
+                "#[cambonos]\n"
+                "#SigLevel = Required TrustedOnly\n"
+                "#Server = https://mirror.cambonos.org/stable/$arch\n",
+            )
+
+    def test_testing_overlay_leaves_stable_and_other_packages_unchanged(self):
+        for package_name, channel in (
+            ("cambonos-pacman", "stable"),
+            ("cambonos-example", "testing"),
+        ):
+            with self.subTest(package=package_name, channel=channel):
+                with tempfile.TemporaryDirectory() as temporary:
+                    config = Path(temporary) / "cambonos.conf"
+                    original = "#[cambonos-testing]\n[cambonos]\n"
+                    config.write_text(original, encoding="utf-8")
+                    result = subprocess.run(
+                        ["bash", "-euc", PACMAN_TESTING_OVERLAY],
+                        env={
+                            **os.environ,
+                            "EXPECTED_PACKAGE": package_name,
+                            "CHANNEL": channel,
+                            "PACMAN_CONFIG": str(config),
+                        },
+                        text=True, capture_output=True, check=False,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(config.read_text(encoding="utf-8"), original)
+
     def test_runtime_dependency_does_not_force_build_order(self):
         packages = {
             "cambonos-fastfetch": package("cambonos-fastfetch", depends=("cambonos-release",)),
@@ -140,10 +203,11 @@ class BuildGraphTests(unittest.TestCase):
                 (output / "build-environment.txt").write_text("Arch build environment")
             run.side_effect = fake_docker
             archive, record = _build_one(
-                package_obj, "arch-image", output,
+                package_obj, "testing", "arch-image", output,
                 [("cambonos-dependency", internal)], 123456,
             )
             self.assertTrue(archive.is_file())
+            self.assertIn("CHANNEL=testing", " ".join(run.call_args.args[0]))
             self.assertEqual(record["source_hash"], sha256_directory(package_dir))
             self.assertEqual(record["package_hash"], sha256_file(archive))
             self.assertEqual(record["source_commit"], "a" * 40)
@@ -162,7 +226,7 @@ class BuildGraphTests(unittest.TestCase):
                 (output / "sample-1-1-any.pkg.tar.zst").write_bytes(b"archive")
             run.side_effect = fake_docker
             with self.assertRaisesRegex(CambonosError, "falta build-environment.txt"):
-                _build_one(package_obj, "image", output, [], 1)
+                _build_one(package_obj, "stable", "image", output, [], 1)
 
 
 if __name__ == "__main__":
