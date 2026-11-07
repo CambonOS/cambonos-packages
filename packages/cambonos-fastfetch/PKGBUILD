@@ -1,6 +1,6 @@
 pkgname=cambonos-fastfetch
-pkgver=0.1.0
-pkgrel=10
+pkgver=0.1.1
+pkgrel=1
 pkgdesc="CambonOS branding and automatic Fastfetch integration for interactive shells"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
@@ -8,7 +8,7 @@ license=('GPL-3.0-only')
 depends=('fastfetch' 'cambonos-release' 'bash' 'util-linux')
 optdepends=(
   'fish: automatic Fastfetch integration in Fish'
-  'zsh: automatic Fastfetch integration in Zsh'
+  'cambonos-zsh: automatic Fastfetch integration in Zsh'
 )
 install=cambonos-fastfetch.install
 
@@ -25,8 +25,8 @@ package() {
   # Shared shell fragments.
   install -Dm644 "$startdir/files/bash/cambonos-fastfetch.bash" \
     "$pkgdir/usr/share/cambonos/fastfetch/shell/bash"
-  install -Dm644 "$startdir/files/zsh/cambonos-fastfetch.zsh" \
-    "$pkgdir/usr/share/cambonos/fastfetch/shell/zsh"
+  install -Dm644 "$startdir/files/zsh/conf.d/60-fastfetch.zsh" \
+    "$pkgdir/usr/share/cambonos/zsh/conf.d/60-fastfetch.zsh"
 
   # POSIX login shells and Fish interactive shells.
   install -Dm644 "$startdir/files/profile.d/cambonos-fastfetch.sh" \
@@ -38,7 +38,7 @@ package() {
   install -Dm755 "$startdir/files/cambonos/lib/integrate-shells" \
     "$pkgdir/usr/lib/cambonos/fastfetch/integrate-shells"
 
-  # Repair managed blocks after Bash/Zsh package upgrades.
+  # Repair the Bash managed block after Bash package upgrades.
   install -Dm644 "$startdir/files/libalpm/hooks/cambonos-fastfetch.hook" \
     "$pkgdir/usr/share/libalpm/hooks/cambonos-fastfetch.hook"
 }

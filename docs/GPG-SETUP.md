@@ -147,6 +147,8 @@ Opcionalmente, si utilizas un dominio personalizado o una URL distinta de GitHub
 
 Asegúrate de que GitHub Pages está configurado para publicar mediante **GitHub Actions**.
 
+Antes de construir, el workflow compara byte a byte los tres archivos públicos del keyring entre los snapshots de `dev` y `main`. Si difieren, la validación falla. La clave pública debe estar disponible en ambas ramas y el fingerprint de la subclave configurado en GitHub debe corresponder a una subclave de firma presente en ese certificado.
+
 La variable `CAMBONOS_BOOTSTRAP=true` permite únicamente la primera publicación cuando todavía no existe `metadata/manifest.json`. Después de que la primera publicación termine correctamente y compruebes que el manifiesto está accesible, cambia la variable a:
 
 ```text
@@ -180,7 +182,7 @@ Solo deben aparecer los archivos públicos. Si aparece `cambonos-signing-subkey.
 
 El paquete instala los tres archivos en `/usr/share/pacman/keyrings/` y ejecuta `pacman-key --populate cambonos` después de instalarse o actualizarse, siempre que el keyring de pacman ya esté inicializado.
 
-La ISO debe inicializar `pacman-key` e instalar `cambonos-keyring` desde el medio local antes de habilitar la confianza obligatoria del repositorio remoto. Después debe instalar `cambonos-repo`, que depende del keyring y configura el Include administrado en `/etc/pacman.conf`. Ese bootstrap pertenece al proceso de instalación de la ISO, no a este pipeline.
+La ISO debe inicializar `pacman-key` e instalar `cambonos-keyring` desde el medio local antes de habilitar la confianza obligatoria del repositorio remoto. Después debe instalar `cambonos-pacman`, que depende del keyring y configura los Include administrados de opciones y repositorios en `/etc/pacman.conf`. Ese bootstrap pertenece al proceso de instalación de la ISO, no a este pipeline.
 
 ## 7. Probar y publicar
 
@@ -197,7 +199,7 @@ python3 scripts/cambonos.py validate \
 
 La validación del paquete keyring debe pasar únicamente si el certificado público y el ownertrust son válidos. Las publicaciones posteriores firman también `metadata/manifest.json`; el siguiente pipeline verifica su firma antes de confiar en sus datos de versión.
 
-Cada rama mantiene su propio desarrollo y su propio snapshot de paquetes: no es necesario fusionar `dev` en `main` ni mantener sincronizados sus paquetes. Asegúrate de que cada rama que publiques contiene `cambonos-keyring` con el certificado y los datos de confianza necesarios para verificar la subclave de firma configurada. El pipeline comprueba ese requisito en cada canal por separado; no compara el contenido de los keyrings ni exige que los paquetes coincidan entre ramas. Un push reconstruye los dos canales a partir de los snapshots independientes de `dev` y `main`.
+Cada rama mantiene su propio desarrollo y su propio snapshot de paquetes: no es necesario fusionar `dev` en `main` ni mantener sincronizados sus paquetes. El pipeline valida cada canal contra su propio manifiesto anterior, pero aplica una regla común de confianza: compara byte a byte `cambonos.gpg`, `cambonos-trusted` y `cambonos-revoked` entre los snapshots de `dev` y `main` antes de continuar. Por tanto, ambos canales deben contener exactamente el mismo material público de keyring, aunque los demás paquetes y sus versiones puedan diferir. Un push reconstruye los dos canales a partir de los snapshots independientes de `dev` y `main`.
 
 Cuando termine la primera publicación:
 - Comprueba `stable/` y `testing/`.
@@ -207,6 +209,6 @@ Cuando termine la primera publicación:
 
 ## 8. Renovación y revocación
 
-No reemplaces la clave de firma de forma improvisada. Los equipos ya instalados confían en la clave pública distribuida por `cambonos-keyring`. Una rotación requiere una transición planificada que permita a los clientes confiar en la nueva clave antes de exigir firmas de ella.
+No reemplaces la clave de firma de forma improvisada. Los equipos ya instalados confían en la clave pública distribuida por `cambonos-keyring`. Una rotación requiere una transición planificada que permita a los clientes confiar en la nueva clave antes de exigir firmas de ella. El procedimiento operativo de rotación y recuperación todavía debe ensayarse con clientes de prueba; no debe considerarse validado solo porque el pipeline acepte el nuevo material.
 
-Conserva la clave primaria y el certificado de revocación en almacenamiento seguro. Si la clave o subclave se compromete, detén las publicaciones y planifica la revocación y distribución de un keyring actualizado. El fichero `cambonos-revoked` forma parte del formato de pacman-key; sigue el procedimiento de la documentación de Arch para añadir revocaciones.
+Conserva la clave primaria y el certificado de revocación en almacenamiento seguro. Si la clave o subclave se compromete, detén las publicaciones y planifica la revocación y distribución de un keyring actualizado. El fichero `cambonos-revoked` forma parte del formato de pacman-key; sigue el procedimiento de la documentación de Arch para añadir revocaciones. Ante compromiso de la clave primaria, asume que algunos clientes necesitarán una intervención manual y una nueva raíz distribuida por un canal autenticado independiente.

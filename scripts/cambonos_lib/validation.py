@@ -1,9 +1,13 @@
 """Static package validation. PKGBUILDs are not sourced on the host."""
 from __future__ import annotations
 
+import ast
+import json
 import re
 import shlex
+import shutil
 import subprocess
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from .common import CambonosError
@@ -12,6 +16,27 @@ from .models import Package
 
 
 NAME_RE = re.compile(r"^[A-Za-z0-9@._+:-]+$")
+PKGVER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+]*$")
+PKGREL_RE = re.compile(r"^[1-9][0-9]*$")
+EXTERNAL_SOURCES = {
+    "https://github.com/CambonOS/installer": "cambonos-installer",
+    "https://github.com/CambonOS/iso": "cambonos-mkiso",
+}
+
+
+def _external_source_metadata(directory: Path) -> dict | None:
+    path = directory / ".cambonos-source.json"
+    if not path.exists():
+        return None
+    try:
+        metadata = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(metadata, dict):
+        return {}
+    return metadata
+
+
 def extract_scalar(text: str, name: str) -> str | None:
     match = re.search(rf"(?m)^\s*{re.escape(name)}\s*=\s*([^\n#]+)", text)
     if not match:
@@ -122,17 +147,163 @@ def discover_packages(source_root: Path) -> dict[str, Package]:
     return packages
 
 
+IMAGE_SIGNATURES = {
+    ".png": lambda data: data.startswith(b"\x89PNG\r\n\x1a\n"),
+    ".jpg": lambda data: data.startswith(b"\xff\xd8\xff"),
+    ".jpeg": lambda data: data.startswith(b"\xff\xd8\xff"),
+    ".gif": lambda data: data.startswith((b"GIF87a", b"GIF89a")),
+    ".webp": lambda data: len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP",
+    ".pdf": lambda data: data.startswith(b"%PDF-"),
+    ".ttf": lambda data: data.startswith(b"\x00\x01\x00\x00"),
+    ".otf": lambda data: data.startswith(b"OTTO"),
+}
+
+
+def validate_file_format(path: Path) -> list[str]:
+    """Check well-known file extensions against their actual file signatures."""
+    suffix = path.suffix.lower()
+    if suffix in IMAGE_SIGNATURES:
+        try:
+            with path.open("rb") as stream:
+                header = stream.read(16)
+        except OSError as exc:
+            return [f"no se pudo leer {path}: {exc}"]
+        if not IMAGE_SIGNATURES[suffix](header):
+            return [f"el contenido de {path} no coincide con su extensión {suffix}"]
+    elif suffix == ".svg":
+        try:
+            ET.parse(path)
+        except (ET.ParseError, OSError) as exc:
+            return [f"SVG inválido en {path}: {exc}"]
+    elif suffix == ".json":
+        try:
+            json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError, OSError) as exc:
+            return [f"JSON inválido en {path}: {exc}"]
+    return []
+
+
+def validate_source_files(package: Package, package_body: str) -> list[str]:
+    """Detect missing and unreferenced local payload files."""
+    errors: list[str] = []
+    directory = package.directory
+    files_root = directory / "files"
+    referenced: set[Path] = set()
+
+    for raw in re.findall(r"""\$startdir/([^\s"']+)""", package_body):
+        raw = raw.rstrip("\\")
+        if raw.startswith("files/"):
+            relative = Path(raw).relative_to("files")
+        else:
+            # Existing repository policy allows local payloads only below files/.
+            continue
+        candidate = (files_root / relative).resolve()
+        if not candidate.is_relative_to(files_root.resolve()):
+            continue
+        if not candidate.exists():
+            # Missing references are already reported by validate_package().
+            continue
+        if candidate.is_dir():
+            referenced.update(p.resolve() for p in candidate.rglob("*") if p.is_file())
+        else:
+            referenced.add(candidate)
+
+    if files_root.is_dir():
+        external_source = _external_source_metadata(directory) is not None
+        for path in files_root.rglob("*"):
+            if path.is_file() and not path.is_symlink():
+                if not external_source and path.resolve() not in referenced:
+                    errors.append(
+                        f"archivo de files/ no utilizado por package(): "
+                        f"{path.relative_to(directory)}"
+                    )
+                errors.extend(validate_file_format(path))
+    return errors
+
+
+def validate_script_syntax(package: Package) -> list[str]:
+    """Run available syntax parsers for scripts shipped by a package."""
+    errors: list[str] = []
+    directory = package.directory
+    candidates = [directory / "PKGBUILD"]
+    if package.install_script:
+        candidates.append(directory / package.install_script)
+    candidates.extend(
+        path for path in directory.rglob("*")
+        if path.is_file() and path not in candidates
+    )
+
+    for path in sorted(set(candidates)):
+        if not path.is_file() or path.is_symlink():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        relative = path.relative_to(directory).as_posix()
+        first = text.splitlines()[0].strip() if text.splitlines() else ""
+        suffix = path.suffix.lower()
+
+        if suffix in {".py"} or first.startswith("#!") and "python" in first:
+            try:
+                ast.parse(text, filename=relative)
+            except SyntaxError as exc:
+                errors.append(f"sintaxis Python incorrecta en {relative}:{exc.lineno}: {exc.msg}")
+        elif suffix in {".sh", ".bash"} or first.startswith("#!") and any(
+            shell in first for shell in ("bash", "/sh", "env sh")
+        ):
+            result = subprocess.run(
+                ["bash", "-n", str(path)], text=True, capture_output=True, check=False
+            )
+            if result.returncode:
+                errors.append(f"sintaxis Bash incorrecta en {relative}: {result.stderr.strip()}")
+        elif suffix == ".zsh" or first.startswith("#!") and "zsh" in first:
+            if shutil.which("zsh"):
+                result = subprocess.run(
+                    ["zsh", "-n", str(path)], text=True, capture_output=True, check=False
+                )
+                if result.returncode:
+                    errors.append(
+                        f"sintaxis Zsh incorrecta en {relative}: {result.stderr.strip()}"
+                    )
+        elif suffix == ".fish" or first.startswith("#!") and "fish" in first:
+            if shutil.which("fish"):
+                result = subprocess.run(
+                    ["fish", "--no-execute", str(path)],
+                    text=True, capture_output=True, check=False,
+                )
+                if result.returncode:
+                    errors.append(
+                        f"sintaxis Fish incorrecta en {relative}: {result.stderr.strip()}"
+                    )
+    return errors
+
+
 def validate_package(package: Package) -> list[str]:
     errors: list[str] = []
     directory = package.directory
     pkgb = directory / "PKGBUILD"
     text = pkgb.read_text(encoding="utf-8")
+    external_source = _external_source_metadata(directory)
+    if external_source is not None:
+        expected_name = EXTERNAL_SOURCES.get(external_source.get("repository"))
+        if (
+            expected_name != package.name
+            or not isinstance(external_source.get("commit"), str)
+            or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", external_source["commit"])
+            or not isinstance(external_source.get("source_date_epoch"), int)
+            or isinstance(external_source.get("source_date_epoch"), bool)
+            or external_source["source_date_epoch"] < 0
+        ):
+            errors.append("metadata de origen externo ausente o inválida")
     good, message = bash_syntax(pkgb)
     if not good:
         errors.append(f"sintaxis Bash incorrecta en PKGBUILD: {message}")
         return errors
-    if not package.pkgver or not package.pkgrel:
-        errors.append("faltan pkgver o pkgrel")
+    if not PKGVER_RE.fullmatch(package.pkgver):
+        errors.append("pkgver no tiene un formato válido de Arch")
+    if not PKGREL_RE.fullmatch(package.pkgrel):
+        errors.append("pkgrel debe ser un entero positivo")
     if "$" in package.pkgver or "$" in package.pkgrel or "$" in package.epoch:
         errors.append("pkgver, pkgrel y epoch deben ser valores estáticos")
     if not package.epoch.isdigit():
@@ -155,18 +326,28 @@ def validate_package(package: Package) -> list[str]:
     if body is None:
         errors.append("no se encuentra package()")
         return errors
-    refs = re.findall(r"""\$startdir/files/([^\s"']+)""", body)
-    if re.search(r"\$startdir/files/(?:\$|\{)", body):
-        errors.append("package() contiene rutas dinámicas bajo files/; utiliza rutas estáticas")
+    errors.extend(validate_source_files(package, body))
+    errors.extend(validate_script_syntax(package))
+    refs = re.findall(r"""\$startdir/([^\s"']+)""", body)
+    if re.search(r"\$startdir/(?:files/)?(?:\$|\{)", body):
+        errors.append("package() contiene rutas dinámicas bajo startdir; utiliza rutas estáticas")
     if re.search(r"\$\{?(?:srcdir)\}?", body):
-        errors.append("package() debe leer los payloads locales desde $startdir/files")
+        errors.append("package() debe leer los payloads locales desde startdir")
     for raw in refs:
-        source = (directory / "files" / raw.rstrip("\\")).resolve()
-        files_root = (directory / "files").resolve()
-        if not source.is_relative_to(files_root):
+        source_path = Path(raw.rstrip("\\"))
+        if source_path.is_absolute() or ".." in source_path.parts:
+            errors.append(f"referencia insegura bajo startdir: {raw}")
+            continue
+        uses_files = source_path.parts[0] == "files"
+        if not uses_files and external_source is None:
             errors.append(f"referencia fuera de files/: {raw}")
-        elif not source.is_file():
-            errors.append(f"no existe el archivo fuente: files/{raw}")
+            continue
+        source_base = directory / "files" if uses_files else directory
+        source = (source_base / source_path.relative_to("files") if uses_files else source_base / source_path).resolve()
+        if not source.is_relative_to(directory.resolve()):
+            errors.append(f"referencia fuera del paquete: {raw}")
+        elif not source.exists():
+            errors.append(f"no existe el archivo fuente: {raw}")
     destinations = re.findall(r"""\$pkgdir(/[^\s"']+)""", body)
     for destination in destinations:
         if "/../" in destination or destination.endswith("/.."):
@@ -182,7 +363,9 @@ def validate_package(package: Package) -> list[str]:
             ok, message = bash_syntax(install_path)
             if not ok:
                 errors.append(f"sintaxis incorrecta en {install_script}: {message}")
-    for script in sorted((directory / "files").rglob("*")) if (directory / "files").exists() else []:
+    for script in sorted(directory.rglob("*")):
+        if script.is_symlink():
+            continue
         if script.is_file():
             try:
                 with script.open("r", encoding="utf-8") as stream:
@@ -193,7 +376,7 @@ def validate_package(package: Package) -> list[str]:
                 ok, message = bash_syntax(script)
                 if not ok:
                     errors.append(f"sintaxis incorrecta en {script.relative_to(directory)}: {message}")
-    for hook in sorted((directory / "files").rglob("*.hook")) if (directory / "files").exists() else []:
+    for hook in sorted(directory.rglob("*.hook")):
         hook_text = hook.read_text(encoding="utf-8")
         required = ("[Trigger]", "[Action]", "Operation =", "Type =", "Target =", "When =", "Exec =")
         missing = [field for field in required if field not in hook_text]

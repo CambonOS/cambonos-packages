@@ -62,9 +62,8 @@ restore_lsb_release() {
     # customize that package-owned file in place rather than shipping a
     # competing file or symlink from cambonos-release.
     if [[ ! -x /usr/bin/lsb_release ]]; then
-        # The optional package was removed. Its old snapshot is no longer
-        # useful; a future installation will create a fresh one.
-        rm -rf -- "$STATE_DIR"
+        # The optional package is absent. Keep any saved original/managed
+        # state: a later reinstall or package removal may still need it.
         return 0
     fi
 

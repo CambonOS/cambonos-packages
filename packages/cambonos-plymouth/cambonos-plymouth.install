@@ -1,0 +1,47 @@
+_cambonos_plymouth_rebuild_initramfs() {
+  local preset found=0
+
+  for preset in /etc/mkinitcpio.d/*.preset; do
+    [[ -f "$preset" ]] || continue
+    found=1
+    break
+  done
+
+  if (( ! found )); then
+    printf 'cambonos-plymouth: no mkinitcpio presets found; rebuild initramfs after installing a kernel.\n' >&2
+    return 0
+  fi
+
+  if ! /usr/bin/mkinitcpio -P; then
+    printf 'cambonos-plymouth: initramfs rebuild failed; run mkinitcpio -P manually.\n' >&2
+    return 1
+  fi
+}
+
+post_install() {
+  if ! /usr/bin/plymouth-set-default-theme cambonos; then
+    printf 'cambonos-plymouth: could not select the CambonOS theme.\n' >&2
+    return 1
+  fi
+  _cambonos_plymouth_rebuild_initramfs
+}
+
+post_upgrade() {
+  local current_theme
+  current_theme=$(/usr/bin/plymouth-set-default-theme 2>/dev/null) || current_theme=
+
+  if [[ "$current_theme" == cambonos ]]; then
+    /usr/bin/plymouth-set-default-theme cambonos || return 1
+  fi
+  _cambonos_plymouth_rebuild_initramfs
+}
+
+post_remove() {
+  local current_theme
+  current_theme=$(/usr/bin/plymouth-set-default-theme 2>/dev/null) || current_theme=
+
+  if [[ "$current_theme" == cambonos ]]; then
+    /usr/bin/plymouth-set-default-theme --reset || return 1
+  fi
+  _cambonos_plymouth_rebuild_initramfs
+}

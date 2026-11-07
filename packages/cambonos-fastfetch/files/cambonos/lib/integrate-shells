@@ -1,142 +1,95 @@
 #!/usr/bin/bash
-# Safely manage CambonOS Fastfetch blocks in global shell rc files.
+# Safely manage CambonOS Fastfetch integrations outside Zsh's conf.d loader.
 set -Eeuo pipefail
 umask 022
 
 readonly BEGIN_MARKER='# >>> CambonOS Fastfetch >>>'
 readonly END_MARKER='# <<< CambonOS Fastfetch <<<'
 readonly BASH_RC='/etc/bash.bashrc'
-readonly ZSH_RC='/etc/zsh/zshrc'
 readonly BASH_FRAGMENT='/usr/share/cambonos/fastfetch/shell/bash'
-readonly ZSH_FRAGMENT='/usr/share/cambonos/fastfetch/shell/zsh'
+readonly ZSH_RC='/etc/zsh/zshrc'
+readonly ZSH_FRAGMENT='/usr/share/cambonos/zsh/conf.d/60-fastfetch.zsh'
+readonly ZSH_LOADER_BEGIN='# >>> CambonOS Zsh configuration >>>'
 readonly PROFILE_SCRIPT='/etc/profile.d/cambonos-fastfetch.sh'
 readonly FISH_CONF='/usr/share/fish/vendor_conf.d/cambonos-fastfetch.fish'
+readonly LOCK_FILE='/run/lock/cambonos-shell-integration.lock'
 
-usage() {
-    printf 'Usage: %s {install|repair|remove|check}\n' "$0"
+TEMP_FILES=()
+cleanup() {
+    local path
+    for path in "${TEMP_FILES[@]}"; do
+        [[ -n "$path" ]] && rm -f -- "$path"
+    done
 }
+trap cleanup EXIT
 
-die() {
-    printf 'cambonos-fastfetch: ERROR: %s\n' "$*" >&2
-    exit 1
-}
+usage() { printf 'Usage: %s {install|repair|remove|check}\n' "$0"; }
+die() { printf 'cambonos-fastfetch: ERROR: %s\n' "$*" >&2; exit 1; }
+is_installed() { [[ -x "$1" ]]; }
 
-is_installed() {
-    [[ -x "$1" ]]
-}
-
-# Write the file without the managed block. Refuse ambiguous or damaged
-# markers rather than risking unrelated administrator configuration.
 strip_block() {
-    local file="$1" tmp="$2"
-    local begin_count end_count
-
+    local file="$1" output="$2" begin_count end_count
     begin_count="$(grep -Fxc -- "$BEGIN_MARKER" "$file" || true)"
     end_count="$(grep -Fxc -- "$END_MARKER" "$file" || true)"
-
     if [[ "$begin_count" == 0 && "$end_count" == 0 ]]; then
-        cp -p -- "$file" "$tmp"
+        cp -p -- "$file" "$output"
         return 0
     fi
-
     [[ "$begin_count" == 1 && "$end_count" == 1 ]] ||
         die "marcadores incompletos o duplicados en $file"
-
     awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
-        $0 == begin {
-            if (inside || seen_begin) { bad=1; next }
-            inside=1
-            seen_begin=1
-            next
-        }
-        $0 == end {
-            if (!inside || seen_end) { bad=1; next }
-            inside=0
-            seen_end=1
-            next
-        }
+        $0 == begin { if (inside || seen_begin) { bad=1; next }; inside=1; seen_begin=1; next }
+        $0 == end { if (!inside || seen_end) { bad=1; next }; inside=0; seen_end=1; next }
         !inside { print }
-        END {
-            if (bad || inside || !seen_begin || !seen_end) exit 1
-        }
-    ' "$file" > "$tmp" || die "bloque administrado mal formado en $file"
+        END { if (bad || inside || !seen_begin || !seen_end) exit 1 }
+    ' "$file" > "$output" || die "bloque administrado mal formado en $file"
 }
 
 managed_block() {
     local fragment="$1"
-    cat <<EOF
+    cat <<EOF_BLOCK
 $BEGIN_MARKER
 # Managed by cambonos-fastfetch. Local changes inside this block may be replaced.
 if [[ -r '$fragment' ]]; then
     source '$fragment'
 fi
 $END_MARKER
-EOF
+EOF_BLOCK
 }
 
 check_file() {
-    local file="$1" fragment="$2"
+    local file="$1" fragment="$2" begin_count end_count
     [[ -f "$file" && ! -L "$file" && -r "$fragment" ]] || return 1
-
-    local begin_count end_count
     begin_count="$(grep -Fxc -- "$BEGIN_MARKER" "$file" || true)"
     end_count="$(grep -Fxc -- "$END_MARKER" "$file" || true)"
     [[ "$begin_count" == 1 && "$end_count" == 1 ]] || return 1
-
-    # Verify marker order and that the expected source command exists.
     grep -Fqx -- "    source '$fragment'" "$file" || return 1
     awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
-        $0 == begin {
-            if (inside || seen_begin) { bad=1; next }
-            inside=1
-            seen_begin=1
-            next
-        }
-        $0 == end {
-            if (!inside || seen_end) { bad=1; next }
-            inside=0
-            seen_end=1
-            next
-        }
-        END {
-            if (bad || inside || !seen_begin || !seen_end) exit 1
-        }
+        $0 == begin { if (inside || seen_begin) bad=1; inside=1; seen_begin=1; next }
+        $0 == end { if (!inside || seen_end) bad=1; inside=0; seen_end=1; next }
+        END { if (bad || inside || !seen_begin || !seen_end) exit 1 }
     ' "$file"
 }
 
-update_file() {
-    local action="$1" file="$2" fragment="$3"
+update_bash_file() {
+    local action="$1" file="$BASH_RC" fragment="$BASH_FRAGMENT"
     local dir tmp stripped existed=0
-
     if [[ -e "$file" || -L "$file" ]]; then
-        [[ ! -L "$file" && -f "$file" ]] ||
-            die "$file no es un archivo regular; no se modifica"
+        [[ ! -L "$file" && -f "$file" ]] || die "$file no es un archivo regular; no se modifica"
         existed=1
     else
-        case "$action" in
-            check) return 1 ;;
-            remove) return 0 ;;
-            install|repair) ;;
-        esac
+        case "$action" in check) return 1 ;; remove) return 0 ;; install|repair) ;; esac
     fi
-
-    if [[ "$action" == check ]]; then
-        check_file "$file" "$fragment"
-        return
-    fi
-    if [[ "$action" != remove && ! -r "$fragment" ]]; then
-        die "no se encuentra el fragmento de shell $fragment"
-    fi
+    if [[ "$action" == check ]]; then check_file "$file" "$fragment"; return; fi
+    if [[ "$action" != remove && ! -r "$fragment" ]]; then die "no se encuentra el fragmento $fragment"; fi
 
     dir="$(dirname -- "$file")"
-    [[ -d "$dir" ]] || die "no existe el directorio de configuración $dir"
-
+    [[ -d "$dir" ]] || die "no existe el directorio $dir"
     tmp="$(mktemp "$dir/.cambonos-fastfetch.XXXXXX")"
     stripped="${tmp}.stripped"
-
+    TEMP_FILES+=("$tmp" "$stripped")
     if (( existed )); then
         strip_block "$file" "$stripped"
-        # Preserve ownership, mode, ACLs and extended attributes where supported.
         cp -a -- "$file" "$tmp"
     else
         : > "$stripped"
@@ -146,37 +99,62 @@ update_file() {
     case "$action" in
         install|repair)
             cat -- "$stripped" > "$tmp"
-            if [[ -s "$tmp" ]] && [[ "$(tail -c 1 "$tmp" | wc -l)" -eq 0 ]]; then
-                printf '\n' >> "$tmp"
-            fi
+            if [[ -s "$tmp" ]] && [[ "$(tail -c 1 "$tmp" | wc -l)" -eq 0 ]]; then printf '\n' >> "$tmp"; fi
             managed_block "$fragment" >> "$tmp"
             ;;
-        remove)
-            cat -- "$stripped" > "$tmp"
-            ;;
-        *)
-            rm -f -- "$tmp" "$stripped"
-            die "acción interna no válida: $action"
-            ;;
+        remove) cat -- "$stripped" > "$tmp" ;;
+        *) die "acción no válida: $action" ;;
     esac
-
     mv -fT -- "$tmp" "$file"
     rm -f -- "$stripped"
 }
 
+remove_legacy_zsh_block() {
+    local action="$1" file="$ZSH_RC" tmp stripped begin_count end_count
+    [[ -e "$file" || -L "$file" ]] || return 0
+    if [[ -L "$file" ]]; then
+        begin_count="$(grep -Fxc -- "$BEGIN_MARKER" "$file" 2>/dev/null || true)"
+        end_count="$(grep -Fxc -- "$END_MARKER" "$file" 2>/dev/null || true)"
+        if [[ "$begin_count" == 0 && "$end_count" == 0 ]]; then return 0; fi
+        die "$file es un enlace simbólico con una integración antigua; no se modifica"
+    fi
+    [[ -f "$file" ]] || die "$file no es un archivo regular; no se modifica"
+    begin_count="$(grep -Fxc -- "$BEGIN_MARKER" "$file" || true)"
+    end_count="$(grep -Fxc -- "$END_MARKER" "$file" || true)"
+    if [[ "$begin_count" == 0 && "$end_count" == 0 ]]; then return 0; fi
+    if [[ "$action" == check ]]; then
+        printf 'OBSOLETO: integración Zsh antigua de Fastfetch en %s\n' "$file" >&2
+        return 1
+    fi
+
+    tmp="$(mktemp "$(dirname -- "$file")/.cambonos-fastfetch-migration.XXXXXX")"
+    stripped="${tmp}.stripped"
+    TEMP_FILES+=("$tmp" "$stripped")
+    strip_block "$file" "$stripped"
+    cp -a -- "$file" "$tmp"
+    cat -- "$stripped" > "$tmp"
+    mv -fT -- "$tmp" "$file"
+    rm -f -- "$stripped"
+    printf 'Migrada: integración Zsh antigua de Fastfetch retirada de %s\n' "$file"
+}
+
 main() {
-    local action="${1:-}"
+    local action="${1:-}" failed=0
     [[ $# == 1 ]] || { usage >&2; exit 2; }
     case "$action" in install|repair|remove|check) ;; *) usage >&2; exit 2 ;; esac
-
     command -v flock >/dev/null 2>&1 || die 'flock no está disponible (dependencia util-linux)'
-    exec 9>/run/lock/cambonos-fastfetch.lock
+    [[ -d /run/lock ]] || die 'no existe /run/lock'
+    exec 9>"$LOCK_FILE"
     flock 9
 
-    local failed=0
+    if remove_legacy_zsh_block "$action"; then
+        :
+    else
+        failed=1
+    fi
 
     if is_installed /usr/bin/bash; then
-        if update_file "$action" "$BASH_RC" "$BASH_FRAGMENT"; then
+        if update_bash_file "$action"; then
             [[ "$action" != check ]] || printf 'OK: integración Bash (%s)\n' "$BASH_RC"
         else
             failed=1
@@ -186,17 +164,6 @@ main() {
         printf 'INFO: Bash no está instalado; se omite.\n'
     fi
 
-    if is_installed /usr/bin/zsh; then
-        if update_file "$action" "$ZSH_RC" "$ZSH_FRAGMENT"; then
-            [[ "$action" != check ]] || printf 'OK: integración Zsh (%s)\n' "$ZSH_RC"
-        else
-            failed=1
-            [[ "$action" != check ]] || printf 'FALTA: integración Zsh (%s)\n' "$ZSH_RC" >&2
-        fi
-    else
-        printf 'INFO: Zsh no está instalado; se omite.\n'
-    fi
-
     if [[ "$action" == check ]]; then
         if [[ -r "$PROFILE_SCRIPT" ]]; then
             printf 'OK: integración POSIX de login (%s)\n' "$PROFILE_SCRIPT"
@@ -204,24 +171,28 @@ main() {
             printf 'FALTA: integración POSIX de login (%s)\n' "$PROFILE_SCRIPT" >&2
             failed=1
         fi
-
         if is_installed /usr/bin/fish; then
-            if [[ -r "$FISH_CONF" ]]; then
-                printf 'OK: integración Fish (%s)\n' "$FISH_CONF"
-            else
-                printf 'FALTA: integración Fish (%s)\n' "$FISH_CONF" >&2
-                failed=1
-            fi
+            if [[ -r "$FISH_CONF" ]]; then printf 'OK: integración Fish (%s)\n' "$FISH_CONF"
+            else printf 'FALTA: integración Fish (%s)\n' "$FISH_CONF" >&2; failed=1; fi
         else
             printf 'INFO: Fish no está instalado; se omite.\n'
         fi
-
-        # /bin/sh may be a POSIX invocation of Bash. Its login startup is
-        # covered by /etc/profile; portable non-login integration is not
-        # possible without arranging ENV in the parent process environment.
-        if [[ -x /bin/sh ]]; then
-            printf 'INFO: sh: inicio login cubierto por /etc/profile; no-login no se fuerza globalmente.\n'
+        if is_installed /usr/bin/zsh; then
+            if [[ -r "$ZSH_FRAGMENT" ]]; then
+                printf 'OK: fragmento Zsh (%s)\n' "$ZSH_FRAGMENT"
+                if grep -Fqx -- "$ZSH_LOADER_BEGIN" "$ZSH_RC" 2>/dev/null; then
+                    printf 'OK: el cargador global CambonOS está presente.\n'
+                else
+                    printf 'INFO: sin cambonos-zsh; integra manualmente el fragmento desde ~/.zshrc.\n'
+                fi
+            else
+                printf 'FALTA: fragmento Zsh (%s)\n' "$ZSH_FRAGMENT" >&2
+                failed=1
+            fi
+        else
+            printf 'INFO: Zsh no está instalado; se omite.\n'
         fi
+        printf 'INFO: sh: inicio login cubierto por /etc/profile; no-login no se fuerza globalmente.\n'
     fi
 
     if (( failed )); then

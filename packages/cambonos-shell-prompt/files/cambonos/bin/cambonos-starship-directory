@@ -1,0 +1,116 @@
+#!/usr/bin/bash
+# Render the CambonOS directory segment for Starship.
+#
+# Only fixed ANSI color sequences are emitted. Directory names are sanitized
+# before being written so control characters cannot inject terminal escapes.
+
+set -u
+
+readonly COLOR_ACCENT=$'\033[38;2;112;231;230m'    # #70E7E6
+readonly COLOR_DEEP_BLUE=$'\033[38;2;1;159;167m'   # #019FA7
+readonly COLOR_RESET=$'\033[0m'
+readonly ICON_DIRECTORY=''
+readonly ICON_HOME=''
+readonly ICON_READ_ONLY=''
+readonly MAX_VISIBLE_DIRECTORIES=4
+
+sanitize_segment() {
+    local input="$1"
+    local output=''
+    local character
+    local index
+
+    for ((index = 0; index < ${#input}; index++)); do
+        character="${input:index:1}"
+        if [[ "$character" == [[:cntrl:]] ]]; then
+            output+='?'
+        else
+            output+="$character"
+        fi
+    done
+
+    # Return through a global variable to avoid a subshell per path segment.
+    SANITIZED_SEGMENT="$output"
+}
+
+current_dir="${PWD:-}"
+if [[ "$current_dir" != /* ]]; then
+    current_dir="$(pwd -L 2>/dev/null)" || exit 0
+fi
+[[ -n "$current_dir" ]] || exit 0
+
+home_dir="${HOME:-}"
+if [[ "$home_dir" != /* ]]; then
+    home_dir=''
+fi
+
+is_home=0
+display_prefix=''
+relative_path=''
+
+if [[ -n "$home_dir" && "$current_dir" == "$home_dir" ]]; then
+    is_home=1
+elif [[ -n "$home_dir" && "$home_dir" != "/" && "$current_dir" == "$home_dir/"* ]]; then
+    display_prefix='~/'
+    relative_path="${current_dir#"$home_dir"/}"
+elif [[ "$current_dir" == "/" ]]; then
+    # The filesystem root has no path components of its own.
+    display_prefix='/'
+else
+    display_prefix='/'
+    relative_path="${current_dir#/}"
+fi
+
+# HOME itself gets its own icon and has no directory components to truncate.
+if (( is_home )); then
+    printf '%s%s%s%s' "$COLOR_ACCENT" "$ICON_HOME" "$COLOR_RESET" ' '
+    if [[ ! -w "$current_dir" ]]; then
+        printf '%s %s%s' "$COLOR_ACCENT" "$ICON_READ_ONLY" "$COLOR_RESET"
+    fi
+    exit 0
+fi
+
+directories=()
+remaining="$relative_path"
+while [[ "$remaining" == */* ]]; do
+    component="${remaining%%/*}"
+    remaining="${remaining#*/}"
+    [[ -n "$component" ]] && directories+=("$component")
+done
+[[ -n "$remaining" ]] && directories+=("$remaining")
+
+printf '%s%s%s ' "$COLOR_ACCENT" "$ICON_DIRECTORY" "$COLOR_RESET"
+
+if [[ "$current_dir" == "/" ]]; then
+    printf '%s/%s ' "$COLOR_ACCENT" "$COLOR_RESET"
+else
+    # The home/root prefix is a parent path, not one of the four directory
+    # components counted by MAX_VISIBLE_DIRECTORIES.
+    if [[ -n "$display_prefix" ]]; then
+        printf '%s%s%s' "$COLOR_DEEP_BLUE" "$display_prefix" "$COLOR_RESET"
+    fi
+
+    directory_count="${#directories[@]}"
+    first_visible=0
+    if (( directory_count > MAX_VISIBLE_DIRECTORIES )); then
+        first_visible=$((directory_count - MAX_VISIBLE_DIRECTORIES))
+        printf '%s…/%s' "$COLOR_DEEP_BLUE" "$COLOR_RESET"
+    fi
+
+    for ((index = first_visible; index < directory_count; index++)); do
+        sanitize_segment "${directories[index]}"
+        safe_component="$SANITIZED_SEGMENT"
+        if (( index == directory_count - 1 )); then
+            printf '%s%s%s' "$COLOR_ACCENT" "$safe_component" "$COLOR_RESET"
+        else
+            printf '%s%s/%s' "$COLOR_DEEP_BLUE" "$safe_component" "$COLOR_RESET"
+        fi
+    done
+    printf ' '
+fi
+
+if [[ ! -w "$current_dir" ]]; then
+    printf '%s%s%s' "$COLOR_ACCENT" "$ICON_READ_ONLY" "$COLOR_RESET"
+fi
+
+exit 0

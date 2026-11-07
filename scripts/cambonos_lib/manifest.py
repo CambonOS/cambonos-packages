@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -52,9 +53,12 @@ def load_previous_manifest(path: Path | None) -> dict | None:
         for name, package in record["packages"].items():
             if (
                 not isinstance(package, dict)
+                or not isinstance(package.get("version"), str)
                 or not package.get("version")
-                or not package.get("source_hash")
-                or not package.get("package_hash")
+                or not isinstance(package.get("source_hash"), str)
+                or not re.fullmatch(r"[0-9a-f]{64}", package["source_hash"])
+                or not isinstance(package.get("package_hash"), str)
+                or not re.fullmatch(r"[0-9a-f]{64}", package["package_hash"])
             ):
                 raise CambonosError(f"registro incompleto del paquete {channel}/{name}")
     return data
@@ -219,6 +223,16 @@ def verify_build_manifest(path: Path, package_dir: Path) -> dict:
         if not isinstance(record, dict):
             raise CambonosError(f"registro inválido para el paquete {name}")
         filename = record.get("package_file", "")
+        if not isinstance(record.get("version"), str) or not record["version"]:
+            raise CambonosError(f"versión ausente o inválida para {name}")
+        if not isinstance(record.get("source_hash"), str) or not re.fullmatch(
+            r"[0-9a-f]{64}", record["source_hash"]
+        ):
+            raise CambonosError(f"source_hash ausente o inválido para {name}")
+        if not isinstance(record.get("package_hash"), str) or not re.fullmatch(
+            r"[0-9a-f]{64}", record["package_hash"]
+        ):
+            raise CambonosError(f"package_hash ausente o inválido para {name}")
         if not isinstance(filename, str):
             raise CambonosError(f"nombre de artefacto no válido para {name}")
         candidate = Path(filename)

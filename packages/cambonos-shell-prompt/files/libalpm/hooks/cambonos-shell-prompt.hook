@@ -1,0 +1,11 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = bash
+
+[Action]
+Description = Restaurando la integración de CambonOS Starship...
+When = PostTransaction
+Depends = bash
+Exec = /usr/lib/cambonos/shell-prompt/integrate-bash repair

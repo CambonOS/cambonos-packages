@@ -1,6 +1,7 @@
 """Isolated Arch Linux container builds, one disposable container per package."""
 from __future__ import annotations
 
+import json
 import os
 import shutil
 from pathlib import Path
@@ -11,6 +12,22 @@ from .manifest import write_build_manifest
 from .models import Package
 from .validation import dependency_name, extract_function
 
+
+PACMAN_TESTING_OVERLAY = r'''
+if [[ "${EXPECTED_PACKAGE}" == "cambonos-pacman" && "${CHANNEL}" == "testing" ]]; then
+    config="${PACMAN_CONFIG:-/build/package/files/cambonos.conf}"
+    test "$(grep -Fxc '#[cambonos-testing]' "${config}")" -eq 1
+    test "$(grep -Fxc '#SigLevel = Required TrustedOnly' "${config}")" -eq 1
+    test "$(grep -Fxc '#Server = https://mirror.cambonos.org/testing/$arch' "${config}")" -eq 1
+    test "$(grep -Fxc '[cambonos]' "${config}")" -eq 1
+    test "$(grep -Fxc 'SigLevel = Required TrustedOnly' "${config}")" -eq 1
+    test "$(grep -Fxc 'Server = https://mirror.cambonos.org/stable/$arch' "${config}")" -eq 1
+    sed -i \
+        -e '/^#\[cambonos-testing\]$/ { s/^#\[cambonos-testing\]$/[cambonos-testing]/; n; s/^#SigLevel = Required TrustedOnly$/SigLevel = Required TrustedOnly/; n; s|^#Server = https://mirror.cambonos.org/testing/\$arch$|Server = https://mirror.cambonos.org/testing/$arch|; }' \
+        -e '/^\[cambonos\]$/ { s/^\[cambonos\]$/#[cambonos]/; n; s/^SigLevel = Required TrustedOnly$/#SigLevel = Required TrustedOnly/; n; s|^Server = https://mirror.cambonos.org/stable/\$arch$|#Server = https://mirror.cambonos.org/stable/$arch|; }' \
+        "${config}"
+fi
+'''
 
 CONTAINER_BUILD_SCRIPT = r"""
 set -Eeuo pipefail
@@ -67,6 +84,7 @@ if [[ ! " ${BUILDENV[*]} " =~ (^|[[:space:]])check([[:space:]]|$) ]]; then
 fi
 EOF
 chown builder:builder /tmp/cambonos-makepkg.conf
+__PACMAN_TESTING_OVERLAY__
 runuser -u builder -- env SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH}" bash -lc \
     'cd /build/package && makepkg --config /tmp/cambonos-makepkg.conf --nodeps --cleanbuild --clean --noconfirm'
 mapfile -t built_packages < <(find /out -maxdepth 1 -type f -name '*.pkg.tar.*' ! -name '*.sig' -print | sort)
@@ -150,6 +168,7 @@ def build_order(packages: dict[str, Package]) -> list[str]:
 
 def _build_one(
     package: Package,
+    channel: str,
     image: str,
     output: Path,
     internal_artifacts: list[tuple[str, Path]],
@@ -170,6 +189,7 @@ def _build_one(
     command = [
         "docker", "run", "--rm", "--platform", "linux/amd64",
         "-e", f"CHECK_PRESENT={check_present}",
+        "-e", f"CHANNEL={channel}",
         "-e", f"INTERNAL_NAMES={internal_names}",
         "-e", f"EXPECTED_PACKAGE={package.name}",
         "-e", f"EXPECTED_VERSION={package.epoch + ':' if package.epoch != '0' else ''}{package.pkgver}-{package.pkgrel}",
@@ -181,7 +201,8 @@ def _build_one(
         "-v", f"{package.directory.resolve()}:/input:ro",
         "-v", f"{output.resolve()}:/out",
         "-v", f"{internal_dir.resolve()}:/internal:ro",
-        image, "bash", "-euc", CONTAINER_BUILD_SCRIPT,
+        image, "bash", "-euc",
+        CONTAINER_BUILD_SCRIPT.replace("__PACMAN_TESTING_OVERLAY__", PACMAN_TESTING_OVERLAY),
     ]
     run_command(command)
     archives = sorted(
@@ -203,6 +224,11 @@ def _build_one(
         "package_file": archive.name,
         "package_hash": sha256_file(archive),
     }
+    metadata_path = package.directory / ".cambonos-source.json"
+    if metadata_path.is_file():
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        record["source_repository"] = metadata["repository"]
+        record["source_commit"] = metadata["commit"]
     env_file = output / "build-environment.txt"
     if not env_file.is_file():
         raise CambonosError(f"{package.name}: falta build-environment.txt")
@@ -212,6 +238,20 @@ def _build_one(
 
 
 def _package_source_date_epoch(package: Package, commit: str) -> int:
+    metadata_path = package.directory / ".cambonos-source.json"
+    if metadata_path.is_file():
+        try:
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            value = metadata.get("source_date_epoch")
+        except (OSError, json.JSONDecodeError, AttributeError) as exc:
+            raise CambonosError(
+                f"{package.name}: metadata de origen externo inválida"
+            ) from exc
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise CambonosError(
+                f"{package.name}: source_date_epoch externo ausente o inválido"
+            )
+        return value
     source_root = package.directory.parent.parent
     relative_path = package.directory.relative_to(source_root).as_posix()
     result = run_command(
@@ -263,7 +303,7 @@ def build_channel(
             shutil.rmtree(per_package_output)
         source_date_epoch = _package_source_date_epoch(package, commit)
         archive, record = _build_one(
-            package, image, per_package_output, internal, source_date_epoch
+            package, channel, image, per_package_output, internal, source_date_epoch
         )
         destination = package_output / archive.name
         shutil.copy2(archive, destination)

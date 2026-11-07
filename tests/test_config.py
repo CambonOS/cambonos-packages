@@ -21,7 +21,7 @@ class ConfigTests(unittest.TestCase):
 
     def test_only_keyring_is_globally_mandatory(self):
         self.assertEqual(REQUIRED_PACKAGES, {"cambonos-keyring"})
-        # cambonos-repo is optional and can differ between channels.
+        # cambonos-pacman is optional and can differ between channels.
 
 
 if __name__ == "__main__":

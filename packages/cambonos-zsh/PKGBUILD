@@ -1,0 +1,40 @@
+pkgname=cambonos-zsh
+pkgver=0.1.0
+pkgrel=4
+pkgdesc="CambonOS default Zsh configuration and interactive shell integration"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('GPL-3.0-only')
+depends=(
+  'zsh'
+  'zsh-completions'
+  'zsh-autosuggestions'
+  'zsh-syntax-highlighting'
+  'cambonos-shell-prompt'
+  'util-linux'
+  'sudo'
+)
+backup=('etc/skel/.zshrc')
+install=cambonos-zsh.install
+
+package() {
+  install -Dm644 "$startdir/files/etc/skel/.zshrc" \
+    "$pkgdir/etc/skel/.zshrc"
+
+  install -Dm644 "$startdir/files/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  install -Dm644 "$startdir/files/zsh/conf.d/10-completion.zsh" \
+    "$pkgdir/usr/share/cambonos/zsh/conf.d/10-completion.zsh"
+  install -Dm644 "$startdir/files/zsh/conf.d/20-keybindings.zsh" \
+    "$pkgdir/usr/share/cambonos/zsh/conf.d/20-keybindings.zsh"
+  install -Dm644 "$startdir/files/zsh/conf.d/30-history.zsh" \
+    "$pkgdir/usr/share/cambonos/zsh/conf.d/30-history.zsh"
+  install -Dm644 "$startdir/files/zsh/conf.d/40-plugins.zsh" \
+    "$pkgdir/usr/share/cambonos/zsh/conf.d/40-plugins.zsh"
+  install -Dm644 "$startdir/files/zsh/conf.d/45-pacman-sudo.zsh" \
+    "$pkgdir/usr/share/cambonos/zsh/conf.d/45-pacman-sudo.zsh"
+
+  install -Dm755 "$startdir/files/cambonos/lib/integrate-zsh" \
+    "$pkgdir/usr/lib/cambonos/zsh/integrate-zsh"
+}

@@ -1,0 +1,20 @@
+post_install() {
+    if [[ -x /usr/lib/cambonos/zsh/integrate-zsh ]]; then
+        /usr/lib/cambonos/zsh/integrate-zsh install ||
+            printf 'cambonos-zsh: no se pudo instalar la integración global; ejecuta integrate-zsh repair.\n' >&2
+    fi
+}
+
+post_upgrade() {
+    if [[ -x /usr/lib/cambonos/zsh/integrate-zsh ]]; then
+        /usr/lib/cambonos/zsh/integrate-zsh repair ||
+            printf 'cambonos-zsh: no se pudo reparar la integración global.\n' >&2
+    fi
+}
+
+pre_remove() {
+    if [[ -x /usr/lib/cambonos/zsh/integrate-zsh ]]; then
+        /usr/lib/cambonos/zsh/integrate-zsh remove ||
+            printf 'cambonos-zsh: no se pudo retirar la integración global.\n' >&2
+    fi
+}

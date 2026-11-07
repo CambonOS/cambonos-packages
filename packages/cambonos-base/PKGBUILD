@@ -1,0 +1,21 @@
+pkgname=cambonos-base
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="CambonOS base system and default user experience"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('GPL-3.0-only')
+
+depends=(
+  'cambonos-keyring'
+  'cambonos-pacman'
+  'cambonos-release'
+  'cambonos-branding'
+  'cambonos-fastfetch'
+  'cambonos-shell-prompt'
+  'cambonos-zsh'
+)
+
+package() {
+  :
+}

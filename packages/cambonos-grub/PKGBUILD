@@ -1,0 +1,104 @@
+pkgname=cambonos-grub
+pkgver=0.1.1
+pkgrel=1
+pkgdesc="CambonOS GRUB configuration and Vimix-derived theme"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('GPL-3.0-only' 'GPL-2.0-or-later WITH Font-exception-2.0')
+depends=('bash' 'grub>=2:2.16' 'os-prober')
+backup=('etc/default/grub.d/60-cambonos.cfg')
+install=cambonos-grub.install
+
+package() {
+  install -Dm644 "$startdir/files/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 "$startdir/files/NOTICE" \
+    "$pkgdir/usr/share/licenses/$pkgname/NOTICE"
+  install -Dm644 "$startdir/files/LICENSE-UNIFONT" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE-UNIFONT"
+  install -Dm644 "$startdir/files/UNIFONT-FONT-EXCEPTION" \
+    "$pkgdir/usr/share/licenses/$pkgname/UNIFONT-FONT-EXCEPTION"
+  install -Dm644 "$startdir/files/defaults/60-cambonos.cfg" \
+    "$pkgdir/etc/default/grub.d/60-cambonos.cfg"
+  install -Dm755 "$startdir/files/lib/regenerate-grub-config" \
+    "$pkgdir/usr/lib/cambonos-grub/regenerate-grub-config"
+  install -Dm644 "$startdir/files/hooks/cambonos-grub-kernel.hook" \
+    "$pkgdir/usr/share/libalpm/hooks/cambonos-grub-kernel.hook"
+  install -Dm644 "$startdir/files/themes/CambonOS/theme.txt" \
+    "$pkgdir/usr/share/grub/themes/CambonOS/theme.txt"
+
+  install -d "$pkgdir/usr/share/grub/themes/CambonOS/icons"
+  cp -a \
+    "$startdir/files/themes/CambonOS/background.png" \
+    "$startdir/files/themes/CambonOS/unifont-regular-16.pf2" \
+    "$startdir/files/themes/CambonOS/select_c.png" \
+    "$startdir/files/themes/CambonOS/select_e.png" \
+    "$startdir/files/themes/CambonOS/select_ne.png" \
+    "$startdir/files/themes/CambonOS/select_n.png" \
+    "$startdir/files/themes/CambonOS/select_nw.png" \
+    "$startdir/files/themes/CambonOS/select_se.png" \
+    "$startdir/files/themes/CambonOS/select_s.png" \
+    "$startdir/files/themes/CambonOS/select_sw.png" \
+    "$startdir/files/themes/CambonOS/select_w.png" \
+    "$startdir/files/themes/CambonOS/terminal_box_c.png" \
+    "$startdir/files/themes/CambonOS/terminal_box_e.png" \
+    "$startdir/files/themes/CambonOS/terminal_box_ne.png" \
+    "$startdir/files/themes/CambonOS/terminal_box_n.png" \
+    "$startdir/files/themes/CambonOS/terminal_box_nw.png" \
+    "$startdir/files/themes/CambonOS/terminal_box_se.png" \
+    "$startdir/files/themes/CambonOS/terminal_box_s.png" \
+    "$startdir/files/themes/CambonOS/terminal_box_sw.png" \
+    "$startdir/files/themes/CambonOS/terminal_box_w.png" \
+    "$pkgdir/usr/share/grub/themes/CambonOS/"
+  cp -a \
+      "$startdir/files/themes/CambonOS/icons/almalinux.png" \
+      "$startdir/files/themes/CambonOS/icons/alpine.png" \
+      "$startdir/files/themes/CambonOS/icons/amazon.png" \
+      "$startdir/files/themes/CambonOS/icons/arch.png" \
+      "$startdir/files/themes/CambonOS/icons/batocera_linux.png" \
+      "$startdir/files/themes/CambonOS/icons/bazzite.png" \
+      "$startdir/files/themes/CambonOS/icons/bodhi.png" \
+      "$startdir/files/themes/CambonOS/icons/cachyos.png" \
+      "$startdir/files/themes/CambonOS/icons/cambonos.png" \
+      "$startdir/files/themes/CambonOS/icons/centos.png" \
+      "$startdir/files/themes/CambonOS/icons/chimeraos.png" \
+      "$startdir/files/themes/CambonOS/icons/debian.png" \
+      "$startdir/files/themes/CambonOS/icons/deepin.png" \
+      "$startdir/files/themes/CambonOS/icons/elementary.png" \
+      "$startdir/files/themes/CambonOS/icons/endeavouros.png" \
+      "$startdir/files/themes/CambonOS/icons/fedora.png" \
+      "$startdir/files/themes/CambonOS/icons/garuda.png" \
+      "$startdir/files/themes/CambonOS/icons/gentoo.png" \
+      "$startdir/files/themes/CambonOS/icons/kali.png" \
+      "$startdir/files/themes/CambonOS/icons/kubuntu.png" \
+      "$startdir/files/themes/CambonOS/icons/lakka.png" \
+      "$startdir/files/themes/CambonOS/icons/linux-lite.png" \
+      "$startdir/files/themes/CambonOS/icons/linux-mint.png" \
+      "$startdir/files/themes/CambonOS/icons/linux.png" \
+      "$startdir/files/themes/CambonOS/icons/mageia.png" \
+      "$startdir/files/themes/CambonOS/icons/manjaro.png" \
+      "$startdir/files/themes/CambonOS/icons/nixos.png" \
+      "$startdir/files/themes/CambonOS/icons/nobara.png" \
+      "$startdir/files/themes/CambonOS/icons/opensuse.png" \
+      "$startdir/files/themes/CambonOS/icons/oracle.png" \
+      "$startdir/files/themes/CambonOS/icons/parrot.png" \
+      "$startdir/files/themes/CambonOS/icons/porteus.png" \
+      "$startdir/files/themes/CambonOS/icons/pop__os.png" \
+      "$startdir/files/themes/CambonOS/icons/puppy.png" \
+      "$startdir/files/themes/CambonOS/icons/q4os.png" \
+      "$startdir/files/themes/CambonOS/icons/raspberry.png" \
+      "$startdir/files/themes/CambonOS/icons/red.png" \
+      "$startdir/files/themes/CambonOS/icons/rocky.png" \
+      "$startdir/files/themes/CambonOS/icons/slackware.png" \
+      "$startdir/files/themes/CambonOS/icons/slax.png" \
+      "$startdir/files/themes/CambonOS/icons/solus.png" \
+      "$startdir/files/themes/CambonOS/icons/steamos.png" \
+      "$startdir/files/themes/CambonOS/icons/suse.png" \
+      "$startdir/files/themes/CambonOS/icons/tails.png" \
+      "$startdir/files/themes/CambonOS/icons/ubuntu.png" \
+      "$startdir/files/themes/CambonOS/icons/void.png" \
+      "$startdir/files/themes/CambonOS/icons/windows.png" \
+      "$startdir/files/themes/CambonOS/icons/xubuntu.png" \
+      "$startdir/files/themes/CambonOS/icons/zorin.png" \
+      "$pkgdir/usr/share/grub/themes/CambonOS/icons/"
+    }

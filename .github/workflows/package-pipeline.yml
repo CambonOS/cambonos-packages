@@ -5,6 +5,7 @@ on:
     branches:
       - dev
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,6 +26,10 @@ jobs:
     outputs:
       sha_dev: ${{ steps.snapshots.outputs.sha_dev }}
       sha_main: ${{ steps.snapshots.outputs.sha_main }}
+      installer_testing: ${{ steps.external.outputs.installer_testing }}
+      installer_stable: ${{ steps.external.outputs.installer_stable }}
+      mkiso_testing: ${{ steps.external.outputs.mkiso_testing }}
+      mkiso_stable: ${{ steps.external.outputs.mkiso_stable }}
       bootstrap: ${{ steps.previous.outputs.bootstrap }}
     steps:
       - name: Checkout pipeline tooling
@@ -32,6 +37,11 @@ jobs:
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
+
+      - name: Install shell syntax checkers
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes zsh fish
 
       - name: Run unit tests
         run: python3 -m unittest discover -s tests -v
@@ -50,6 +60,64 @@ jobs:
           echo "sha_main=${SHA_MAIN}" >> "$GITHUB_OUTPUT"
           git worktree add --detach "${RUNNER_TEMP}/source-dev" "${SHA_DEV}"
           git worktree add --detach "${RUNNER_TEMP}/source-main" "${SHA_MAIN}"
+
+      - name: Resolve immutable external package snapshots
+        id: external
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          resolve() {
+            local repository="$1" branch="$2" result
+            result="$(git ls-remote --heads "${repository}" "refs/heads/${branch}" | awk '{ print $1 }')"
+            if [[ -z "${result}" && "${branch}" == "dev" ]]; then
+              result="$(git ls-remote --heads "${repository}" refs/heads/main | awk '{ print $1 }')"
+            fi
+            printf '%s' "${result}"
+          }
+          installer_testing="$(resolve https://github.com/CambonOS/installer.git dev)"
+          installer_stable="$(resolve https://github.com/CambonOS/installer.git main)"
+          mkiso_testing="$(resolve https://github.com/CambonOS/iso.git dev)"
+          mkiso_stable="$(resolve https://github.com/CambonOS/iso.git main)"
+          for commit in "${installer_testing}" "${installer_stable}" "${mkiso_testing}" "${mkiso_stable}"; do
+            [[ "${commit}" =~ ^[0-9a-f]{40}$ ]]
+          done
+          echo "installer_testing=${installer_testing}" >> "$GITHUB_OUTPUT"
+          echo "installer_stable=${installer_stable}" >> "$GITHUB_OUTPUT"
+          echo "mkiso_testing=${mkiso_testing}" >> "$GITHUB_OUTPUT"
+          echo "mkiso_stable=${mkiso_stable}" >> "$GITHUB_OUTPUT"
+          checkout_at() {
+            local repository="$1" commit="$2" destination="$3"
+            git clone --no-checkout "${repository}" "${destination}"
+            git -C "${destination}" fetch --no-tags origin "${commit}"
+            git -C "${destination}" checkout --detach FETCH_HEAD
+            test "$(git -C "${destination}" rev-parse HEAD)" = "${commit}"
+          }
+          for channel in testing stable; do
+            if [[ "${channel}" == "testing" ]]; then
+              installer_commit="${installer_testing}"
+              mkiso_commit="${mkiso_testing}"
+              source=source-dev
+            else
+              installer_commit="${installer_stable}"
+              mkiso_commit="${mkiso_stable}"
+              source=source-main
+            fi
+            checkout_at https://github.com/CambonOS/installer.git "${installer_commit}" \
+              "${RUNNER_TEMP}/external-installer-${channel}"
+            checkout_at https://github.com/CambonOS/iso.git "${mkiso_commit}" \
+              "${RUNNER_TEMP}/external-mkiso-${channel}"
+            python3 scripts/stage_external_packages.py \
+              --source-root "${RUNNER_TEMP}/${source}" \
+              --installer-source "${RUNNER_TEMP}/external-installer-${channel}" \
+              --installer-commit "${installer_commit}" \
+              --mkiso-source "${RUNNER_TEMP}/external-mkiso-${channel}" \
+              --mkiso-commit "${mkiso_commit}"
+          done
+
+      - name: Verify identical package signing keyrings
+        shell: bash
+        run: |
+          set -Eeuo pipefail
           for keyfile in cambonos.gpg cambonos-trusted cambonos-revoked; do
             cmp "${RUNNER_TEMP}/source-dev/packages/cambonos-keyring/files/${keyfile}" \
                 "${RUNNER_TEMP}/source-main/packages/cambonos-keyring/files/${keyfile}"
@@ -128,7 +196,7 @@ jobs:
           fi
           python3 scripts/cambonos.py "${args[@]}"
 
-      - name: Upload verified previous manifest for binary immutability check
+      - name: Upload verified previous manifest for source version policy
         if: steps.previous.outputs.bootstrap == 'false'
         uses: actions/upload-artifact@v7.0.2
         with:
@@ -150,9 +218,13 @@ jobs:
           - channel: testing
             branch: dev
             commit: ${{ needs.validate.outputs.sha_dev }}
+            installer_commit: ${{ needs.validate.outputs.installer_testing }}
+            mkiso_commit: ${{ needs.validate.outputs.mkiso_testing }}
           - channel: stable
             branch: main
             commit: ${{ needs.validate.outputs.sha_main }}
+            installer_commit: ${{ needs.validate.outputs.installer_stable }}
+            mkiso_commit: ${{ needs.validate.outputs.mkiso_stable }}
     steps:
       - name: Checkout pipeline tooling
         uses: actions/checkout@v7.0.1
@@ -164,10 +236,29 @@ jobs:
         shell: bash
         env:
           SOURCE_COMMIT: ${{ matrix.commit }}
+          INSTALLER_COMMIT: ${{ matrix.installer_commit }}
+          MKISO_COMMIT: ${{ matrix.mkiso_commit }}
         run: |
           set -Eeuo pipefail
           git fetch --no-tags origin "${SOURCE_COMMIT}"
           git worktree add --detach "${RUNNER_TEMP}/package-source" "${SOURCE_COMMIT}"
+          checkout_at() {
+            local repository="$1" commit="$2" destination="$3"
+            git clone --no-checkout "${repository}" "${destination}"
+            git -C "${destination}" fetch --no-tags origin "${commit}"
+            git -C "${destination}" checkout --detach FETCH_HEAD
+            test "$(git -C "${destination}" rev-parse HEAD)" = "${commit}"
+          }
+          checkout_at https://github.com/CambonOS/installer.git "${INSTALLER_COMMIT}" \
+            "${RUNNER_TEMP}/external-installer"
+          checkout_at https://github.com/CambonOS/iso.git "${MKISO_COMMIT}" \
+            "${RUNNER_TEMP}/external-mkiso"
+          python3 scripts/stage_external_packages.py \
+            --source-root "${RUNNER_TEMP}/package-source" \
+            --installer-source "${RUNNER_TEMP}/external-installer" \
+            --installer-commit "${INSTALLER_COMMIT}" \
+            --mkiso-source "${RUNNER_TEMP}/external-mkiso" \
+            --mkiso-commit "${MKISO_COMMIT}"
 
       - name: Build all packages in disposable Arch containers
         run: |

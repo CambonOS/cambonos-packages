@@ -1,0 +1,14 @@
+#!/bin/bash
+set -u
+
+grub_cfg=/boot/grub/grub.cfg
+if [[ ! -e "$grub_cfg" && ! -L "$grub_cfg" ]]; then
+  exit 0
+fi
+
+if [[ ! -f "$grub_cfg" || -L "$grub_cfg" ]]; then
+  printf 'cambonos-grub: refusing to replace a non-regular %s.\n' "$grub_cfg" >&2
+  exit 1
+fi
+
+exec /usr/bin/grub-mkconfig -o "$grub_cfg"
