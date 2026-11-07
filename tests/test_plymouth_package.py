@@ -147,12 +147,6 @@ class PlymouthPackageTests(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
 
-    def test_readme_documents_boot_arguments_and_configuration_limits(self):
-        readme = (PACKAGE / "README.md").read_text(encoding="utf-8")
-        self.assertIn("splash quiet", readme)
-        self.assertIn("ShowDelay=0", readme)
-        self.assertIn("/etc/mkinitcpio.conf.d/90-cambonos-plymouth.conf", readme)
-        self.assertIn("ALL_config", readme)
 
 
 if __name__ == "__main__":

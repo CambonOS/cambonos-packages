@@ -38,6 +38,11 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
+      - name: Install shell syntax checkers
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes zsh fish
+
       - name: Run unit tests
         run: python3 -m unittest discover -s tests -v
 

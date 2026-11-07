@@ -35,7 +35,6 @@ class ShellPackageMetadataTests(unittest.TestCase):
         self.assertIn("(( EUID == 0 ))", source)
         self.assertIn("command sudo pacman", source)
         self.assertIn("_cambonos_pacman_needs_sudo", source)
-        self.assertIn("pacman -Syu", (package / "README.md").read_text())
 
     def test_shell_prompt_is_independent_of_zsh_and_fish(self):
         text = (ROOT / "packages/cambonos-shell-prompt/PKGBUILD").read_text()

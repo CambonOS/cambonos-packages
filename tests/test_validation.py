@@ -8,7 +8,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from cambonos_lib.validation import (
     discover_packages, extract_array, extract_function, extract_scalar, validate_package,
-    validate_all, dependency_name,
+    validate_all, dependency_name, validate_file_format, validate_script_syntax,
 )
 from cambonos_lib.common import CambonosError
 from cambonos_lib.models import Package
@@ -63,6 +63,42 @@ class ValidationTests(unittest.TestCase):
             makedepends=tuple(makedepends.replace("'", "").split()) if makedepends else (),
             checkdepends=tuple(checkdepends.replace("'", "").split()) if checkdepends else (),
         )
+
+    def test_rejects_png_extension_with_jpeg_content(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "image.png"
+            path.write_bytes(b"\xff\xd8\xff" + b"jpeg-data")
+            self.assertTrue(any("no coincide con su extensión" in error
+                                for error in validate_file_format(path)))
+
+    def test_accepts_png_signature(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "image.png"
+            path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"payload")
+            self.assertEqual(validate_file_format(path), [])
+
+    def test_detects_unreferenced_package_payload(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            package = self._package(temporary)
+            (package.directory / "files" / "unused.txt").write_text("unused")
+            errors = validate_package(package)
+            self.assertTrue(any("no utilizado por package()" in error for error in errors))
+
+    def test_detects_python_script_syntax_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            package = self._package(temporary)
+            script = package.directory / "files" / "broken.py"
+            script.write_text("def broken(:\n    pass\n")
+            errors = validate_script_syntax(package)
+            self.assertTrue(any("sintaxis Python incorrecta" in error for error in errors))
+
+    def test_detects_shell_script_syntax_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            package = self._package(temporary)
+            script = package.directory / "files" / "broken.sh"
+            script.write_text("if then\\n  echo broken\\nfi\\n")
+            errors = validate_script_syntax(package)
+            self.assertTrue(any("sintaxis Bash incorrecta" in error for error in errors))
 
     def test_extract_array_handles_comments_and_quoted_spaces(self):
         text = "depends=('base package' # comment\n 'other>=2')\n"

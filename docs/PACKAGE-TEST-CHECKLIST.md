@@ -1,65 +1,106 @@
-# CambonOS — Checklist esencial de paquetes y repositorio
+# Checklist funcional de paquetes CambonOS
 
-Checklist breve para validar un candidato de `dev` antes de integrarlo en `main`. Ejecutar las pruebas de instalación en una VM Arch desechable o snapshot restaurable, nunca en el equipo principal. Aplicar las comprobaciones al paquete o componente cambiado; los casos de error y límites se cubren en `tests/` y no se repiten manualmente en cada release.
+Este documento registra las funciones de los paquetes y si han sido verificadas en un entorno real. No es una guía de instalación ni una lista de tareas de publicación.
 
-## 1. Gate de release
+Marca una función únicamente cuando se haya comprobado su funcionamiento en un sistema Arch de pruebas. Una función implementada pero no probada debe permanecer pendiente. Antes de fusionar `dev` en `main`, todas las funciones de esta checklist deben estar verificadas. Toda función nueva debe añadirse aquí y probarse antes de ese merge.
 
-- [ ] Registrar SHA exactos de `dev` y `main`, fecha, arquitectura, versión Arch y snapshot utilizado.
-- [ ] Registrar los SHA upstream exactos de `CambonOS/installer` y `CambonOS/iso`; comprobar que coinciden entre validación y build y aparecen en los manifiestos.
-- [ ] Ejecutar `python3 -m unittest discover -s tests -v`; validar estáticamente ambos snapshots y la política de versiones.
-- [ ] Confirmar que CI valida y construye los snapshots fijados; registrar los resultados de `validate`, `build` y `signing`.
-- [ ] Para cada paquete cambiado, revisar `pkgver`/`pkgrel`, arquitectura, `depends`, `makedepends`, `checkdepends`, `backup` y rutas instaladas.
-- [ ] Construir los paquetes afectados en el entorno Arch aislado del pipeline e inspeccionar contenido y dependencias.
-- [ ] Para `cambonos-installer`, comprobar que el paquete conserva `cambonos-fs/` y que su launcher resuelve las rutas relativas desde `/usr/share/cambonos-installer/`.
-- [ ] Para `cambonos-mkiso`, comprobar que instala el perfil y lo resuelve desde cualquier cwd sin cambiar el destino predeterminado; ejecutar el smoke de limpieza solo en una VM desechable por el `rm -rf /iso` existente.
-- [ ] Confirmar que los tres ficheros públicos de `cambonos-keyring` son idénticos entre ramas y que no se incluye material secreto.
-- [ ] Verificar firmas de bases de datos y paquetes desde un cliente con `Required TrustedOnly`; no relajar `SigLevel`.
+- `[ ]` Pendiente de verificación funcional.
+- `[x]` Verificada en un entorno real.
 
-## 2. Ciclo de vida
+Anota el entorno y la fecha de la comprobación en el registro del paquete. Si una función no existe todavía, no debe marcarse como verificada.
 
-Aplicar estas comprobaciones a cada paquete afectado, no repetir la matriz completa si el paquete no cambió.
+## cambonos-branding
 
-- [ ] En una VM/snapshot Arch, instalar o actualizar desde el canal previsto; comprobar que todas las dependencias se resuelven automáticamente.
-- [ ] Reinstalar el paquete y confirmar que sus scriptlets y hooks terminan sin errores.
-- [ ] Comprobar `pacman -Qkk` y que las rutas instaladas coinciden con el contenido declarado.
-- [ ] Si usa `backup` o configura archivos compartidos, confirmar que preserva la configuración ajena y revisar los `.pacnew` sin sobrescribirlos a ciegas.
-- [ ] Desinstalar solo cuando el cambio requiera validar retirada; comprobar que se retiran los archivos/bloques propios y se conserva el contenido administrativo.
-- [ ] Guardar versiones, comandos, logs e incidencias de la ejecución.
+- [ ] Los recursos SVG de identidad se muestran correctamente.
+- [ ] Los recursos PNG de identidad se muestran correctamente.
+- [ ] La fuente CambonOS Symbols se reconoce y sus glifos se representan correctamente.
+- [ ] Fontconfig encuentra y aplica la configuración de la fuente.
 
-## 3. Smoke tests por familia
+## cambonos-fastfetch
 
-Ejecutar solo el bloque correspondiente a los paquetes cambiados.
+- [ ] Fastfetch muestra la identidad y el logotipo de CambonOS.
+- [ ] Fastfetch muestra correctamente la información principal del sistema.
+- [ ] Fastfetch se ejecuta en las sesiones de login compatibles mediante `/etc/profile.d/`.
+- [ ] La integración automática funciona en sesiones interactivas de Bash.
+- [ ] La integración automática funciona en sesiones interactivas de Zsh cuando está instalado `cambonos-zsh`.
+- [ ] La integración automática funciona en sesiones interactivas de Fish.
+- [ ] La integración de shells puede activarse y retirarse sin alterar configuraciones ajenas.
 
-- [ ] `cambonos-branding`: verificar rutas de recursos canónicos, dimensiones PNG, licencia y `fc-match 'CambonOS Symbols'`. Los recursos gráficos son `cambonos-icon.svg`, `cambonos-text.svg`, `cambonos-icon.png` y `cambonos-text.png`; se excluyen `cambonos-icon-black.svg`, `cambonos-icon-white.svg`, `cambonos-text-black.svg`, `cambonos-text-white.svg` y `cambonos-logo.txt`. Para una actualización desde `0.1.1-1` a `0.1.1-3`, confirmar la retirada de los recursos obsoletos. No se depende de rutas antiguas ni aliases; el fallback conserva la fuente.
-- [ ] `cambonos-fastfetch`, `cambonos-shell-prompt`, `cambonos-zsh`: comprobar la salida principal y sesiones interactivas de los shells instalados; no ejecutar en shells no interactivos, respetar el opt-out y no modificar archivos personales.
-- [ ] `cambonos-release`: verificar la identidad CambonOS; install/upgrade/remove preservan enlaces, archivos y cambios administrativos ajenos.
-- [ ] `cambonos-pacman`: confirmar dependencias en `.PKGINFO` (incluido `diffutils`), `Required TrustedOnly` en stable/testing, opciones efectivas de `pacman-conf`, lista de repositorios e idempotencia de `manage-pacman-config`.
-- [ ] `cambonos-grub`: verificar los defaults acordados y la regeneración segura del menú; probar arranque visual solo si cambian tema, configuración o hooks.
-- [ ] `cambonos-plymouth`: verificar drop-in, orden de hooks, tema y reconstrucción de initramfs; probar arranque visual solo si cambia el tema o su integración.
-- [ ] `cambonos-keyring`: verificar fingerprint por canal autenticado, igualdad entre ramas, aceptación de paquete firmado válido y rechazo de firma inválida/no confiable; nunca incluir claves privadas.
+## cambonos-shell-prompt
 
-## 4. Repositorio y publicación
+- [ ] Starship utiliza la configuración visual predeterminada de CambonOS.
+- [ ] El prompt funciona en sesiones interactivas de Bash.
+- [ ] El prompt funciona en sesiones interactivas de Zsh cuando está instalado `cambonos-zsh`.
+- [ ] El prompt funciona en sesiones interactivas de Fish.
+- [ ] El directorio actual y sus directorios padre se representan correctamente.
+- [ ] Se respeta la configuración personal de Starship del usuario.
 
-- [ ] Confirmar que los manifiestos corresponden a los SHA fijados y que las versiones cumplen la política de fuente/`pkgver`/`pkgrel`.
-- [ ] Confirmar que `testing` y `stable` se validan independientemente y que cada paquete, firma e índice publicado está representado en el manifiesto.
-- [ ] Desde un cliente de prueba, sincronizar ambos canales con verificación activa e instalar/actualizar el paquete candidato.
-- [ ] Confirmar que un fallo en validación, construcción o firma impide publicar y conserva el sitio anterior.
+## cambonos-zsh
 
-## 5. Pruebas condicionales
+- [ ] Zsh carga la configuración global de CambonOS.
+- [ ] El sistema de autocompletado funciona.
+- [ ] Los atajos de teclado configurados funcionan.
+- [ ] El historial persistente funciona.
+- [ ] Autosuggestions y syntax highlighting funcionan.
+- [ ] Los fragmentos de integración de otros paquetes se cargan en el orden previsto.
+- [ ] La configuración personal del usuario se mantiene independiente de la configuración global.
+- [ ] Las operaciones de pacman que modifican el sistema solicitan privilegios cuando corresponde.
 
-No son parte del ciclo ordinario; ejecutarlas solo cuando el cambio afecte a esa responsabilidad. Los escenarios de fallo unitarios no se repiten manualmente salvo regresión o cambio de diseño.
+## cambonos-release
 
-- Keyring: rotación, revocación y recuperación solo en entorno aislado cuando cambie la cadena de confianza.
-- Configuración `backup`: casos especiales de `.pacnew` y preservación de cambios cuando cambie el archivo administrado.
-- GRUB/Plymouth: arranque UEFI/BIOS, cifrado, multiboot, hardware y generación de initramfs cuando cambien esos componentes.
-- Gestores de shell y release: concurrencia, marcadores dañados y recuperación solo si cambia esa lógica.
+- [ ] El sistema muestra la identidad CambonOS mediante `/etc/os-release`.
+- [ ] Los metadatos LSB de CambonOS están disponibles cuando se instala el componente correspondiente.
+- [ ] La identidad CambonOS se mantiene tras las transacciones de paquetes que afectan a los archivos de identidad.
+- [ ] La retirada del paquete restaura la identidad anterior cuando corresponde.
 
-## 6. Registro reciente
+## cambonos-pacman
 
-- `dev` probado: `9e75fb15db9c2518e2fdd920326dc8383dbbb309`; corrección de `cambonos-pacman` publicada en `1a75c1dbc92f9018c686ec5b683a238e7f578811`.
-- La suite registró 183 tests correctos; la validación estática cubrió los nueve paquetes.
-- En `arch-pruebas`, desde una snapshot sin paquetes CambonOS ni `diffutils`, pacman instaló `diffutils` como dependencia de `cambonos-pacman 0.1.0-2`. La reinstalación, `pacman -Qkk` e idempotencia del helper pasaron.
-- Pacman rechazó un paquete temporal con firma detached alterada. No se probó una clave firmante no confiable ni recuperación de keyring.
-- Las pruebas visuales/funcionales de GRUB, Plymouth y Zsh fueron confirmadas por el usuario; la VM no tiene kernel ni contenido en `/boot`, así que no validó arranque real.
-- Cinco `.pacnew` difieren de sus archivos activos y quedan pendientes de revisión administrativa; no se modificaron.
-- No se construyó localmente con `makepkg`; se probó el artefacto publicado y firmado.
+- [ ] El repositorio stable de CambonOS aparece configurado y habilitado.
+- [ ] El repositorio testing puede habilitarse mediante su configuración.
+- [ ] Pacman aplica las opciones diferenciales de CambonOS.
+- [ ] Pacman conserva la verificación obligatoria de firmas de los repositorios CambonOS.
+- [ ] La integración con `/etc/pacman.conf` funciona sin eliminar configuraciones manuales del administrador.
+- [ ] La transición desde la configuración anterior `cambonos-repo` conserva el funcionamiento esperado.
+
+## cambonos-grub
+
+- [ ] GRUB aplica la configuración predeterminada de CambonOS.
+- [ ] El menú de GRUB muestra correctamente el tema CambonOS.
+- [ ] Los iconos de los sistemas operativos se muestran correctamente.
+- [ ] GRUB detecta otros sistemas operativos cuando `os-prober` está disponible.
+- [ ] La configuración del menú se regenera después de los cambios de kernel.
+- [ ] El sistema puede arrancar correctamente con la configuración generada.
+
+## cambonos-plymouth
+
+- [ ] Plymouth selecciona y muestra el tema CambonOS.
+- [ ] La animación y la barra de progreso se muestran correctamente durante el arranque.
+- [ ] Los diálogos de teclado y desbloqueo muestran los recursos gráficos esperados.
+- [ ] La integración con mkinitcpio incorpora Plymouth a las imágenes initramfs.
+- [ ] La configuración de Plymouth funciona con el orden de hooks previsto, también en sistemas cifrados.
+- [ ] La selección de tema del administrador se conserva durante las actualizaciones.
+
+## cambonos-keyring
+
+- [ ] Pacman incorpora la clave pública de CambonOS.
+- [ ] Pacman reconoce el material de confianza de CambonOS.
+- [ ] Pacman acepta paquetes y bases de datos firmados por la clave autorizada.
+- [ ] Pacman rechaza paquetes y bases de datos con firmas inválidas o no confiables.
+- [ ] La instalación o actualización ejecuta `pacman-key --populate cambonos` cuando el keyring local está inicializado.
+- [ ] La actualización del paquete aplica el material de confianza vigente.
+
+## Registro de verificación
+
+Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última comprobación funcional. No es necesario repetir las pruebas de funciones que no hayan podido verse afectadas por un cambio.
+
+| Paquete | Entorno de prueba | Fecha | Observaciones |
+|---|---|---|---|
+| `cambonos-branding` | Pendiente | — | — |
+| `cambonos-fastfetch` | Pendiente | — | — |
+| `cambonos-shell-prompt` | Pendiente | — | — |
+| `cambonos-zsh` | Pendiente | — | — |
+| `cambonos-release` | Pendiente | — | — |
+| `cambonos-pacman` | Pendiente | — | — |
+| `cambonos-grub` | Pendiente | — | — |
+| `cambonos-plymouth` | Pendiente | — | — |
+| `cambonos-keyring` | Pendiente | — | — |

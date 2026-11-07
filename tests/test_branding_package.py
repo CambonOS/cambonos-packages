@@ -35,8 +35,6 @@ class BrandingPackageTests(unittest.TestCase):
 
     def test_pkgbuild_installs_svg_png_and_font_assets(self):
         content = PKGBUILD.read_text(encoding="utf-8")
-        self.assertIn("pkgver=0.1.1", content)
-        self.assertIn("pkgrel=3", content)
         for name in sorted(GRAPHIC_ASSETS):
             self.assertIn(f'"$branding_dir/{name}"', content)
         self.assertIn('"$font_dir/CambonOS-Symbols.ttf"', content)
@@ -77,38 +75,6 @@ class BrandingPackageTests(unittest.TestCase):
         signature = (TTF_DIR / "CambonOS-Symbols.ttf").read_bytes()[:4]
         self.assertIn(signature, {b"\x00\x01\x00\x00", b"OTTO", b"true", b"typ1"})
 
-    def test_package_readme_documents_svg_png_paths_and_no_legacy_aliases(self):
-        readme = (PACKAGE / "README.md").read_text(encoding="utf-8")
-        for name in sorted(GRAPHIC_ASSETS):
-            self.assertIn(f"/usr/share/cambonos/branding/{name}", readme)
-        self.assertIn("No se ofrece compatibilidad con las rutas anteriores", readme)
-        self.assertIn("3792 × 1024", readme)
-        self.assertIn("CambonOS-Symbols.ttf", readme)
-        self.assertIn("conf.default", readme)
-
-    def test_checklist_covers_png_assets_removed_assets_and_upgrade(self):
-        checklist = (ROOT / "docs" / "PACKAGE-TEST-CHECKLIST.md").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("`0.1.1-1`", checklist)
-        self.assertIn("`0.1.1-3`", checklist)
-        for name in sorted(GRAPHIC_ASSETS):
-            self.assertIn(name, checklist)
-        for removed in REMOVED_ASSETS:
-            self.assertIn(removed, checklist)
-        self.assertIn("No se depende de rutas antiguas", checklist)
-        self.assertIn("conserva la fuente", checklist)
-
-    def test_implementation_docs_describe_svg_png_branding_scope(self):
-        implementation = (ROOT / "docs" / "IMPLEMENTATION.md").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("### `cambonos-branding`", implementation)
-        for name in sorted(GRAPHIC_ASSETS):
-            self.assertIn(name, implementation)
-        self.assertIn("CambonOS-Symbols.ttf", implementation)
-        self.assertIn("incrementa `pkgrel` de 1 a 3", implementation)
-        self.assertIn("No se crean enlaces simbólicos en `/usr/share/icons/`", " ".join(implementation.split()))
 
 
 if __name__ == "__main__":

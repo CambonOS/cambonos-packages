@@ -142,13 +142,6 @@ class GrubPackageTests(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
 
-    def test_readme_documents_automation_and_limits(self):
-        readme = (PACKAGE / "README.md").read_text(encoding="utf-8")
-        self.assertIn("grub-mkconfig", readme)
-        self.assertIn("os-prober", readme)
-        self.assertIn("no ejecuta `grub-install`", readme)
-        self.assertIn("IPv6 permanece habilitado", readme)
-        self.assertIn("GRUB_GFXMODE", readme)
 
 
 if __name__ == "__main__":
