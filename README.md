@@ -73,7 +73,13 @@ cambonos-packages/
 
 ## Construcción y publicación
 
-El workflow `.github/workflows/package-pipeline.yml` se ejecuta en `push` a `dev` o `main` y contiene cuatro jobs:
+El workflow `.github/workflows/package-pipeline.yml` se ejecuta en `push` a `dev`
+o `main`, y también puede iniciarse manualmente desde GitHub Actions seleccionando
+`dev` o `main`. Para que GitHub muestre la opción manual, este workflow debe estar
+presente en la rama predeterminada del repositorio. La ejecución manual resulta
+útil cuando cambian los repositorios externos `CambonOS/installer` o
+`CambonOS/iso`: el pipeline resuelve sus referencias actuales al comenzar y
+reconstruye/publica ambos canales (`testing` y `stable`). Contiene cuatro jobs:
 
 1. **validate**: fija los SHA de ambas ramas y de los repos externos, ejecuta las pruebas y valida ambos snapshots frente al manifiesto publicado.
 2. **build**: construye `testing` y `stable` en matrices independientes, sin secretos de firma.

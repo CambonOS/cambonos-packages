@@ -88,7 +88,12 @@ La firma acredita la procedencia criptográfica del paquete, no la ausencia de c
 
 Se elimina `pages-bootstrap.yml` y se incorpora `package-pipeline.yml`.
 
-El workflow se activa exclusivamente con `push` a `dev` y `main`. No hay workflow de PR ni ejecución manual.
+El workflow se activa con `push` a `dev` y `main`, o manualmente desde GitHub
+Actions seleccionando una de esas ramas. Para que GitHub ofrezca el disparo
+manual, el archivo debe estar presente en la rama predeterminada. La ejecución
+manual permite reconstruir y publicar ambos canales cuando cambian los
+repositorios externos; los SHA de ambas ramas fuente y de los repositorios
+externos se resuelven al comenzar cada ejecución. No hay workflow de PR.
 
 Los cuatro jobs son:
 1. `validate`
