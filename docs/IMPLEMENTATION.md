@@ -2,7 +2,7 @@
 
 ## Resumen
 
-El repositorio utiliza un pipeline modular de validación, construcción, firma y publicación. Cada push a `dev` o `main` fija los commits de ambas ramas y procesa los dos canales a partir de esos snapshots Git inmutables.
+El repositorio utiliza un pipeline modular de validación, construcción, firma y publicación. Cada push a `dev` o `main` fija los commits de ambas ramas y procesa los dos canales a partir de esos snapshots Git inmutables. Para los repos fuente externos, `stable` usa `main` y `testing` usa `dev` cuando está publicada, con fallback a `main`; esos commits se verifican y staged temporalmente como `cambonos-installer` y `cambonos-mkiso`, sin copiar sus fuentes al historial de `cambonos-packages`.
 
 ## Cambios principales
 
@@ -47,6 +47,8 @@ Cada paquete se construye en su propio contenedor:
 
 Las dependencias internas de construcción se ordenan topológicamente. Las dependencias internas de ejecución no obligan a construir o instalar primero el paquete dependiente.
 
+Los dos repositorios externos se clonan en los SHA resueltos en `validate`. El helper `scripts/stage_external_packages.py` verifica origen, commit limpio y nombre de paquete antes de copiar temporalmente el checkout al árbol que consume el validador. Añade `.cambonos-source.json` con repositorio, SHA y timestamp; ese archivo forma parte del hash de fuente. Las rutas estáticas del `PKGBUILD` pueden referenciar archivos dentro del checkout únicamente cuando existe metadata válida, y el validador impide que una ruta o symlink escape del árbol del paquete.
+
 ### 4. Manifiestos y versionado
 
 El sitio publica `metadata/manifest.json`, con información de ambos canales:
@@ -66,7 +68,7 @@ El pipeline recupera el manifiesto anterior firmado desde GitHub Pages y verific
 
 ### 5. Firma y seguridad
 
-- `SOURCE_DATE_EPOCH` se deriva del último commit que modificó cada directorio de paquete, para normalizar marcas temporales entre reconstrucciones del mismo contenido.
+- `SOURCE_DATE_EPOCH` se deriva del último commit que modificó cada directorio de paquete. Para los paquetes externos se toma del commit upstream fijado.
 - La política de versión compara `source_hash` y la versión del paquete con el manifiesto anterior de su propio canal. Si cambia el contenido fuente sin aumentar `pkgrel`/`pkgver`, la publicación se bloquea.
 - Una reconstrucción con la misma fuente y versión puede producir un binario distinto por los cambios del entorno rolling de Arch y está permitida. `package_hash` se utiliza para verificar la integridad del artefacto y registrar exactamente qué binario se ha firmado y publicado; nunca determina por sí solo la obligación de incrementar la versión.
 - La fase de firma verifica los manifiestos de construcción, los artefactos y la política de fuente/versión antes de importar la subclave privada. La política de versionado tiene una única implementación compartida con la validación previa a la construcción.

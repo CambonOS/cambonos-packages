@@ -1,6 +1,7 @@
 """Isolated Arch Linux container builds, one disposable container per package."""
 from __future__ import annotations
 
+import json
 import os
 import shutil
 from pathlib import Path
@@ -203,6 +204,11 @@ def _build_one(
         "package_file": archive.name,
         "package_hash": sha256_file(archive),
     }
+    metadata_path = package.directory / ".cambonos-source.json"
+    if metadata_path.is_file():
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        record["source_repository"] = metadata["repository"]
+        record["source_commit"] = metadata["commit"]
     env_file = output / "build-environment.txt"
     if not env_file.is_file():
         raise CambonosError(f"{package.name}: falta build-environment.txt")
@@ -212,6 +218,20 @@ def _build_one(
 
 
 def _package_source_date_epoch(package: Package, commit: str) -> int:
+    metadata_path = package.directory / ".cambonos-source.json"
+    if metadata_path.is_file():
+        try:
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            value = metadata.get("source_date_epoch")
+        except (OSError, json.JSONDecodeError, AttributeError) as exc:
+            raise CambonosError(
+                f"{package.name}: metadata de origen externo inválida"
+            ) from exc
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise CambonosError(
+                f"{package.name}: source_date_epoch externo ausente o inválido"
+            )
+        return value
     source_root = package.directory.parent.parent
     relative_path = package.directory.relative_to(source_root).as_posix()
     result = run_command(

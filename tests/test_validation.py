@@ -113,6 +113,41 @@ class ValidationTests(unittest.TestCase):
             errors = validate_package(package)
             self.assertTrue(any("no existe el archivo fuente" in error for error in errors))
 
+    def test_validate_external_package_allows_static_sources_at_checkout_root(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            package = self._package(temporary, name="cambonos-installer")
+            directory = package.directory
+            (directory / ".cambonos-source.json").write_text(
+                '{"repository":"https://github.com/CambonOS/installer",'
+                '"commit":"' + "a" * 40 + '","source_date_epoch":1}\n'
+            )
+            (directory / "payload").write_text("payload")
+            pkgb = directory / "PKGBUILD"
+            pkgb.write_text(
+                pkgb.read_text().replace(
+                    '"$startdir/files/payload"', '"$startdir/payload"'
+                )
+            )
+            errors = validate_package(package)
+            self.assertEqual(errors, [])
+
+    def test_validate_external_package_rejects_sources_escaping_checkout(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            package = self._package(temporary, name="cambonos-installer")
+            directory = package.directory
+            (directory / ".cambonos-source.json").write_text(
+                '{"repository":"https://github.com/CambonOS/installer",'
+                '"commit":"' + "a" * 40 + '","source_date_epoch":1}\n'
+            )
+            pkgb = directory / "PKGBUILD"
+            pkgb.write_text(
+                pkgb.read_text().replace(
+                    '"$startdir/files/payload"', '"$startdir/../outside"'
+                )
+            )
+            errors = validate_package(package)
+            self.assertTrue(any("referencia insegura" in error for error in errors))
+
     def test_validate_package_rejects_unsafe_install_destination(self):
         with tempfile.TemporaryDirectory() as temporary:
             package = self._package(temporary)
