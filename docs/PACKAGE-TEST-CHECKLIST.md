@@ -77,8 +77,8 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 - [x] La animación y la barra de progreso se muestran correctamente durante el arranque.
 - [x] La integración con mkinitcpio incorpora Plymouth a las imágenes initramfs.
 - [x] La selección de tema del administrador se conserva durante las actualizaciones.
-- [ ] La configuración de Plymouth funciona con el orden de hooks previsto, también en sistemas cifrados. (Pendiente: CambonOS todavía no soporta instalaciones cifradas; estas pruebas quedan fuera del alcance funcional actual.)
-- [ ] Los diálogos de teclado y desbloqueo muestran los recursos gráficos esperados. (Pendiente: CambonOS todavía no soporta instalaciones cifradas; estas pruebas quedan fuera del alcance funcional actual.)
+- [ ] La configuración de Plymouth funciona con el orden de hooks previsto, también en sistemas cifrados. (Excepción aceptada para esta versión: CambonOS todavía no soporta instalaciones cifradas; estas pruebas quedan fuera del alcance funcional actual y permanecen sin verificar.)
+- [ ] Los diálogos de teclado y desbloqueo muestran los recursos gráficos esperados. (Excepción aceptada para esta versión: CambonOS todavía no soporta instalaciones cifradas; estas pruebas quedan fuera del alcance funcional actual y permanecen sin verificar.)
 
 ## cambonos-keyring
 

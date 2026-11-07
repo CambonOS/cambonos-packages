@@ -50,7 +50,7 @@ La ayuda de las herramientas está disponible mediante:
 python3 scripts/cambonos.py --help
 ```
 
-Antes de fusionar `dev` en `main`, todas las funciones de [la checklist funcional](docs/PACKAGE-TEST-CHECKLIST.md) deben estar verificadas en un entorno real.
+Antes de fusionar `dev` en `main`, deben estar verificadas en un entorno real todas las funciones que formen parte del alcance soportado de esa versión. Las pruebas excluidas del alcance por limitaciones documentadas y expresamente aceptadas pueden permanecer pendientes; deben seguir identificadas como no verificadas en la [checklist funcional](docs/PACKAGE-TEST-CHECKLIST.md).
 
 ## Documentación
 
