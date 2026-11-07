@@ -15,7 +15,7 @@ class PlymouthPackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-plymouth", pkgb)
         self.assertIn("pkgver=0.1.0", pkgb)
-        self.assertIn("pkgrel=3", pkgb)
+        self.assertIn("pkgrel=4", pkgb)
         self.assertIn("depends=('plymouth' 'mkinitcpio>=36')", pkgb)
         self.assertIn(
             "backup=('etc/mkinitcpio.conf.d/90-cambonos-plymouth.conf')", pkgb
@@ -35,7 +35,7 @@ class PlymouthPackageTests(unittest.TestCase):
         self.assertFalse(any(name.startswith(("animation-", "throbber-")) for name in assets))
         for filename, dimensions in (
             ("background.png", "3840 x 2160"),
-            ("header-image.png", "256 x 256"),
+            ("header-image.png", "512 x 512"),
         ):
             result = subprocess.run(
                 ["file", str(THEME / filename)],
