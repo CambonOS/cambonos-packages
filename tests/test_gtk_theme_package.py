@@ -14,7 +14,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.2.0", pkgb)
-        self.assertIn("pkgrel=1", pkgb)
+        self.assertIn("pkgrel=2", pkgb)
         self.assertIn("license=('GPL-3.0-or-later')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -59,6 +59,26 @@ class GtkThemePackageTests(unittest.TestCase):
         self.assertIn("themes/CambonOS-Dark/index.theme", payload)
         self.assertFalse(any("CambonOS-Light" in p for p in payload))
         self.assertFalse(any("CambonOS-" in p and "CambonOS-Dark" not in p for p in payload))
+
+    def test_whiskermenu_uses_cambonos_dark_palette(self):
+        for filename in ("gtk.css", "gtk-dark.css"):
+            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
+            self.assertIn("window#whiskermenu-window > frame > border", css)
+            self.assertIn("background-color: #0A1D2B;", css)
+            self.assertIn("background-color: #019FA7;", css)
+            self.assertIn("border-color: #70E7E6;", css)
+            whisker_frame = css.split("window#whiskermenu-window > frame > border {", 1)[1].split("}", 1)[0]
+            self.assertNotIn("rgba(33, 33, 33, 0.97)", whisker_frame)
+
+    def test_xfce_panel_uses_opaque_midnight_background(self):
+        for filename in ("gtk.css", "gtk-dark.css"):
+            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
+            match = re.search(
+                r"\.xfce4-panel\.background\s*\{([^}]*)\}", css
+            )
+            self.assertIsNotNone(match, filename)
+            self.assertIn("background-color: #061C31;", match.group(1))
+            self.assertNotRegex(match.group(1), r"background-color:\s*rgba?\(")
 
     def test_pkgbuild_has_valid_bash_syntax(self):
         result = subprocess.run(["bash", "-n", str(PACKAGE / "PKGBUILD")],

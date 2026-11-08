@@ -8166,7 +8166,7 @@ button.centerbutton:last-child {
 .xfce4-panel.background {
   border: none;
   border-color: transparent;
-  background-color: rgba(33, 33, 33, 0.65);
+  background-color: #061C31;
   color: rgba(255, 255, 255, 0.7);
   font-weight: 500;
 }
@@ -8244,11 +8244,16 @@ window#whiskermenu-window {
 }
 
 window#whiskermenu-window entry.search {
+  border: 1px solid rgba(112, 231, 230, 0.28);
   border-radius: 5px;
+  background-color: #061C31;
+  box-shadow: none;
 }
 
 window#whiskermenu-window entry.search:focus {
+  border-color: #70E7E6;
   background-color: #061C31;
+  box-shadow: 0 0 0 1px rgba(112, 231, 230, 0.22);
 }
 
 window#whiskermenu-window > frame > border {
@@ -8256,7 +8261,7 @@ window#whiskermenu-window > frame > border {
   padding: 6px 8px 6px 9px;
   margin: 6px;
   border: none;
-  background-color: rgba(33, 33, 33, 0.97);
+  background-color: #0A1D2B;
   box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.2), 0 4px 4px 0 rgba(0, 0, 0, 0.14), 0 1px 6px 0 rgba(0, 0, 0, 0.12), inset 0 1px rgba(255, 255, 255, 0.1);
 }
 
@@ -8267,12 +8272,13 @@ window#whiskermenu-window box.categories > button.radio {
 }
 
 window#whiskermenu-window box.categories > button.radio:hover {
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(1, 159, 167, 0.18);
+  color: #70E7E6;
 }
 
 window#whiskermenu-window box.categories > button.radio:checked, window#whiskermenu-window box.categories > button.radio:active {
-  background-color: rgba(255, 255, 255, 0.3);
-  color: white;
+  background-color: #019FA7;
+  color: #061C31;
 }
 
 window#whiskermenu-window box.categories > button.radio:checked:hover, window#whiskermenu-window box.categories > button.radio:active:hover {
