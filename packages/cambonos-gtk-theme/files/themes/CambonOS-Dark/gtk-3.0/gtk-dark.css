@@ -8263,9 +8263,11 @@ window#whiskermenu-window {
   border: none;
 }
 
-/* Keep the category pane as the most transparent Whisker surface. */
+/* Keep categories visibly translucent while remaining lighter than the
+ * application list and search field. */
 window#whiskermenu-window box.categories {
-  background-color: transparent;
+  background-color: rgba(6, 28, 49, 0.72);
+  background-image: none;
 }
 
 /* The application list and search field stay more opaque for readability. */

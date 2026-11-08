@@ -14,7 +14,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.2.0", pkgb)
-        self.assertIn("pkgrel=5", pkgb)
+        self.assertIn("pkgrel=6", pkgb)
         self.assertIn("license=('GPL-3.0-or-later')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -35,6 +35,12 @@ class GtkThemePackageTests(unittest.TestCase):
             self.assertIn("#AEFA50", css)
             self.assertIn("#70E7E6", css)
             self.assertEqual(css.count("{"), css.count("}"))
+
+    def test_whisker_categories_have_translucent_background(self):
+        for stylesheet in ("gtk.css", "gtk-dark.css"):
+            css = (THEME / "gtk-3.0" / stylesheet).read_text(encoding="utf-8")
+            self.assertIn("window#whiskermenu-window box.categories", css)
+            self.assertIn("background-color: rgba(6, 28, 49, 0.72);", css)
 
     def test_upstream_provenance_is_recorded(self):
         notice = (FILES / "upstream" / "ORCHIS-NOTICE").read_text(encoding="utf-8")
