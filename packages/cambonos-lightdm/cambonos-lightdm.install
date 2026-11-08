@@ -1,0 +1,35 @@
+#!/bin/bash
+
+_cambonos_lightdm_enable_service() {
+  local root="${1:-/}"
+  local root_prefix=""
+  local display_manager_link
+  local selected_display_manager=""
+
+  if [[ "$root" != "/" ]]; then
+    root_prefix="${root%/}"
+  fi
+  display_manager_link="${root_prefix}/etc/systemd/system/display-manager.service"
+
+  if [[ -e "$display_manager_link" || -L "$display_manager_link" ]]; then
+    if [[ -L "$display_manager_link" ]]; then
+      selected_display_manager=$(readlink -- "$display_manager_link" 2>/dev/null || true)
+      if [[ "$selected_display_manager" == "/usr/lib/systemd/system/lightdm.service" ]]; then
+        return 0
+      fi
+    fi
+
+    printf 'cambonos-lightdm: preserving existing display-manager.service; LightDM was not enabled automatically.\n' >&2
+    printf 'cambonos-lightdm: select LightDM manually after disabling the currently selected display manager.\n' >&2
+    return 0
+  fi
+
+  if ! /usr/bin/systemctl --root="$root" enable lightdm.service; then
+    printf 'cambonos-lightdm: could not enable lightdm.service automatically.\n' >&2
+    printf 'cambonos-lightdm: run systemctl enable lightdm.service after resolving any display-manager conflict.\n' >&2
+  fi
+}
+
+post_install() {
+  _cambonos_lightdm_enable_service /
+}

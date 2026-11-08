@@ -15,6 +15,7 @@ Repositorio de los paquetes propios de **CambonOS**, una distribución basada en
 | [cambonos-pacman](packages/cambonos-pacman/README.md) | Configuración de los repositorios y de Pacman. |
 | [cambonos-grub](packages/cambonos-grub/README.md) | Configuración y tema de GRUB. |
 | [cambonos-plymouth](packages/cambonos-plymouth/README.md) | Tema de arranque e integración de Plymouth. |
+| [cambonos-lightdm](packages/cambonos-lightdm/README.md) | Configuración de LightDM y Slick Greeter. |
 | [cambonos-keyring](packages/cambonos-keyring/README.md) | Claves públicas para verificar los paquetes CambonOS. |
 
 Los paquetes del instalador y de creación de imágenes se mantienen en sus propios repositorios: [CambonOS/installer](https://github.com/CambonOS/installer) y [CambonOS/iso](https://github.com/CambonOS/iso).

@@ -1,0 +1,21 @@
+pkgname=cambonos-lightdm
+pkgver=0.1.0
+pkgrel=2
+pkgdesc="CambonOS LightDM and Slick Greeter configuration"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('GPL-3.0-only')
+depends=('lightdm' 'lightdm-slick-greeter' 'numlockx')
+backup=('etc/lightdm/lightdm.conf.d/50-cambonos.conf' 'etc/lightdm/slick-greeter.conf')
+install=cambonos-lightdm.install
+
+package() {
+  install -Dm644 "$startdir/files/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 "$startdir/files/lightdm/50-cambonos.conf" \
+    "$pkgdir/etc/lightdm/lightdm.conf.d/50-cambonos.conf"
+  install -Dm644 "$startdir/files/slick-greeter/slick-greeter.conf" \
+    "$pkgdir/etc/lightdm/slick-greeter.conf"
+  install -Dm644 "$startdir/files/branding/background.png" \
+    "$pkgdir/usr/share/cambonos/lightdm/background.png"
+}

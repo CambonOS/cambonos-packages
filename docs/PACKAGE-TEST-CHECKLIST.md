@@ -80,6 +80,19 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 - [ ] La configuración de Plymouth funciona con el orden de hooks previsto, también en sistemas cifrados. (Excepción aceptada para esta versión: CambonOS todavía no soporta instalaciones cifradas; estas pruebas quedan fuera del alcance funcional actual y permanecen sin verificar.)
 - [ ] Los diálogos de teclado y desbloqueo muestran los recursos gráficos esperados. (Excepción aceptada para esta versión: CambonOS todavía no soporta instalaciones cifradas; estas pruebas quedan fuera del alcance funcional actual y permanecen sin verificar.)
 
+## cambonos-lightdm
+
+- [ ] LightDM selecciona Slick Greeter como interfaz de autenticación.
+- [ ] El greeter muestra la lista de usuarios y no ofrece login manual ni sesión de invitado.
+- [ ] El fondo de CambonOS se muestra correctamente.
+- [ ] NumLock se activa en el greeter.
+- [ ] HiDPI se detecta y aplica correctamente.
+- [ ] La selección de sesión permite iniciar los escritorios instalados sin imponer una sesión predeterminada.
+- [ ] La instalación habilita LightDM cuando no existe otro display manager seleccionado.
+- [ ] La instalación conserva un display manager previamente seleccionado.
+- [ ] Las actualizaciones y la retirada respetan el estado de activación del servicio.
+- [ ] Las configuraciones locales se conservan durante las actualizaciones y la retirada.
+
 ## cambonos-keyring
 
 - [x] Pacman incorpora la clave pública de CambonOS.
@@ -112,3 +125,4 @@ Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última
 | `cambonos-plymouth` | VM (iso-install) | 07/11/2026 | Faltan pruebas con disco cifrado |
 | `cambonos-base` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-keyring` | VM (iso-install) | 07/11/2026 | — |
+| `cambonos-lightdm` | — | — | Pendiente de prueba funcional en una instalación Arch real |
