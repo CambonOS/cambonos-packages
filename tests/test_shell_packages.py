@@ -36,6 +36,13 @@ class ShellPackageMetadataTests(unittest.TestCase):
         self.assertIn("command sudo pacman", source)
         self.assertIn("_cambonos_pacman_needs_sudo", source)
 
+    def test_shell_prompt_declares_nerd_fonts_symbols_dependency(self):
+        text = (ROOT / "packages/cambonos-shell-prompt/PKGBUILD").read_text()
+        self.assertIn("pkgrel=8", text)
+        self.assertIn("'ttf-nerd-fonts-symbols-mono'", text.split("optdepends=", 1)[0])
+        readme = (ROOT / "packages/cambonos-shell-prompt/README.md").read_text()
+        self.assertIn("`ttf-nerd-fonts-symbols-mono`", readme)
+
     def test_shell_prompt_is_independent_of_zsh_and_fish(self):
         text = (ROOT / "packages/cambonos-shell-prompt/PKGBUILD").read_text()
         self.assertIn("'starship'", text)

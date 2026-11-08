@@ -10,4 +10,6 @@ Configuración de Starship que proporciona el prompt visual de CambonOS.
 
 ## Dependencias
 
-`starship`, `bash`, `util-linux`.
+`ttf-nerd-fonts-symbols-mono` proporciona los glifos de Nerd Fonts utilizados por los símbolos del prompt en terminales monoespaciadas.
+
+`starship`, `bash`, `util-linux`, `ttf-nerd-fonts-symbols-mono`.
