@@ -1,10 +1,11 @@
 pkgname=cambonos-zsh
 pkgver=0.1.0
-pkgrel=4
+pkgrel=5
 pkgdesc="CambonOS default Zsh configuration and interactive shell integration"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
+groups=('cambonos-base')
 depends=(
   'zsh'
   'zsh-completions'

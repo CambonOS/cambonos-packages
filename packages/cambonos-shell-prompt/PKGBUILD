@@ -1,10 +1,11 @@
 pkgname=cambonos-shell-prompt
 pkgver=0.1.0
-pkgrel=6
+pkgrel=7
 pkgdesc="CambonOS Starship prompt configuration and shell integrations"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
+groups=('cambonos-base')
 depends=('starship' 'bash' 'util-linux')
 optdepends=('fish: automatic Starship integration in Fish')
 install=cambonos-shell-prompt.install

@@ -44,6 +44,13 @@ class BasePackageTests(unittest.TestCase):
             self.EXPECTED_DEPENDENCIES,
         )
 
+    def test_base_components_belong_to_the_cambonos_base_group(self):
+        for dependency in self.EXPECTED_DEPENDENCIES:
+            with self.subTest(dependency=dependency):
+                pkgb_path = ROOT / "packages" / dependency / "PKGBUILD"
+                pkgb = pkgb_path.read_text(encoding="utf-8")
+                self.assertEqual(extract_array(pkgb, "groups"), ["cambonos-base"])
+
     def test_is_an_empty_metapackage_without_installation_side_effects(self):
         self.assertEqual(extract_function(self.pkgb, "package").strip(), ":")
         self.assertIsNone(extract_scalar(self.pkgb, "install"))
