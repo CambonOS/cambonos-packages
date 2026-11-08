@@ -14,7 +14,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.2.0", pkgb)
-        self.assertIn("pkgrel=6", pkgb)
+        self.assertIn("pkgrel=7", pkgb)
         self.assertIn("license=('GPL-3.0-or-later')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -134,6 +134,25 @@ class GtkThemePackageTests(unittest.TestCase):
             )
             self.assertIsNotNone(whisker, filename)
             self.assertIn("background-color: #006B73;", whisker.group(1))
+
+    def test_thunar_iconview_rubberband_avoids_generic_hover_shadow(self):
+        for filename in ("gtk.css", "gtk-dark.css"):
+            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
+            hover = re.search(
+                r"\.thunar \.standard-view\.frame iconview\.view:hover\s*\{([^}]*)\}",
+                css,
+            )
+            self.assertIsNotNone(hover, filename)
+            self.assertIn("box-shadow: none;", hover.group(1))
+            rubberband = re.search(
+                r"\.thunar \.standard-view\.frame iconview\.view > rubberband\s*\{([^}]*)\}",
+                css,
+            )
+            self.assertIsNotNone(rubberband, filename)
+            self.assertIn("background-color: rgba(1, 159, 167, 0.24);", rubberband.group(1))
+            self.assertIn("border: 1px solid #70E7E6;", rubberband.group(1))
+            self.assertIn("box-shadow: none;", rubberband.group(1))
+            self.assertIn("transition: none;", rubberband.group(1))
 
     def test_xfce_panel_uses_opaque_midnight_background(self):
         for filename in ("gtk.css", "gtk-dark.css"):

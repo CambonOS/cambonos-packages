@@ -8462,6 +8462,23 @@ window#whiskermenu-window .title-area > .commands-area > button.flat.command-but
   color: white;
 }
 
+/* Thunar's GtkIconView repaints its rubberband while the pointer is dragged.
+ * Avoid the large generic hover shadow on this view and keep the selection
+ * overlay on GtkIconView's documented child CSS node only. */
+.thunar .standard-view.frame iconview.view:hover {
+  box-shadow: none;
+  background-image: none;
+}
+
+.thunar .standard-view.frame iconview.view > rubberband {
+  border: 1px solid #70E7E6;
+  border-radius: 0;
+  background-color: rgba(1, 159, 167, 0.24);
+  background-image: none;
+  box-shadow: none;
+  transition: none;
+}
+
 .thunar .standard-view.frame .view:selected {
   color: white;
   background: #006B73;

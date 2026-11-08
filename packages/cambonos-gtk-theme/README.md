@@ -57,3 +57,11 @@ The GTK3 stylesheets use CambonOS teal (`#006B73`) for pointer-hover and
 selection states on selectable rows, including Whisker Menu entries. The XFCE
 session logout dialog is styled through the `xfsm-logout-dialog` GTK style class.
 Its translucent background is subject to GTK window visuals and the XFCE compositor.
+
+
+### Thunar icon-view selection
+
+The GTK3 theme scopes the rubberband overlay to Thunar's `GtkIconView` CSS
+node and disables the generic hover shadow on that view. This avoids applying
+a large inset hover effect while the icon view is continuously repainted
+during pointer-drag selection.
