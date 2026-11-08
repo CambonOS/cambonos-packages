@@ -1,0 +1,21 @@
+pkgname=cambonos-gtk-theme
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Light and dark GTK 3 themes for CambonOS"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('GPL-3.0-only')
+
+package() {
+  install -Dm644 "$startdir/files/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  install -Dm644 "$startdir/files/themes/CambonOS-Light/index.theme" \
+    "$pkgdir/usr/share/themes/CambonOS-Light/index.theme"
+  install -Dm644 "$startdir/files/themes/CambonOS-Light/gtk-3.0/gtk.css" \
+    "$pkgdir/usr/share/themes/CambonOS-Light/gtk-3.0/gtk.css"
+  install -Dm644 "$startdir/files/themes/CambonOS-Dark/index.theme" \
+    "$pkgdir/usr/share/themes/CambonOS-Dark/index.theme"
+  install -Dm644 "$startdir/files/themes/CambonOS-Dark/gtk-3.0/gtk.css" \
+    "$pkgdir/usr/share/themes/CambonOS-Dark/gtk-3.0/gtk.css"
+}

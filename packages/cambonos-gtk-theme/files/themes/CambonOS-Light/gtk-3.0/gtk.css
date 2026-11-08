@@ -1,0 +1,196 @@
+@define-color theme_bg_color #f7f5ec;
+@define-color theme_fg_color #102537;
+@define-color theme_base_color #ffffff;
+@define-color theme_text_color #102537;
+@define-color theme_selected_bg_color #019fa7;
+@define-color theme_selected_fg_color #f7f5ec;
+@define-color borders #d7e0e4;
+@define-color insensitive_bg_color #f4f8f8;
+@define-color insensitive_fg_color #526371;
+@define-color insensitive_base_color #f4f8f8;
+@define-color unfocused_borders #d7e0e4;
+@define-color surface_color #f4f8f8;
+@define-color accent_lime #aefa50;
+@define-color accent_aqua #70e7e6;
+@define-color accent_teal #019fa7;
+@define-color accent_navy #061c31;
+
+window, .background {
+  color: @theme_fg_color;
+  background-color: @theme_bg_color;
+}
+
+button {
+  padding: 6px 10px;
+  color: @theme_fg_color;
+  background-image: linear-gradient(to bottom, @theme_base_color, @surface_color);
+  border: 1px solid @borders;
+  border-radius: 3px;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+button:hover {
+  background-color: @surface_color;
+  border-color: @accent_teal;
+}
+
+button:active, button:checked {
+  color: @theme_selected_fg_color;
+  background-color: @accent_navy;
+  border-color: @accent_navy;
+}
+
+button:disabled, entry:disabled {
+  color: @insensitive_fg_color;
+  background-color: @insensitive_bg_color;
+}
+
+button.suggested-action {
+  color: @accent_navy;
+  background-color: @accent_lime;
+  border-color: @accent_lime;
+}
+
+entry, spinbutton, combobox, .view {
+  color: @theme_text_color;
+  background-color: @theme_base_color;
+  border: 1px solid @borders;
+  border-radius: 2px;
+  box-shadow: none;
+}
+
+entry {
+  padding: 5px 7px;
+  caret-color: @accent_teal;
+}
+
+entry selection, textview text selection {
+  color: @theme_selected_fg_color;
+  background-color: @theme_selected_bg_color;
+}
+
+headerbar, .titlebar {
+  color: @theme_fg_color;
+  background-color: @surface_color;
+  border-bottom: 1px solid @borders;
+  box-shadow: none;
+}
+
+menubar, menu, .menu, popover {
+  color: @theme_fg_color;
+  background-color: @theme_bg_color;
+  border: 1px solid @borders;
+  box-shadow: none;
+}
+
+menuitem, modelbutton {
+  padding: 5px 8px;
+}
+
+menuitem:hover, modelbutton:hover {
+  color: @theme_selected_fg_color;
+  background-color: @theme_selected_bg_color;
+}
+
+treeview.view, list, row {
+  color: @theme_text_color;
+  background-color: @theme_base_color;
+}
+
+treeview.view:selected, row:selected {
+  color: @theme_selected_fg_color;
+  background-color: @theme_selected_bg_color;
+}
+
+notebook > header {
+  background-color: @surface_color;
+  border-bottom: 1px solid @borders;
+}
+
+notebook > header tab {
+  padding: 7px 10px;
+  color: @insensitive_fg_color;
+}
+
+notebook > header tab:checked {
+  color: @theme_fg_color;
+  background-color: @theme_bg_color;
+  box-shadow: inset 0 -2px @accent_teal;
+}
+
+check, radio {
+  color: @theme_fg_color;
+  background-color: @theme_base_color;
+  border: 1px solid @borders;
+}
+
+check:checked, radio:checked {
+  color: @accent_navy;
+  background-color: @accent_lime;
+  border-color: @accent_teal;
+}
+
+switch {
+  min-width: 36px;
+  min-height: 20px;
+  color: @theme_fg_color;
+  background-color: @borders;
+  border: 1px solid @borders;
+  border-radius: 12px;
+}
+
+switch:checked {
+  background-color: @accent_teal;
+  border-color: @accent_teal;
+}
+
+switch slider {
+  background-color: @theme_base_color;
+  border: 1px solid @borders;
+  border-radius: 10px;
+}
+
+scale trough, progressbar trough {
+  min-height: 6px;
+  background-color: @surface_color;
+  border: 1px solid @borders;
+  border-radius: 4px;
+}
+
+scale highlight, progressbar progress {
+  background-color: @accent_teal;
+  border-radius: 4px;
+}
+
+scrollbar slider {
+  min-width: 7px;
+  min-height: 7px;
+  background-color: @borders;
+  border-radius: 5px;
+}
+
+scrollbar slider:hover {
+  background-color: @accent_teal;
+}
+
+tooltip {
+  color: @theme_selected_fg_color;
+  background-color: @accent_navy;
+  border: 1px solid @accent_navy;
+  border-radius: 2px;
+}
+
+separator {
+  background-color: @borders;
+}
+
+link {
+  color: @accent_teal;
+}
+
+:focus {
+  outline-color: @accent_teal;
+  outline-style: solid;
+  outline-width: 2px;
+}
