@@ -44,18 +44,18 @@
 calendar.raven-calendar:selected, .budgie-popover.budgie-menu row.activatable > button.flat:checked, box.vertical > widget > widget:selected, row:selected, treeview.view:selected, modelbutton.flat:selected,
 .menuitem.button.flat:selected {
   color: white;
-  background-color: #414141;
+  background-color: #006B73;
 }
 
 .nemo-window .view selection, .nemo-window .view:selected, .nautilus-window notebook .view:not(treeview) selection, .nautilus-window notebook .view:not(treeview):selected, .nautilus-window flowboxchild:selected .icon-item-background, flowbox flowboxchild:selected, .background.csd .view:selected {
-  color: #AEFA50;
-  background-color: rgba(102, 187, 106, 0.2);
+  color: white;
+  background-color: #006B73;
 }
 
 .nemo-window .nemo-window-pane widget.entry:selected, XfdesktopIconView.view:active, XfdesktopIconView.view:selected, XfdesktopIconView.view:checked, window.background.csd evview.view.content-view:selected, window.background.csd evview.view.content-view:selected:backdrop, statuspage.search-view entry.search > window.background treeview.view:selected, calendar:selected, spinbutton.vertical selection, spinbutton:not(.vertical) selection,
 entry selection, label selection, textview text selection:focus, textview text selection, .view:selected {
   color: white;
-  background-color: #AEFA50;
+  background-color: #006B73;
 }
 
 .linked:not(.vertical) > button, .linked:not(.vertical) > spinbutton.vertical, .linked:not(.vertical) > spinbutton:not(.vertical), .linked:not(.vertical) > entry {
@@ -135,7 +135,7 @@ entry selection, label selection, textview text selection:focus, textview text s
 }
 
 .gtkstyle-fallback:selected {
-  background-color: #AEFA50;
+  background-color: #006B73;
   color: white;
 }
 
@@ -963,7 +963,7 @@ button.color {
 }
 
 *:visited {
-  color: #BA68C8;
+  color: #019FA7;
 }
 
 button.link:link, button.link:link:focus, button.link:link:hover, button.link:link:active {
@@ -971,7 +971,7 @@ button.link:link, button.link:link:focus, button.link:link:hover, button.link:li
 }
 
 button.link:visited, button.link:visited:focus, button.link:visited:hover, button.link:visited:active {
-  color: #BA68C8;
+  color: #019FA7;
 }
 
 button.link > label {
@@ -1438,7 +1438,7 @@ searchbar > revealer > box {
   transition: background-color 0.1ms 225ms, color 75ms cubic-bezier(0, 0, 0.2, 1);
   animation: ripple-on-headerbar 225ms cubic-bezier(0, 0, 0.2, 1);
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.2);
-  background-color: #AEFA50;
+  background-color: #006B73;
   color: white;
 }
 
@@ -1499,7 +1499,7 @@ searchbar > revealer > box {
 
 .titlebar .selection-mode {
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.2);
-  background-color: #AEFA50;
+  background-color: #006B73;
 }
 
 .tiled .titlebar, .tiled-top .titlebar, .tiled-right .titlebar, .tiled-bottom .titlebar, .tiled-left .titlebar, .maximized .titlebar, .fullscreen .titlebar {
@@ -1690,7 +1690,7 @@ treeview.view {
 }
 
 treeview.view:selected {
-  background-image: image(alpha(currentColor, 0.1));
+  background-image: image(#006B73);
 }
 
 treeview.view:hover, treeview.view:selected {
@@ -1917,7 +1917,7 @@ menu menuitem label:dir(rtl), menu menuitem label:dir(ltr) {
 }
 
 menu .view:selected {
-  background-color: #505050;
+  background-color: #006B73;
 }
 
 menu > arrow {
@@ -3281,8 +3281,8 @@ window.background.csd > box.vertical > overlay > stack > box.vertical > box.hori
 window.background.csd > box.vertical > overlay > stack > box.vertical > box.horizontal > revealer > stack > list > row.activatable:selected,
 window.background.csd > box.vertical > overlay > stack > box.vertical > box.horizontal > revealer > stack > scrolledwindow > viewport.frame > list > row.activatable:selected,
 window.background.csd > box.vertical > overlay > stack > box.vertical > box.horizontal > revealer > stack > box.vertical > stack > scrolledwindow > viewport.frame > list > row.activatable:selected, hdyleaflet > box.vertical > scrolledwindow > viewport.frame list:not(.view):not(.tweak-group) row.activatable:selected, leaflet > box.vertical > scrolledwindow > viewport.frame list:not(.view):not(.tweak-group) row.activatable:selected, box.horizontal > stack.background > box.vertical > scrolledwindow > viewport.frame list:not(.view):not(.tweak-group) row.activatable:selected {
-  background-color: alpha(currentColor, 0.1);
-  color: #AEFA50;
+  background-color: #006B73;
+  color: white;
 }
 
 window.background.csd > box.vertical > overlay > stack > box.vertical > box.horizontal > revealer > stack > list > row.activatable:selected image,
@@ -3290,7 +3290,7 @@ window.background.csd > box.vertical > overlay > stack > box.vertical > box.hori
 window.background.csd > box.vertical > overlay > stack > box.vertical > box.horizontal > revealer > stack > box.vertical > stack > scrolledwindow > viewport.frame > list > row.activatable:selected image, hdyleaflet > box.vertical > scrolledwindow > viewport.frame list:not(.view):not(.tweak-group) row.activatable:selected image, leaflet > box.vertical > scrolledwindow > viewport.frame list:not(.view):not(.tweak-group) row.activatable:selected image, box.horizontal > stack.background > box.vertical > scrolledwindow > viewport.frame list:not(.view):not(.tweak-group) row.activatable:selected image, window.background.csd > box.vertical > overlay > stack > box.vertical > box.horizontal > revealer > stack > list > row.activatable:selected label,
 window.background.csd > box.vertical > overlay > stack > box.vertical > box.horizontal > revealer > stack > scrolledwindow > viewport.frame > list > row.activatable:selected label,
 window.background.csd > box.vertical > overlay > stack > box.vertical > box.horizontal > revealer > stack > box.vertical > stack > scrolledwindow > viewport.frame > list > row.activatable:selected label, hdyleaflet > box.vertical > scrolledwindow > viewport.frame list:not(.view):not(.tweak-group) row.activatable:selected label, leaflet > box.vertical > scrolledwindow > viewport.frame list:not(.view):not(.tweak-group) row.activatable:selected label, box.horizontal > stack.background > box.vertical > scrolledwindow > viewport.frame list:not(.view):not(.tweak-group) row.activatable:selected label {
-  color: #AEFA50;
+  color: white;
 }
 
 list {
@@ -3568,8 +3568,8 @@ stacksidebar.sidebar row {
 }
 
 stacksidebar.sidebar row:selected {
-  background-color: alpha(currentColor, 0.1);
-  color: #AEFA50;
+  background-color: #006B73;
+  color: white;
   font-weight: 500;
 }
 
@@ -3619,13 +3619,13 @@ placessidebar.sidebar row > revealer {
 }
 
 placessidebar.sidebar row:selected {
-  background-color: alpha(currentColor, 0.1);
-  color: #AEFA50;
+  background-color: #006B73;
+  color: white;
   font-weight: 500;
 }
 
 placessidebar.sidebar row:selected image.sidebar-icon {
-  color: #AEFA50;
+  color: white;
 }
 
 placessidebar.sidebar row:disabled {
@@ -3771,7 +3771,7 @@ infobar.action > revealer > box *:link, infobar.action:backdrop > revealer > box
 }
 
 infobar.action:hover > revealer > box, infobar.question:hover > revealer > box {
-  background-color: #54b359;
+  background-color: #149246;
 }
 
 infobar.warning > revealer > box, infobar.warning:backdrop > revealer > box {
@@ -4256,11 +4256,11 @@ popover.emoji-completion .emoji:hover {
 }
 
 .nautilus-window.background.csd placessidebar > viewport.frame > list > row.activatable:selected image.sidebar-icon, .nautilus-window.background.csd placessidebar > viewport.frame > list > row.activatable:selected label.sidebar-label {
-  color: #AEFA50;
+  color: white;
 }
 
 .nautilus-window.background.csd placessidebar > viewport.frame > list > row.activatable:selected > revealer.sidebar-revealer > widget > box {
-  background-color: #061C31;
+  background-color: #006B73;
   border-image-width: 10px 10px 10px 46px;
   border-image-slice: 10 10 10 46;
   border-image-repeat: stretch;
@@ -4272,7 +4272,7 @@ popover.emoji-completion .emoji:hover {
 }
 
 .nautilus-window.background.csd placessidebar > viewport.frame > list > row.activatable:selected button.sidebar-button {
-  color: #AEFA50;
+  color: white;
 }
 
 .nautilus-window.background.csd placessidebar > viewport.frame > list > row.activatable:disabled, .nautilus-window.background.csd placessidebar > viewport.frame > list > row.activatable:disabled image.sidebar-icon, .nautilus-window.background.csd placessidebar > viewport.frame > list > row.activatable:disabled label.sidebar-label {
@@ -4366,7 +4366,7 @@ popover.emoji-completion .emoji:hover {
 }
 
 .nautilus-window.background.csd notebook scrolledwindow .view:selected {
-  background-color: #354135;
+  background-color: #006B73;
 }
 
 .nautilus-window.background.csd notebook placesview > stack > frame > scrolledwindow > viewport > list {
@@ -5153,7 +5153,7 @@ window.background > box.vertical > toolbar.primary-toolbar > toolitem > .linked 
 }
 
 .polari-room-list .sidebar > row.activatable:selected {
-  background-color: #AEFA50;
+  background-color: #006B73;
   color: white;
 }
 
@@ -5569,7 +5569,7 @@ overlay grid.horizontal > revealer > scrolledwindow.frame:dir(rtl) {
 }
 
 .side-panel .view:selected {
-  background-image: image(#AEFA50);
+  background-image: image(#006B73);
 }
 
 .side-panel .view:selected:hover {
@@ -6206,7 +6206,7 @@ window.background.chromium textview.view {
 }
 
 window.background.chromium treeview.view.cell:selected:focus {
-  background-color: #AEFA50;
+  background-color: #006B73;
   color: white;
 }
 
@@ -6228,7 +6228,7 @@ tooltip.background.chromium {
 }
 
 #MozillaGtkWidget > widget text:selected {
-  background-color: #AEFA50;
+  background-color: #006B73;
   color: white;
 }
 
@@ -6512,7 +6512,7 @@ window.background:not(.solid-csd):not(.csd) > notebook:not(.frame) > header > ta
 }
 
 #gtk-combobox-popup-window treeview.view:selected, #gtk-combobox-popup-window treeview.view:hover {
-  background-image: image(#AEFA50);
+  background-image: image(#006B73);
 }
 
 #gtk-combobox-popup-window treeview.view:selected, #gtk-combobox-popup-window treeview.view:selected label, #gtk-combobox-popup-window treeview.view:hover, #gtk-combobox-popup-window treeview.view:hover label {
@@ -6884,7 +6884,7 @@ PanelApplet.wnck-applet .wnck-pager:active {
 }
 
 PanelApplet.wnck-applet .wnck-pager:selected {
-  background-color: #AEFA50;
+  background-color: #006B73;
 }
 
 .mate-panel-menu-bar.horizontal #clock-applet-button label {
@@ -6957,7 +6957,7 @@ na-tray-applet {
 }
 
 #PanelApplet:selected > box {
-  background-color: alpha(currentColor, 0.1);
+  background-color: #006B73;
   color: white;
 }
 
@@ -7108,7 +7108,7 @@ na-tray-applet {
 
 .caja-desktop.view .entry:selected,
 .caja-navigation-window .view .entry:selected {
-  background-color: alpha(currentColor, 0.06);
+  background-color: #006B73;
 }
 
 .caja-desktop.view .entry {
@@ -7119,7 +7119,7 @@ na-tray-applet {
 }
 
 .caja-desktop.view .entry:selected {
-  background-color: alpha(currentColor, 0.06);
+  background-color: #006B73;
 }
 
 .caja-navigation-window statusbar {
@@ -7328,7 +7328,7 @@ MsdOsdWindow.background.osd .progressbar {
 }
 
 .budgie-popover treeview.view.sidebar:selected {
-  background-color: alpha(currentColor, 0.12);
+  background-color: #006B73;
 }
 
 .budgie-popover scrolledwindow.sidebar:not(.categories) {
@@ -7890,7 +7890,7 @@ frame.raven-frame > border {
 }
 
 .raven .audio-widget list.devices-list.sound-devices > row.activatable:selected, .raven .audio-widget list.devices-list.sound-devices > row.activatable:checked {
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: #006B73;
   color: white;
 }
 
@@ -7961,7 +7961,7 @@ image.raven-mpris {
 }
 
 .raven-notifications-view > .raven-background > viewport.frame > list > row.activatable list > row.activatable:hover, .raven-notifications-view > .raven-background > viewport.frame > list > row.activatable list > row.activatable:selected {
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: #006B73;
 }
 
 .raven-notifications-view > .raven-background > viewport.frame > list > row.activatable:selected, .raven-notifications-view > .raven-background > viewport.frame > list > row.activatable:selected:hover, .raven-notifications-view > .raven-background > viewport.frame > list > row.activatable:hover, .raven-notifications-view > .raven-background > viewport.frame > list > row.activatable:active, .raven-notifications-view > .raven-background > viewport.frame > list > row.activatable:focus {
@@ -8201,7 +8201,7 @@ wnck-pager:active {
 }
 
 wnck-pager:selected {
-  background-color: #AEFA50;
+  background-color: #006B73;
 }
 
 XfdesktopIconView.view {
@@ -8256,13 +8256,16 @@ window#whiskermenu-window entry.search:focus {
   box-shadow: 0 0 0 1px rgba(112, 231, 230, 0.22);
 }
 
+/* Whisker already draws its own popup surface. Keep the internal frame
+ * transparent so it does not create a second rectangular panel. */
+window#whiskermenu-window > frame,
 window#whiskermenu-window > frame > border {
-  border-radius: 18px;
-  padding: 6px 8px 6px 9px;
-  margin: 6px;
   border: none;
-  background-color: #0A1D2B;
-  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.2), 0 4px 4px 0 rgba(0, 0, 0, 0.14), 0 1px 6px 0 rgba(0, 0, 0, 0.12), inset 0 1px rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 window#whiskermenu-window box.categories > button.radio {
@@ -8300,7 +8303,7 @@ window#whiskermenu-window scrolledwindow.frame treeview.view:not(:hover):not(:se
 }
 
 window#whiskermenu-window scrolledwindow.frame treeview.view:selected:hover {
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: #006B73;
   color: white;
 }
 
@@ -8370,7 +8373,7 @@ window#whiskermenu-window .title-area > .commands-area > button.flat.command-but
 
 .thunar .standard-view.frame .view:selected {
   color: white;
-  background: #AEFA50;
+  background: #006B73;
 }
 
 .thunar paned paned paned > notebook.frame {
@@ -8593,7 +8596,7 @@ text widgets and the like base background color */
 @define-color theme_base_color #061C31;
 /*
 base background color of selections */
-@define-color theme_selected_bg_color #AEFA50;
+@define-color theme_selected_bg_color #006B73;
 /*
 text/foreground color of selections */
 @define-color theme_selected_fg_color white;
@@ -8620,7 +8623,7 @@ text widgets and the like base background color on backdrop windows */
 @define-color theme_unfocused_base_color #061C31;
 /*
 base background color of selections on backdrop windows */
-@define-color theme_unfocused_selected_bg_color #AEFA50;
+@define-color theme_unfocused_selected_bg_color #006B73;
 /*
 text/foreground color of selections on backdrop windows */
 @define-color theme_unfocused_selected_fg_color white;

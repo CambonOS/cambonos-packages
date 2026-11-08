@@ -6,7 +6,6 @@ Encoding=UTF-8
 
 [X-GNOME-Metatheme]
 GtkTheme=CambonOS-Dark
-MetacityTheme=CambonOS-Dark
 IconTheme=Adwaita
 CursorTheme=Adwaita
 ButtonLayout=close,minimize,maximize:menu

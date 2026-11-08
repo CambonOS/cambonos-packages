@@ -127,7 +127,7 @@
 @define-color scrollbar_outline_color rgba(255, 255, 255, 0.12);
 :root {
   --accent-blue: #3281EA;
-  --accent-teal: #4DB6AC;
+  --accent-teal: #70E7E6;
   --accent-green: #AEFA50;
   --accent-yellow: #FBC02D;
   --accent-orange: #FB8C00;
@@ -889,7 +889,7 @@ dnd tab button.image-button:hover, splitbutton.flat > button:hover,
 splitbutton.flat > menubutton > button:hover, menubutton.flat > button:hover, .nautilus-window headerbar popover.background > contents button.flat:hover:not(.suggested-action):not(.destructive-action), filechooser #pathbarbox > stack > box > button:hover, window.messagedialog .response-area button:hover, window.dialog.message.csd .dialog-action-area > button:hover, .app-notification button:hover, headerbar button:hover:not(.suggested-action):not(.destructive-action), .toolbar > button:hover,
 toolbar > button:hover, dropdown > .linked:not(.vertical) > button:hover:not(:only-child),
 combobox > .linked:not(.vertical) > button:hover:not(:only-child), button.flat:hover {
-  background-color: alpha(currentColor, 0.08);
+  background-color: #006B73;
   color: white;
 }
 
@@ -903,7 +903,7 @@ toolbar > button:active, dropdown > .linked:not(.vertical) > button:active:not(:
 combobox > .linked:not(.vertical) > button:active:not(:only-child), button.flat:active {
   transition: all 75ms cubic-bezier(0, 0, 0.2, 1), background-size 0ms, background-image 0ms;
   animation: ripple 225ms cubic-bezier(0, 0, 0.2, 1) forwards;
-  background-color: alpha(currentColor, 0.08);
+  background-color: #006B73;
   background-image: radial-gradient(circle, alpha(currentColor, 0.12) 10%, transparent 0%);
   background-size: 100% 100%;
   color: white;
@@ -1258,7 +1258,7 @@ link {
 }
 
 link:visited {
-  color: #BA68C8;
+  color: #019FA7;
 }
 
 button.link:link, button.link:link:focus, button.link:link:hover, button.link:link:active {
@@ -1266,7 +1266,7 @@ button.link:link, button.link:link:focus, button.link:link:hover, button.link:li
 }
 
 button.link:visited, button.link:visited:focus, button.link:visited:hover, button.link:visited:active {
-  color: #BA68C8;
+  color: #019FA7;
 }
 
 button.link > label {
@@ -2153,8 +2153,8 @@ treeview.view {
 
 columnview.view:selected,
 treeview.view:selected {
-  background-color: #061C31;
-  background-image: image(alpha(currentColor, 0.1));
+  background-color: #006B73;
+  background-image: image(#006B73);
   box-shadow: none;
 }
 
@@ -2356,7 +2356,7 @@ menubar > item {
 
 menubar > item:selected {
   transition: none;
-  background-color: alpha(currentColor, 0.1);
+  background-color: #006B73;
   color: white;
 }
 
@@ -2393,7 +2393,7 @@ popover.menu box.inline-buttons button.image-button.model {
 }
 
 popover.menu box.inline-buttons button.image-button.model:selected {
-  background-image: image(alpha(currentColor, 0.06));
+  background-image: image(#006B73);
 }
 
 popover.menu box.circular-buttons {
@@ -3947,7 +3947,7 @@ button:checked row.activatable, button:checked:hover row.activatable {
 }
 
 row:selected {
-  background-color: alpha(currentColor, 0.06);
+  background-color: #006B73;
   color: inherit;
 }
 
@@ -4393,7 +4393,7 @@ list.boxed-list-separate > row {
 }
 
 list.boxed-list-separate > row:selected {
-  background-color: alpha(currentColor, 0.06);
+  background-color: #006B73;
 }
 
 list.boxed-list-separate > row:last-child {
@@ -4787,21 +4787,21 @@ separator.sidebar.spacer {
 }
 
 .navigation-sidebar > row:selected {
-  background-color: alpha(currentColor, 0.1);
+  background-color: #006B73;
   color: var(--accent-bg-color);
 }
 
 .navigation-sidebar > row:selected:hover {
-  background-color: alpha(currentColor, 0.16);
+  background-color: #006B73;
 }
 
 .navigation-sidebar > row:selected:focus-visible:focus-within {
   outline: none;
-  background-color: alpha(currentColor, 0.08);
+  background-color: #006B73;
 }
 
 .navigation-sidebar > row:selected:focus-visible:focus-within:hover {
-  background-color: alpha(currentColor, 0.16);
+  background-color: #006B73;
 }
 
 .navigation-sidebar > row:disabled {
@@ -4835,7 +4835,7 @@ placessidebar .navigation-sidebar > row > revealer {
 }
 
 placessidebar .navigation-sidebar > row:selected {
-  background-color: alpha(currentColor, 0.1);
+  background-color: #006B73;
   color: var(--accent-bg-color);
   font-weight: 500;
 }
@@ -5221,17 +5221,18 @@ window.ssd {
 }
 
 gridview > child:selected, calendar:selected, calendar > grid > label.day-number:selected {
-  background-color: alpha(currentColor, 0.06);
+  color: white;
+  background-color: #006B73;
 }
 
 .view:selected, iconview:selected, flowbox > flowboxchild:selected, calendar > grid > label.today, stacksidebar row:selected {
-  color: var(--accent-bg-color);
-  background-color: color-mix(in srgb, var(--accent-bg-color) 20%, transparent);
+  color: white;
+  background-color: #006B73;
 }
 
 textview text selection:focus, textview text selection, label > selection, entry > text > selection, calendar > grid > label.today:selected {
   color: white;
-  background-color: var(--accent-bg-color);
+  background-color: #006B73;
 }
 
 .monospace {
@@ -5588,7 +5589,7 @@ popover.entry-completion > contents {
 .nautilus-window flap.unfolded > placessidebar > scrolledwindow > viewport > list.navigation-sidebar > row.activatable:selected > revealer > box,
 .nautilus-window .sidebar-pane > toolbarview > placessidebar > scrolledwindow > viewport > list.navigation-sidebar > row.activatable:selected > revealer > box {
   color: var(--accent-bg-color);
-  background-color: #061C31;
+  background-color: #006B73;
   border: none;
   border-image-width: 16px 9px 16px 46px;
   border-image-slice: 16 9 16 46;
@@ -6193,7 +6194,7 @@ datechooser button.day dot, datechooser button.day.text-button dot {
 }
 
 datechooser button.day:selected, datechooser button.day.today:selected, datechooser button.day.text-button:selected, datechooser button.day.text-button.today:selected {
-  background-color: var(--accent-bg-color);
+  background-color: #006B73;
   color: white;
   font-weight: bold;
 }
@@ -6261,7 +6262,7 @@ weekgrid > widget.now-strip {
 weekgrid:selected, weekgrid.dnd,
 .week-header:selected,
 .week-header.dnd {
-  background-color: alpha(var(--accent-bg-color), 0.25);
+  background-color: #006B73;
 }
 
 monthcell {
@@ -6278,11 +6279,11 @@ monthcell:hover:not(.out-of-month):not(.today) {
 }
 
 monthcell:selected {
-  background-color: alpha(var(--accent-bg-color), 0.1);
+  background-color: #006B73;
 }
 
 monthcell:selected:hover {
-  background-color: alpha(var(--accent-bg-color), 0.2);
+  background-color: #006B73;
 }
 
 monthcell:selected label.day-label {
@@ -6303,11 +6304,11 @@ monthcell.today:hover {
 }
 
 monthcell.today:selected {
-  background-color: alpha(var(--accent-bg-color), 0.25);
+  background-color: #006B73;
 }
 
 monthcell.today:selected:hover {
-  background-color: alpha(var(--accent-bg-color), 0.35);
+  background-color: #006B73;
 }
 
 monthcell label {
@@ -6708,7 +6709,7 @@ image.circular {
 }
 
 .polari-room-list .sidebar > row.activatable:selected {
-  background-color: var(--accent-bg-color);
+  background-color: #006B73;
   color: white;
 }
 
@@ -8029,7 +8030,7 @@ tabbar tab:hover:not(:selected):not(:active):not(:checked) {
 
 tabbar tab:selected, tabbar tab:checked, tabbar tab:active {
   transition: background-color 150ms ease-in-out;
-  background-color: #061C31;
+  background-color: #006B73;
   box-shadow: none;
   color: white;
   border-color: #102B3D;
@@ -8622,7 +8623,7 @@ text widgets and the like base background color */
 @define-color theme_base_color #061C31;
 /*
 base background color of selections */
-@define-color theme_selected_bg_color var(--accent-bg-color);
+@define-color theme_selected_bg_color #006B73;
 /*
 text/foreground color of selections */
 @define-color theme_selected_fg_color white;
@@ -8649,7 +8650,7 @@ text widgets and the like base background color on backdrop windows */
 @define-color theme_unfocused_base_color #061C31;
 /*
 base background color of selections on backdrop windows */
-@define-color theme_unfocused_selected_bg_color var(--accent-bg-color);
+@define-color theme_unfocused_selected_bg_color #006B73;
 /*
 text/foreground color of selections on backdrop windows */
 @define-color theme_unfocused_selected_fg_color white;
