@@ -14,7 +14,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.2.0", pkgb)
-        self.assertIn("pkgrel=3", pkgb)
+        self.assertIn("pkgrel=4", pkgb)
         self.assertIn("license=('GPL-3.0-or-later')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -74,6 +74,35 @@ class GtkThemePackageTests(unittest.TestCase):
             self.assertIsNotNone(whisker_frame, filename)
             self.assertIn("background: transparent;", whisker_frame.group(1))
             self.assertIn("box-shadow: none;", whisker_frame.group(1))
+
+    def test_whiskermenu_surfaces_use_layered_transparency(self):
+        for filename in ("gtk.css", "gtk-dark.css"):
+            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
+            self.assertRegex(
+                css,
+                r"window#whiskermenu-window\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.58\)",
+            )
+            self.assertIn("window#whiskermenu-window box.categories", css)
+            self.assertRegex(
+                css,
+                r"window#whiskermenu-window scrolledwindow\.frame\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.84\)",
+            )
+            self.assertRegex(
+                css,
+                r"window#whiskermenu-window entry\.search\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.90\)",
+            )
+            self.assertIn("background-color: rgba(6, 28, 49, 0.94);", css)
+
+    def test_xfce_logout_dialog_uses_cambonos_palette_and_translucency(self):
+        for filename in ("gtk.css", "gtk-dark.css"):
+            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
+            self.assertRegex(
+                css,
+                r"dialog\.xfsm-logout-dialog\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.94\)",
+            )
+            self.assertIn("dialog.xfsm-logout-dialog button:hover", css)
+            self.assertIn("dialog.xfsm-logout-dialog button:active", css)
+            self.assertIn("dialog.xfsm-logout-dialog label", css)
 
     def test_xfce_panel_uses_opaque_midnight_background(self):
         for filename in ("gtk.css", "gtk-dark.css"):

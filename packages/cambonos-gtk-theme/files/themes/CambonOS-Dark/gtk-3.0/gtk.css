@@ -8239,20 +8239,33 @@ XfdesktopIconView.view .rubberband {
  ***************/
 window#whiskermenu-window {
   border-radius: 0;
-  background-color: #061C31;
+  background-color: rgba(6, 28, 49, 0.58);
   border: none;
 }
 
-window#whiskermenu-window entry.search {
-  border: 1px solid rgba(112, 231, 230, 0.28);
+/* Keep the category pane as the most transparent Whisker surface. */
+window#whiskermenu-window box.categories {
+  background-color: transparent;
+}
+
+/* The application list and search field stay more opaque for readability. */
+window#whiskermenu-window scrolledwindow.frame {
+  padding: 3px;
+  background-color: rgba(6, 28, 49, 0.84);
+  border: 1px solid rgba(112, 231, 230, 0.16);
   border-radius: 5px;
-  background-color: #061C31;
+}
+
+window#whiskermenu-window entry.search {
+  border: 1px solid rgba(112, 231, 230, 0.32);
+  border-radius: 5px;
+  background-color: rgba(6, 28, 49, 0.90);
   box-shadow: none;
 }
 
 window#whiskermenu-window entry.search:focus {
   border-color: #70E7E6;
-  background-color: #061C31;
+  background-color: rgba(6, 28, 49, 0.94);
   box-shadow: 0 0 0 1px rgba(112, 231, 230, 0.22);
 }
 
@@ -8288,12 +8301,6 @@ window#whiskermenu-window box.categories > button.radio:checked:hover, window#wh
   background-image: none;
 }
 
-window#whiskermenu-window scrolledwindow.frame {
-  padding: 3px;
-  background-color: #061C31;
-  border-radius: 5px;
-}
-
 window#whiskermenu-window scrolledwindow.frame treeview.view {
   border-radius: 5px;
 }
@@ -8326,6 +8333,59 @@ window#whiskermenu-window .title-area > .commands-area > button.flat.command-but
 window#whiskermenu-window .title-area > .commands-area > button.flat.command-button:checked, window#whiskermenu-window .title-area > .commands-area > button.flat.command-button:active {
   background-color: rgba(255, 255, 255, 0.3);
   color: white;
+}
+
+/********************
+ * XFCE logout dialog *
+ ********************/
+
+dialog.xfsm-logout-dialog {
+  color: #FFFFFF;
+  background-color: rgba(6, 28, 49, 0.94);
+  border: 1px solid rgba(112, 231, 230, 0.30);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+dialog.xfsm-logout-dialog > box,
+dialog.xfsm-logout-dialog .dialog-vbox,
+dialog.xfsm-logout-dialog .dialog-action-box {
+  color: #FFFFFF;
+  background-color: transparent;
+  border-color: rgba(112, 231, 230, 0.16);
+}
+
+dialog.xfsm-logout-dialog button {
+  color: #FFFFFF;
+  background-image: none;
+  background-color: rgba(1, 159, 167, 0.16);
+  border: 1px solid rgba(112, 231, 230, 0.24);
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+dialog.xfsm-logout-dialog button:hover {
+  color: #FFFFFF;
+  background-image: none;
+  background-color: rgba(1, 159, 167, 0.34);
+  border-color: #70E7E6;
+}
+
+dialog.xfsm-logout-dialog button:active,
+dialog.xfsm-logout-dialog button:checked {
+  color: #061C31;
+  background-image: none;
+  background-color: #70E7E6;
+  border-color: #70E7E6;
+}
+
+dialog.xfsm-logout-dialog button:focus {
+  outline-color: rgba(112, 231, 230, 0.72);
+  outline-offset: 2px;
+}
+
+dialog.xfsm-logout-dialog label {
+  color: #FFFFFF;
 }
 
 /**********

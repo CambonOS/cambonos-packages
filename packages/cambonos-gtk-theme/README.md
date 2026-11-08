@@ -11,6 +11,15 @@ el tema automáticamente, no modifica preferencias del usuario, no instala
 configuración global de GTK y no incorpora scripts de instalación ni hooks
 ALPM.
 
+## Integración con XFCE
+
+La hoja GTK 3 incluye ajustes visuales para Whisker Menu y el diálogo de cierre
+de sesión de XFCE. Whisker utiliza superficies con distintos niveles de
+transparencia: las categorías son más transparentes que la lista de
+aplicaciones y el campo de búsqueda. El diálogo de cierre de sesión utiliza la
+paleta CambonOS y un fondo ligeramente translúcido. La transparencia efectiva
+depende de la composición habilitada en XFCE y del soporte del compositor.
+
 ## GTK y libadwaita
 
 GTK 2/3/4 consumen los recursos de sus respectivos directorios. La presencia de `gtk-4.0` no implica que las aplicaciones libadwaita
