@@ -8,15 +8,17 @@ Configuración predeterminada de LightDM y Slick Greeter para CambonOS.
 - Muestra los usuarios disponibles y desactiva el acceso manual y las sesiones de invitado.
 - Configura el fondo de CambonOS.
 - Activa NumLock y la detección automática de HiDPI.
+- Selecciona `CambonOS-Dark` como tema GTK de Slick Greeter.
 - Habilita `lightdm.service` durante la instalación únicamente cuando todavía no existe un `display-manager.service` seleccionado.
 
-El paquete no instala un entorno de escritorio, no selecciona una sesión de usuario y no configura temas GTK ni temas de iconos. XFCE, Qtile y otros escritorios deben proporcionar sus propios ajustes de sesión.
+El paquete no instala un entorno de escritorio ni selecciona una sesión de usuario. La dependencia `cambonos-gtk-theme` garantiza que el tema `CambonOS-Dark` esté instalado para Slick Greeter; esta selección solo afecta a la pantalla de inicio de sesión. XFCE, Qtile y otros escritorios deben proporcionar sus propios ajustes de tema GTK e iconos para la sesión del usuario.
 
 ## Dependencias
 
 - `lightdm`
 - `lightdm-slick-greeter`
 - `numlockx` (necesario para la función `activate-numlock` configurada aquí)
+- `cambonos-gtk-theme` (proporciona el tema GTK `CambonOS-Dark` seleccionado por Slick Greeter)
 
 ## Archivos instalados
 

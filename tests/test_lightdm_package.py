@@ -16,10 +16,10 @@ class LightDMPackageTests(unittest.TestCase):
         content = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-lightdm", content)
         self.assertIn("pkgver=0.1.0", content)
-        self.assertIn("pkgrel=2", content)
+        self.assertIn("pkgrel=3", content)
         self.assertIn("license=('GPL-3.0-only')", content)
         self.assertIn(
-            "depends=('lightdm' 'lightdm-slick-greeter' 'numlockx')", content
+            "depends=('lightdm' 'lightdm-slick-greeter' 'numlockx' 'cambonos-gtk-theme')", content
         )
         self.assertIn(
             "backup=('etc/lightdm/lightdm.conf.d/50-cambonos.conf' 'etc/lightdm/slick-greeter.conf')",
@@ -42,7 +42,7 @@ class LightDMPackageTests(unittest.TestCase):
         self.assertFalse(parser.has_option("Seat:*", "user-session"))
         self.assertFalse(parser.has_option("Seat:*", "xserver-command"))
 
-    def test_slick_greeter_config_uses_background_without_forcing_themes(self):
+    def test_slick_greeter_config_selects_cambonos_gtk_theme(self):
         path = FILES / "slick-greeter" / "slick-greeter.conf"
         parser = configparser.ConfigParser(interpolation=None)
         parser.read(path, encoding="utf-8")
@@ -53,7 +53,7 @@ class LightDMPackageTests(unittest.TestCase):
         self.assertEqual(parser.getboolean("Greeter", "draw-user-backgrounds"), False)
         self.assertEqual(parser.getboolean("Greeter", "activate-numlock"), True)
         self.assertEqual(parser.get("Greeter", "enable-hidpi"), "auto")
-        self.assertFalse(parser.has_option("Greeter", "theme-name"))
+        self.assertEqual(parser.get("Greeter", "theme-name"), "CambonOS-Dark")
         self.assertFalse(parser.has_option("Greeter", "icon-theme-name"))
 
     def test_graphic_assets_have_expected_signatures_and_dimensions(self):
