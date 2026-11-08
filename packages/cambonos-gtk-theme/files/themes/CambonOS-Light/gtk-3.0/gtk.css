@@ -3,17 +3,18 @@
 @define-color theme_base_color #ffffff;
 @define-color theme_text_color #102537;
 @define-color theme_selected_bg_color #019fa7;
-@define-color theme_selected_fg_color #f7f5ec;
-@define-color borders #d7e0e4;
-@define-color insensitive_bg_color #f4f8f8;
-@define-color insensitive_fg_color #526371;
-@define-color insensitive_base_color #f4f8f8;
-@define-color unfocused_borders #d7e0e4;
-@define-color surface_color #f4f8f8;
+@define-color theme_selected_fg_color #ffffff;
+@define-color borders #d5dfe2;
+@define-color insensitive_bg_color #edf2f2;
+@define-color insensitive_fg_color #687985;
+@define-color insensitive_base_color #f1f4f3;
+@define-color unfocused_borders #d5dfe2;
+@define-color surface_color #eef3f2;
 @define-color accent_lime #aefa50;
 @define-color accent_aqua #70e7e6;
 @define-color accent_teal #019fa7;
 @define-color accent_navy #061c31;
+@define-color danger_color #bd5360;
 
 window, .background {
   color: @theme_fg_color;
@@ -21,48 +22,84 @@ window, .background {
 }
 
 button {
-  padding: 6px 10px;
+  min-height: 22px;
+  padding: 6px 12px;
   color: @theme_fg_color;
-  background-image: linear-gradient(to bottom, @theme_base_color, @surface_color);
+  background-image: linear-gradient(to bottom, #ffffff, #f1f5f4);
   border: 1px solid @borders;
-  border-radius: 3px;
-  box-shadow: none;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(6, 28, 49, 0.10);
   text-shadow: none;
 }
 
 button:hover {
-  background-color: @surface_color;
-  border-color: @accent_teal;
+  background-image: linear-gradient(to bottom, #ffffff, #eaf3f2);
+  border-color: #9dc9ca;
+  box-shadow: 0 2px 4px rgba(6, 28, 49, 0.12);
 }
 
 button:active, button:checked {
   color: @theme_selected_fg_color;
-  background-color: @accent_navy;
-  border-color: @accent_navy;
+  background-image: none;
+  background-color: @accent_teal;
+  border-color: @accent_teal;
+  box-shadow: inset 0 1px 2px rgba(6, 28, 49, 0.18);
 }
 
 button:disabled, entry:disabled {
   color: @insensitive_fg_color;
+  background-image: none;
   background-color: @insensitive_bg_color;
+  border-color: @borders;
+  box-shadow: none;
 }
 
 button.suggested-action {
   color: @accent_navy;
-  background-color: @accent_lime;
-  border-color: @accent_lime;
+  background-image: linear-gradient(to bottom, #c5ff76, @accent_lime);
+  border-color: #95d941;
+  box-shadow: 0 1px 2px rgba(6, 28, 49, 0.15);
+}
+
+button.suggested-action:hover {
+  background-image: linear-gradient(to bottom, #d2ff98, #b8f65e);
+  border-color: #82c932;
+}
+
+button.destructive-action {
+  color: #ffffff;
+  background-image: linear-gradient(to bottom, #cc6872, @danger_color);
+  border-color: #a94753;
+}
+
+button.flat, headerbar button, .titlebar button {
+  background-image: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+button.flat:hover, headerbar button:hover, .titlebar button:hover {
+  color: @accent_teal;
+  background-color: rgba(1, 159, 167, 0.08);
+  border-color: transparent;
 }
 
 entry, spinbutton, combobox, .view {
   color: @theme_text_color;
   background-color: @theme_base_color;
   border: 1px solid @borders;
-  border-radius: 2px;
-  box-shadow: none;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 2px rgba(6, 28, 49, 0.04);
 }
 
-entry {
-  padding: 5px 7px;
-  caret-color: @accent_teal;
+entry, spinbutton entry, combobox button {
+  min-height: 22px;
+  padding: 6px 9px;
+}
+
+entry:focus, spinbutton:focus, combobox:focus {
+  border-color: @accent_teal;
+  box-shadow: 0 0 0 2px rgba(1, 159, 167, 0.18);
 }
 
 entry selection, textview text selection {
@@ -71,72 +108,142 @@ entry selection, textview text selection {
 }
 
 headerbar, .titlebar {
+  min-height: 34px;
+  padding: 5px 8px;
   color: @theme_fg_color;
+  background-color: @theme_bg_color;
+  border-bottom: 1px solid @borders;
+  box-shadow: 0 1px 2px rgba(6, 28, 49, 0.06);
+}
+
+headerbar .title, .titlebar .title {
+  font-weight: 700;
+}
+
+.toolbar, toolbar {
+  padding: 5px;
   background-color: @surface_color;
   border-bottom: 1px solid @borders;
-  box-shadow: none;
+}
+
+.sidebar, placessidebar {
+  color: @theme_fg_color;
+  background-color: @surface_color;
+}
+
+.sidebar row, placessidebar row {
+  min-height: 28px;
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+
+.sidebar row:hover, placessidebar row:hover {
+  background-color: rgba(1, 159, 167, 0.09);
+}
+
+.sidebar row:selected, placessidebar row:selected {
+  color: @theme_selected_fg_color;
+  background-color: @accent_teal;
 }
 
 menubar, menu, .menu, popover {
   color: @theme_fg_color;
-  background-color: @theme_bg_color;
+  background-color: @theme_base_color;
   border: 1px solid @borders;
-  box-shadow: none;
+  border-radius: 7px;
+  box-shadow: 0 4px 14px rgba(6, 28, 49, 0.16);
 }
 
 menuitem, modelbutton {
-  padding: 5px 8px;
+  min-height: 24px;
+  padding: 5px 10px;
 }
 
 menuitem:hover, modelbutton:hover {
-  color: @theme_selected_fg_color;
-  background-color: @theme_selected_bg_color;
+  color: @theme_fg_color;
+  background-color: rgba(1, 159, 167, 0.10);
 }
 
-treeview.view, list, row {
+treeview.view, iconview.view, list, row {
   color: @theme_text_color;
   background-color: @theme_base_color;
 }
 
-treeview.view:selected, row:selected {
+treeview.view row, list row {
+  min-height: 26px;
+  padding: 3px 6px;
+}
+
+treeview.view row:hover, list row:hover {
+  background-color: @surface_color;
+}
+
+treeview.view:selected, treeview.view row:selected, iconview.view:selected, row:selected {
   color: @theme_selected_fg_color;
   background-color: @theme_selected_bg_color;
 }
 
 notebook > header {
+  padding: 4px 5px 0;
   background-color: @surface_color;
   border-bottom: 1px solid @borders;
 }
 
 notebook > header tab {
-  padding: 7px 10px;
+  min-height: 28px;
+  padding: 6px 12px;
   color: @insensitive_fg_color;
+  border: 1px solid transparent;
+  border-radius: 5px 5px 0 0;
+}
+
+notebook > header tab:hover {
+  color: @theme_fg_color;
+  background-color: rgba(255, 255, 255, 0.55);
 }
 
 notebook > header tab:checked {
   color: @theme_fg_color;
   background-color: @theme_bg_color;
-  box-shadow: inset 0 -2px @accent_teal;
+  border-color: @borders;
+  border-bottom-color: @theme_bg_color;
+  box-shadow: inset 0 2px @accent_teal;
 }
 
 check, radio {
+  min-width: 14px;
+  min-height: 14px;
   color: @theme_fg_color;
   background-color: @theme_base_color;
-  border: 1px solid @borders;
+  border: 1px solid #aebdc2;
+  box-shadow: inset 0 1px 2px rgba(6, 28, 49, 0.08);
 }
 
-check:checked, radio:checked {
-  color: @accent_navy;
-  background-color: @accent_lime;
+check {
+  border-radius: 4px;
+}
+
+radio {
+  border-radius: 50%;
+}
+
+check:hover, radio:hover {
   border-color: @accent_teal;
 }
 
+check:checked, radio:checked {
+  color: @theme_selected_fg_color;
+  background-color: @accent_teal;
+  border-color: @accent_teal;
+  box-shadow: none;
+}
+
 switch {
-  min-width: 36px;
-  min-height: 20px;
+  min-width: 38px;
+  min-height: 22px;
   color: @theme_fg_color;
-  background-color: @borders;
-  border: 1px solid @borders;
+  background-color: #dce5e5;
+  border: 1px solid #cbd7d9;
   border-radius: 12px;
 }
 
@@ -146,28 +253,42 @@ switch:checked {
 }
 
 switch slider {
-  background-color: @theme_base_color;
-  border: 1px solid @borders;
-  border-radius: 10px;
+  min-width: 18px;
+  min-height: 18px;
+  background-image: linear-gradient(to bottom, #ffffff, #f1f4f3);
+  border: 1px solid #cbd5d8;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(6, 28, 49, 0.18);
 }
 
 scale trough, progressbar trough {
-  min-height: 6px;
-  background-color: @surface_color;
-  border: 1px solid @borders;
-  border-radius: 4px;
+  min-height: 7px;
+  background-color: #e3eaea;
+  border: 1px solid #d5dfe2;
+  border-radius: 5px;
 }
 
 scale highlight, progressbar progress {
   background-color: @accent_teal;
-  border-radius: 4px;
+  border-radius: 5px;
+}
+
+scale slider {
+  min-width: 16px;
+  min-height: 16px;
+  background-image: linear-gradient(to bottom, #ffffff, #edf2f1);
+  border: 1px solid #b9c9cc;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(6, 28, 49, 0.2);
 }
 
 scrollbar slider {
-  min-width: 7px;
-  min-height: 7px;
-  background-color: @borders;
-  border-radius: 5px;
+  min-width: 8px;
+  min-height: 8px;
+  background-color: #bdcacc;
+  border: 2px solid transparent;
+  border-radius: 7px;
+  background-clip: padding-box;
 }
 
 scrollbar slider:hover {
@@ -175,10 +296,12 @@ scrollbar slider:hover {
 }
 
 tooltip {
-  color: @theme_selected_fg_color;
+  padding: 5px 8px;
+  color: #ffffff;
   background-color: @accent_navy;
-  border: 1px solid @accent_navy;
-  border-radius: 2px;
+  border: 1px solid #173b53;
+  border-radius: 5px;
+  box-shadow: 0 2px 6px rgba(6, 28, 49, 0.18);
 }
 
 separator {
@@ -189,8 +312,10 @@ link {
   color: @accent_teal;
 }
 
-:focus {
-  outline-color: @accent_teal;
+button:focus, entry:focus, spinbutton:focus, combobox:focus,
+check:focus, radio:focus, switch:focus, scale:focus {
+  outline-color: rgba(1, 159, 167, 0.55);
   outline-style: solid;
   outline-width: 2px;
+  outline-offset: -2px;
 }

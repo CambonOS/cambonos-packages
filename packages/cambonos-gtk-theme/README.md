@@ -1,13 +1,15 @@
 # cambonos-gtk-theme
 
-Temas GTK 3 claro y oscuro inspirados en la paleta de CambonOS Web.
+Temas GTK 3 claro y oscuro con una interfaz pulida inspirada en Mint-Y y la paleta de CambonOS Web.
 
 ## Variantes
 
 - `CambonOS-Light`: superficie clara `#F7F5EC`, texto `#102537` y acentos lima y aqua.
 - `CambonOS-Dark`: superficie oscura `#0A1D2B`, texto `#E4EDF2` y los mismos acentos de marca.
 
-El tema adapta los colores de la web a componentes GTK 3. No incluye tipografías ni recursos gráficos y no cambia la configuración global o personal de GTK.
+Los controles usan superficies diferenciadas, bordes suaves y estados de interacción consistentes. El teal y el aqua marcan selección y foco; el lima queda reservado para acciones destacadas. No se incluyen recursos de terceros, tipografías ni iconos.
+
+El tema no cambia la configuración global o personal de GTK.
 
 ## Activación
 

@@ -12,7 +12,7 @@ VARIANTS = {
     "Light": {
         "background": "#f7f5ec",
         "foreground": "#102537",
-        "surface": "#f4f8f8",
+        "surface": "#eef3f2",
     },
     "Dark": {
         "background": "#0a1d2b",
@@ -27,7 +27,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = PKGBUILD.read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.1.0", pkgb)
-        self.assertIn("pkgrel=1", pkgb)
+        self.assertIn("pkgrel=2", pkgb)
         self.assertIn("license=('GPL-3.0-only')", pkgb)
         license_text = (FILES / "LICENSE").read_text(encoding="utf-8")
         self.assertIn("GNU GENERAL PUBLIC LICENSE", license_text)
@@ -45,6 +45,10 @@ class GtkThemePackageTests(unittest.TestCase):
                 self.assertIn("button.suggested-action", css)
                 self.assertIn("entry", css)
                 self.assertIn("notebook > header", css)
+                self.assertIn("border-radius: 6px", css)
+                self.assertIn("box-shadow:", css)
+                self.assertIn(".sidebar row:hover", css)
+                self.assertIn("button:focus", css)
                 self.assertEqual(css.count("{"), css.count("}"))
 
     def test_variants_use_web_palette_and_shared_accents(self):

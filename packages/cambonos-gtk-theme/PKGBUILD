@@ -1,6 +1,6 @@
 pkgname=cambonos-gtk-theme
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Light and dark GTK 3 themes for CambonOS"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
