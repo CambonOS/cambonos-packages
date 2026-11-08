@@ -203,7 +203,7 @@ class ValidationTests(unittest.TestCase):
             package = self._package(temporary, name="cambonos-installer")
             directory = package.directory
             (directory / ".cambonos-source.json").write_text(
-                '{"repository":"https://github.com/CambonOS/installer",'
+                '{"repository":"https://github.com/CambonOS/cambonos-installer",'
                 '"commit":"' + "a" * 40 + '","source_date_epoch":1}\n'
             )
             (directory / "payload").write_text("payload")
@@ -221,7 +221,7 @@ class ValidationTests(unittest.TestCase):
             package = self._package(temporary, name="cambonos-installer")
             directory = package.directory
             (directory / ".cambonos-source.json").write_text(
-                '{"repository":"https://github.com/CambonOS/installer",'
+                '{"repository":"https://github.com/CambonOS/cambonos-installer",'
                 '"commit":"' + "a" * 40 + '","source_date_epoch":1}\n'
             )
             pkgb = directory / "PKGBUILD"

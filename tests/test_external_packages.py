@@ -32,7 +32,7 @@ class ExternalPackageStagingTests(unittest.TestCase):
         subprocess.run(["git", "-C", str(source), "config", "user.email", "test@example.invalid"], check=True)
         subprocess.run(
             ["git", "-C", str(source), "remote", "add", "origin",
-             "https://github.com/CambonOS/installer.git"], check=True
+             "https://github.com/CambonOS/cambonos-installer.git"], check=True
         )
         subprocess.run(["git", "-C", str(source), "add", "."], check=True)
         subprocess.run(["git", "-C", str(source), "commit", "-qm", "package source"], check=True)
@@ -49,7 +49,7 @@ class ExternalPackageStagingTests(unittest.TestCase):
             destination = stage_external_package(root / "central", "cambonos-installer", source, commit)
             metadata = json.loads((destination / ".cambonos-source.json").read_text())
             self.assertEqual(metadata["commit"], commit)
-            self.assertEqual(metadata["repository"], "https://github.com/CambonOS/installer")
+            self.assertEqual(metadata["repository"], "https://github.com/CambonOS/cambonos-installer")
             self.assertEqual((destination / "payload").read_text(), "payload")
             self.assertFalse((destination / ".git").exists())
             package = Package(

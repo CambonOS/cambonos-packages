@@ -184,7 +184,7 @@ class BuildGraphTests(unittest.TestCase):
                 "package() { :; }\ncheck() { :; }\n"
             )
             (package_dir / ".cambonos-source.json").write_text(
-                '{"repository":"https://github.com/CambonOS/installer",'
+                '{"repository":"https://github.com/CambonOS/cambonos-installer",'
                 '"commit":"' + "a" * 40 + '","source_date_epoch":123}\n'
             )
             output = root / "out"

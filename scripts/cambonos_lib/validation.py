@@ -19,8 +19,8 @@ NAME_RE = re.compile(r"^[A-Za-z0-9@._+:-]+$")
 PKGVER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+]*$")
 PKGREL_RE = re.compile(r"^[1-9][0-9]*$")
 EXTERNAL_SOURCES = {
-    "https://github.com/CambonOS/installer": "cambonos-installer",
-    "https://github.com/CambonOS/iso": "cambonos-mkiso",
+    "https://github.com/CambonOS/cambonos-installer": "cambonos-installer",
+    "https://github.com/CambonOS/cambonos-mkiso": "cambonos-mkiso",
 }
 
 

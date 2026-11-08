@@ -18,8 +18,8 @@ from cambonos_lib.validation import extract_scalar
 
 
 EXTERNAL_PACKAGES = {
-    "cambonos-installer": "https://github.com/CambonOS/installer.git",
-    "cambonos-mkiso": "https://github.com/CambonOS/iso.git",
+    "cambonos-installer": "https://github.com/CambonOS/cambonos-installer.git",
+    "cambonos-mkiso": "https://github.com/CambonOS/cambonos-mkiso.git",
 }
 
 

@@ -74,10 +74,10 @@ jobs:
             fi
             printf '%s' "${result}"
           }
-          installer_testing="$(resolve https://github.com/CambonOS/installer.git dev)"
-          installer_stable="$(resolve https://github.com/CambonOS/installer.git main)"
-          mkiso_testing="$(resolve https://github.com/CambonOS/iso.git dev)"
-          mkiso_stable="$(resolve https://github.com/CambonOS/iso.git main)"
+          installer_testing="$(resolve https://github.com/CambonOS/cambonos-installer.git dev)"
+          installer_stable="$(resolve https://github.com/CambonOS/cambonos-installer.git main)"
+          mkiso_testing="$(resolve https://github.com/CambonOS/cambonos-mkiso.git dev)"
+          mkiso_stable="$(resolve https://github.com/CambonOS/cambonos-mkiso.git main)"
           for commit in "${installer_testing}" "${installer_stable}" "${mkiso_testing}" "${mkiso_stable}"; do
             [[ "${commit}" =~ ^[0-9a-f]{40}$ ]]
           done
@@ -102,9 +102,9 @@ jobs:
               mkiso_commit="${mkiso_stable}"
               source=source-main
             fi
-            checkout_at https://github.com/CambonOS/installer.git "${installer_commit}" \
+            checkout_at https://github.com/CambonOS/cambonos-installer.git "${installer_commit}" \
               "${RUNNER_TEMP}/external-installer-${channel}"
-            checkout_at https://github.com/CambonOS/iso.git "${mkiso_commit}" \
+            checkout_at https://github.com/CambonOS/cambonos-mkiso.git "${mkiso_commit}" \
               "${RUNNER_TEMP}/external-mkiso-${channel}"
             python3 scripts/stage_external_packages.py \
               --source-root "${RUNNER_TEMP}/${source}" \
@@ -249,9 +249,9 @@ jobs:
             git -C "${destination}" checkout --detach FETCH_HEAD
             test "$(git -C "${destination}" rev-parse HEAD)" = "${commit}"
           }
-          checkout_at https://github.com/CambonOS/installer.git "${INSTALLER_COMMIT}" \
+          checkout_at https://github.com/CambonOS/cambonos-installer.git "${INSTALLER_COMMIT}" \
             "${RUNNER_TEMP}/external-installer"
-          checkout_at https://github.com/CambonOS/iso.git "${MKISO_COMMIT}" \
+          checkout_at https://github.com/CambonOS/cambonos-mkiso.git "${MKISO_COMMIT}" \
             "${RUNNER_TEMP}/external-mkiso"
           python3 scripts/stage_external_packages.py \
             --source-root "${RUNNER_TEMP}/package-source" \
