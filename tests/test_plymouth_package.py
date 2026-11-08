@@ -52,6 +52,11 @@ class PlymouthPackageTests(unittest.TestCase):
         self.assertIn("UseProgressBar=true", boot)
         self.assertNotIn("UseAnimation=true", theme)
 
+    def test_theme_centers_logo_and_places_progress_bar_below(self):
+        theme = (THEME / "cambonos.plymouth").read_text(encoding="utf-8")
+        self.assertIn("VerticalAlignment=0.50", theme)
+        self.assertIn("ProgressBarVerticalAlignment=0.76", theme)
+
     def test_background_and_palette_use_cambonos_brand(self):
         theme = (THEME / "cambonos.plymouth").read_text(encoding="utf-8")
         for value in (

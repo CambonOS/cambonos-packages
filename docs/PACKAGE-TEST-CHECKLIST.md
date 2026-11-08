@@ -61,6 +61,7 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 - [x] Pacman conserva la verificación obligatoria de firmas de los repositorios CambonOS.
 - [x] La integración con `/etc/pacman.conf` funciona sin eliminar configuraciones manuales del administrador.
 - [x] La transición desde la configuración anterior `cambonos-repo` conserva el funcionamiento esperado.
+- [X] Comprobar que en dev activa el repo testing y que en main activa el repo stable. Se hace mediante el workflow.
 
 ## cambonos-grub
 
@@ -82,16 +83,16 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 
 ## cambonos-lightdm
 
-- [ ] LightDM selecciona Slick Greeter como interfaz de autenticación.
-- [ ] El greeter muestra la lista de usuarios y no ofrece login manual ni sesión de invitado.
-- [ ] El fondo de CambonOS se muestra correctamente.
-- [ ] NumLock se activa en el greeter.
-- [ ] HiDPI se detecta y aplica correctamente.
-- [ ] La selección de sesión permite iniciar los escritorios instalados sin imponer una sesión predeterminada.
-- [ ] La instalación habilita LightDM cuando no existe otro display manager seleccionado.
-- [ ] La instalación conserva un display manager previamente seleccionado.
-- [ ] Las actualizaciones y la retirada respetan el estado de activación del servicio.
-- [ ] Las configuraciones locales se conservan durante las actualizaciones y la retirada.
+- [x] LightDM selecciona Slick Greeter como interfaz de autenticación.
+- [x] El greeter muestra la lista de usuarios y no ofrece login manual ni sesión de invitado.
+- [x] El fondo de CambonOS se muestra correctamente.
+- [x] NumLock se activa en el greeter.
+- [x] HiDPI se detecta y aplica correctamente.
+- [x] La selección de sesión permite iniciar los escritorios instalados sin imponer una sesión predeterminada.
+- [x] La instalación habilita LightDM cuando no existe otro display manager seleccionado.
+- [X] La instalación conserva un display manager previamente seleccionado.
+- [x] Las actualizaciones y la retirada respetan el estado de activación del servicio.
+- [x] Las configuraciones locales se conservan durante las actualizaciones y la retirada.
 
 ## cambonos-keyring
 
@@ -109,6 +110,15 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 - [x] La instalación o retirada del metapaquete no cambia la shell de inicio de sesión de usuarios existentes.
 - [x] `cambonos-grub` y `cambonos-plymouth` permanecen independientes.
 
+## cambonos-gtk-theme
+
+- [x] La instalación deja el tema `CambonOS-Dark` en `/usr/share/themes/` sin tocar preferencias del usuario ni archivos de configuración global de GTK.
+- [x] GTK 2, GTK 3, GTK 4 y XFWM4 reconocen el tema y cargan sus recursos sin errores de lectura ni rutas rotas.
+- [x] La paleta oficial de CambonOS se aplica de forma consistente en ventanas, controles y paneles de una sesión XFCE real.
+- [x] La selección del tema requiere acción del usuario; el paquete no fuerza un tema ni sustituye la configuración local del escritorio.
+- [x] Las aplicaciones GTK y los componentes de escritorio muestran el modo oscuro con la identidad CambonOS sin forzar acentos o esquemas ajenos.
+- [x] La retirada del paquete elimina los recursos del tema sin alterar la configuración previa del sistema ni de los usuarios.
+
 ## Registro de verificación
 
 Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última comprobación funcional. No es necesario repetir las pruebas de funciones que no hayan podido verse afectadas por un cambio.
@@ -125,4 +135,5 @@ Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última
 | `cambonos-plymouth` | VM (iso-install) | 07/11/2026 | Faltan pruebas con disco cifrado |
 | `cambonos-base` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-keyring` | VM (iso-install) | 07/11/2026 | — |
-| `cambonos-lightdm` | — | — | Pendiente de prueba funcional en una instalación Arch real |
+| `cambonos-lightdm` | VM (iso-install) | 08/11/2026 | - |
+| `cambonos-gtk-theme` | VM (iso-install) | 08/11/2026 | - |
