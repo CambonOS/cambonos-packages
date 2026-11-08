@@ -1,7 +1,12 @@
 [Desktop Entry]
 Type=X-GNOME-Metatheme
-Name=CambonOS Dark
-Comment=Dark GTK 3 theme for CambonOS
+Name=CambonOS-Dark
+Comment=Dark GTK theme for CambonOS, based on Orchis
 Encoding=UTF-8
+
+[X-GNOME-Metatheme]
 GtkTheme=CambonOS-Dark
-X-GNOME-Metatheme-Name=CambonOS-Dark
+MetacityTheme=CambonOS-Dark
+IconTheme=Adwaita
+CursorTheme=Adwaita
+ButtonLayout=close,minimize,maximize:menu

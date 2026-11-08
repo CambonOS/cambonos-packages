@@ -1,20 +1,43 @@
 # cambonos-gtk-theme
 
-Temas GTK 3 claro y oscuro con una interfaz pulida inspirada en Mint-Y y la paleta de CambonOS Web.
+Tema oscuro de CambonOS para GTK 2, GTK 3, GTK 4 y decoraciones XFWM4.
 
-## Variantes
+## Variante incluida
 
-- `CambonOS-Light`: superficie clara `#F7F5EC`, texto `#102537` y acentos lima y aqua.
-- `CambonOS-Dark`: superficie oscura `#0A1D2B`, texto `#E4EDF2` y los mismos acentos de marca.
+- `CambonOS-Dark`: tema oscuro basado en Orchis, refinado con la paleta oficial de CambonOS.
 
-Los controles usan superficies diferenciadas, bordes suaves y estados de interacción consistentes. El teal y el aqua marcan selección y foco; el lima queda reservado para acciones destacadas. No se incluyen recursos de terceros, tipografías ni iconos.
+El paquete instala el tema en `/usr/share/themes/CambonOS-Dark`. No selecciona
+el tema automáticamente, no modifica preferencias del usuario, no instala
+configuración global de GTK y no incorpora scripts de instalación ni hooks
+ALPM.
 
-El tema no cambia la configuración global o personal de GTK.
+## GTK y libadwaita
 
-## Activación
+GTK 2/3/4 consumen los recursos de sus respectivos directorios. La presencia de `gtk-4.0` no implica que las aplicaciones libadwaita
+respeten el tema GTK: libadwaita mantiene su propio sistema visual. La
+compatibilidad `supported` significa que el paquete no interfiere con sus
+preferencias oficiales de esquema/acento; las aplicaciones pueden adoptar el
+modo oscuro y los acentos que ofrezcan el escritorio y el portal. No se
+garantiza una tematización completa ni un acento HEX personalizado. El paquete
+no enlaza archivos en `~/.config/gtk-4.0`, no modifica preferencias y no
+inyecta CSS en libadwaita.
 
-Selecciona `CambonOS-Light` o `CambonOS-Dark` en la herramienta de apariencia de tu escritorio. El paquete instala ambos temas, pero no selecciona uno automáticamente. Solo cubre GTK 3; GTK 4 y las aplicaciones libadwaita quedan fuera de alcance.
+## Procedencia
 
-## Licencia
+Recursos derivados de Orchis upstream, revisión
+`a4c48a425e63808345e824495964bd9c2f462e04`, a partir del payload
+`release/Orchis-Green.tar.xz` (`Orchis-Green-Dark`). Los cambios de paleta
+CambonOS están aplicados sobre los recursos generados. Se conserva el texto
+de licencia upstream en `LICENSE`.
 
-GPL-3.0-only. El texto de la licencia se instala en `/usr/share/licenses/cambonos-gtk-theme/LICENSE`.
+## Instalación y activación
+
+Instala el paquete y selecciona `CambonOS-Dark` desde la herramienta de
+apariencia del escritorio. La selección no se realiza automáticamente.
+
+## Limitaciones
+
+- Qt no está incluido; se tratará en un paquete independiente.
+- La integración libadwaita es `supported`, no una tematización completa ni
+  una garantía de que todas las aplicaciones libadwaita adopten los colores.
+- La validación visual debe realizarse en una sesión XFCE real.

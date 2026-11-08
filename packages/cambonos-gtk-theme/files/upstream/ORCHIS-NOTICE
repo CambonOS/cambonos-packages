@@ -1,0 +1,16 @@
+Orchis GTK theme source
+=======================
+Upstream: https://github.com/vinceliuice/Orchis-theme
+Revision: a4c48a425e63808345e824495964bd9c2f462e04
+Upstream release payload: release/Orchis-Green.tar.xz (Orchis-Green-Dark)
+
+The GTK 2, GTK 3, GTK 4 and XFWM4 theme resources are derived from the
+upstream release payload above. CambonOS applies palette substitutions and
+ships the resulting theme as CambonOS-Dark. See LICENSE for the upstream
+license text.
+
+Source archive SHA-256:
+14b875d260b27c449a05c08829ac775c586dcd07e41d3da370fff8a1b4407f5c
+
+Upstream release payload SHA-256:
+a2d3e3a06108dc6e7ccc608706ec3d3e731f963fd688c4a33d1161208b2fb2dd
