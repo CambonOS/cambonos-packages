@@ -47,6 +47,26 @@ calendar.raven-calendar:selected, .budgie-popover.budgie-menu row.activatable > 
   background-color: #006B73;
 }
 
+/* Pointer hover on selectable GTK3 rows uses the CambonOS teal palette,
+ * rather than the upstream Orchis lime accent. Keep other hover accents intact. */
+row.activatable:hover,
+treeview.view:hover,
+iconview.view > :hover,
+flowbox > flowboxchild:hover,
+modelbutton.flat:hover,
+.menuitem:hover {
+  color: #FFFFFF;
+  background-color: #006B73;
+  background-image: none;
+}
+
+row.activatable:hover label,
+treeview.view:hover label,
+modelbutton.flat:hover label,
+.menuitem:hover label {
+  color: #FFFFFF;
+}
+
 .nemo-window .view selection, .nemo-window .view:selected, .nautilus-window notebook .view:not(treeview) selection, .nautilus-window notebook .view:not(treeview):selected, .nautilus-window flowboxchild:selected .icon-item-background, flowbox flowboxchild:selected, .background.csd .view:selected {
   color: white;
   background-color: #006B73;
@@ -184,8 +204,8 @@ flowbox treeview.view rubberband,
 flowbox rubberband,
 flowbox treeview.view rubberband,
 treeview.view flowbox rubberband {
-  border: 1px solid #AEFA50;
-  background-color: rgba(102, 187, 106, 0.3);
+  border: 1px solid #70E7E6;
+  background-color: rgba(1, 159, 167, 0.24);
 }
 
 flowbox flowboxchild {
@@ -8309,9 +8329,17 @@ window#whiskermenu-window scrolledwindow.frame treeview.view:not(:hover):not(:se
   background: none;
 }
 
+window#whiskermenu-window scrolledwindow.frame treeview.view:hover,
+window#whiskermenu-window scrolledwindow.frame treeview.view:selected,
 window#whiskermenu-window scrolledwindow.frame treeview.view:selected:hover {
   background-color: #006B73;
-  color: white;
+  background-image: none;
+  color: #FFFFFF;
+}
+
+window#whiskermenu-window scrolledwindow.frame treeview.view:hover label,
+window#whiskermenu-window scrolledwindow.frame treeview.view:selected label {
+  color: #FFFFFF;
 }
 
 window#whiskermenu-window scrolledwindow.frame iconview {
@@ -8339,7 +8367,8 @@ window#whiskermenu-window .title-area > .commands-area > button.flat.command-but
  * XFCE logout dialog *
  ********************/
 
-dialog.xfsm-logout-dialog {
+/* xfce4-session sets xfsm-logout-dialog as a GTK style class on the dialog. */
+.xfsm-logout-dialog {
   color: #FFFFFF;
   background-color: rgba(6, 28, 49, 0.94);
   border: 1px solid rgba(112, 231, 230, 0.30);
@@ -8347,15 +8376,15 @@ dialog.xfsm-logout-dialog {
   box-shadow: none;
 }
 
-dialog.xfsm-logout-dialog > box,
-dialog.xfsm-logout-dialog .dialog-vbox,
-dialog.xfsm-logout-dialog .dialog-action-box {
+.xfsm-logout-dialog > box,
+.xfsm-logout-dialog .dialog-vbox,
+.xfsm-logout-dialog .dialog-action-box {
   color: #FFFFFF;
   background-color: transparent;
   border-color: rgba(112, 231, 230, 0.16);
 }
 
-dialog.xfsm-logout-dialog button {
+.xfsm-logout-dialog button {
   color: #FFFFFF;
   background-image: none;
   background-color: rgba(1, 159, 167, 0.16);
@@ -8364,27 +8393,27 @@ dialog.xfsm-logout-dialog button {
   box-shadow: none;
 }
 
-dialog.xfsm-logout-dialog button:hover {
+.xfsm-logout-dialog button:hover {
   color: #FFFFFF;
   background-image: none;
   background-color: rgba(1, 159, 167, 0.34);
   border-color: #70E7E6;
 }
 
-dialog.xfsm-logout-dialog button:active,
-dialog.xfsm-logout-dialog button:checked {
+.xfsm-logout-dialog button:active,
+.xfsm-logout-dialog button:checked {
   color: #061C31;
   background-image: none;
   background-color: #70E7E6;
   border-color: #70E7E6;
 }
 
-dialog.xfsm-logout-dialog button:focus {
+.xfsm-logout-dialog button:focus {
   outline-color: rgba(112, 231, 230, 0.72);
   outline-offset: 2px;
 }
 
-dialog.xfsm-logout-dialog label {
+.xfsm-logout-dialog label {
   color: #FFFFFF;
 }
 
@@ -8470,16 +8499,6 @@ window.background.csd.thunar > grid.horizontal > paned.horizontal > scrolledwind
 
 window.background.csd.thunar > grid.horizontal > paned.horizontal > scrolledwindow.frame.sidebar.shortcuts-pane treeview.view:not(:hover):not(:active):not(:selected) {
   background-color: transparent;
-}
-
-/***************
- * xfsm dialog *
- ***************/
-dialog.xfsm-logout-dialog {
-  box-shadow: none;
-  border: none;
-  border-radius: 18px;
-  background-color: rgba(33, 33, 33, 0.97);
 }
 
 /**********************

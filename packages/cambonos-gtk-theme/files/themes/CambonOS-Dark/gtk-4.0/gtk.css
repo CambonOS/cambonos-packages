@@ -95,6 +95,8 @@
    ----------------
    use responsibly! */
 @define-color accent_color #AEFA50;
+@define-color accent_bg_color #006B73;
+@define-color accent_fg_color #FFFFFF;
 @define-color destructive_bg_color #F44336;
 @define-color destructive_fg_color white;
 @define-color destructive_color #F44336;
@@ -233,9 +235,9 @@ iconview:hover, iconview:selected {
 rubberband, .content-view rubberband, .content-view columnview.view > rubberband,
 .content-view treeview.view > rubberband, .content-view .rubberband, columnview.view > rubberband,
 treeview.view > rubberband, gridview > rubberband, flowbox > rubberband {
-  --accent-bg-color: @accent_bg_color;
-  border: 1px solid var(--accent-bg-color);
-  background-color: color-mix(in srgb, var(--accent-bg-color) 30%, transparent);
+  --accent-bg-color: #006B73;
+  border: 1px solid #70E7E6;
+  background-color: rgba(1, 159, 167, 0.24);
 }
 
 flowbox > flowboxchild {

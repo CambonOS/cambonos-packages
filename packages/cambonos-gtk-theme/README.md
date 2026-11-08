@@ -50,3 +50,10 @@ apariencia del escritorio. La selección no se realiza automáticamente.
 - La integración libadwaita es `supported`, no una tematización completa ni
   una garantía de que todas las aplicaciones libadwaita adopten los colores.
 - La validación visual debe realizarse en una sesión XFCE real.
+
+### GTK3 interaction and XFCE logout styling
+
+The GTK3 stylesheets use CambonOS teal (`#006B73`) for pointer-hover and
+selection states on selectable rows, including Whisker Menu entries. The XFCE
+session logout dialog is styled through the `xfsm-logout-dialog` GTK style class.
+Its translucent background is subject to GTK window visuals and the XFCE compositor.

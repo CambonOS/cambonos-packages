@@ -14,7 +14,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.2.0", pkgb)
-        self.assertIn("pkgrel=4", pkgb)
+        self.assertIn("pkgrel=5", pkgb)
         self.assertIn("license=('GPL-3.0-or-later')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -98,11 +98,36 @@ class GtkThemePackageTests(unittest.TestCase):
             css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
             self.assertRegex(
                 css,
-                r"dialog\.xfsm-logout-dialog\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.94\)",
+                r"\.xfsm-logout-dialog\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.94\)",
             )
-            self.assertIn("dialog.xfsm-logout-dialog button:hover", css)
-            self.assertIn("dialog.xfsm-logout-dialog button:active", css)
-            self.assertIn("dialog.xfsm-logout-dialog label", css)
+            self.assertIn(".xfsm-logout-dialog button:hover", css)
+            self.assertIn(".xfsm-logout-dialog button:active", css)
+            self.assertIn(".xfsm-logout-dialog label", css)
+            self.assertNotIn("dialog.xfsm-logout-dialog", css)
+            self.assertNotIn("background-color: rgba(33, 33, 33, 0.97);", css)
+
+    def test_gtk3_pointer_hover_uses_cambonos_teal_not_orchis_lime(self):
+        selectors = (
+            "row.activatable:hover",
+            "treeview.view:hover",
+            "flowbox > flowboxchild:hover",
+            "modelbutton.flat:hover",
+            ".menuitem:hover",
+        )
+        for filename in ("gtk.css", "gtk-dark.css"):
+            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
+            for selector in selectors:
+                self.assertIn(selector, css, f"{filename}: {selector}")
+            self.assertIn("background-color: #006B73;", css)
+            self.assertIn("color: #FFFFFF;", css)
+            whisker = re.search(
+                r"window#whiskermenu-window scrolledwindow\.frame treeview\.view:hover,"
+                r"\s*window#whiskermenu-window scrolledwindow\.frame treeview\.view:selected,"
+                r"\s*window#whiskermenu-window scrolledwindow\.frame treeview\.view:selected:hover\s*\{([^}]*)\}",
+                css,
+            )
+            self.assertIsNotNone(whisker, filename)
+            self.assertIn("background-color: #006B73;", whisker.group(1))
 
     def test_xfce_panel_uses_opaque_midnight_background(self):
         for filename in ("gtk.css", "gtk-dark.css"):
@@ -120,6 +145,12 @@ class GtkThemePackageTests(unittest.TestCase):
                 css = (THEME / toolkit / filename).read_text(encoding="utf-8")
                 self.assertIn("#006B73", css, f"{toolkit}/{filename}")
                 self.assertIn(".view:selected", css, f"{toolkit}/{filename}")
+                if toolkit == "gtk-3.0":
+                    self.assertIn("border: 1px solid #70E7E6;", css, f"{toolkit}/{filename}")
+                    self.assertIn("background-color: rgba(1, 159, 167, 0.24);", css, f"{toolkit}/{filename}")
+                else:
+                    self.assertIn("@define-color accent_bg_color #006B73;", css)
+                    self.assertIn("border: 1px solid #70E7E6;", css)
                 self.assertNotRegex(
                     css,
                     r"(?is)(?:selected|selection-mode)[^{}]*\\{[^{}]*(?:#AEFA50|#66BB6A|#54B359|#414141)",
