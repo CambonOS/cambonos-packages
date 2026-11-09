@@ -58,7 +58,7 @@ class GrubPackageTests(unittest.TestCase):
     def test_grub_defaults_keep_ipv6_and_multiboot_enabled(self):
         config = (FILES / "defaults" / "60-cambonos.cfg").read_text(encoding="utf-8")
         self.assertIn('GRUB_DISTRIBUTOR="CambonOS"', config)
-        self.assertIn('GRUB_CMDLINE_LINUX_DEFAULT="splash quiet loglevel=3"', config)
+        self.assertIn('GRUB_CMDLINE_LINUX_DEFAULT="splash"', config)
         self.assertIn("GRUB_GFXMODE=auto", config)
         self.assertIn("GRUB_DISABLE_OS_PROBER=false", config)
         self.assertIn("GRUB_DISABLE_SUBMENU=true", config)
