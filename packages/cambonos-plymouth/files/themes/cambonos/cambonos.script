@@ -1,7 +1,6 @@
 reference_width = 1920;
 reference_height = 1080;
-logo_vertical_alignment = 0.66;
-progress_vertical_alignment = 0.7;
+logo_vertical_alignment = 0.5;
 progress_reference_width = 420;
 progress_reference_height = 8;
 
@@ -50,7 +49,7 @@ logo_sprite.SetPosition(logo_x, logo_y, 10);
 progress_width = Math.Int(progress_reference_width * screen_scale);
 progress_height = Math.Int(progress_reference_height * screen_scale);
 progress_x = window_x + Math.Int((window_width - progress_width) / 2);
-progress_y = window_y + Math.Int((window_height - progress_height) * progress_vertical_alignment);
+progress_y = logo_y + logo_height + Math.Int(24 * screen_scale);
 progress_background_original = Image("progress-background.png");
 progress_background_image = progress_background_original.Scale(progress_width, progress_height);
 progress_background_sprite = Sprite(progress_background_image);

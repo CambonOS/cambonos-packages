@@ -60,11 +60,11 @@ class PlymouthPackageTests(unittest.TestCase):
 
     def test_theme_centers_logo_and_places_progress_bar_below(self):
         script = (THEME / "cambonos.script").read_text(encoding="utf-8")
-        self.assertIn("logo_vertical_alignment = 0.66", script)
-        self.assertIn("progress_vertical_alignment = 0.7", script)
+        self.assertIn("logo_vertical_alignment = 0.5", script)
         self.assertIn("(window_width - logo_width) / 2", script)
         self.assertIn("(window_height - logo_height) * logo_vertical_alignment", script)
-        self.assertIn("(window_height - progress_height) * progress_vertical_alignment", script)
+        self.assertIn("progress_y = logo_y + logo_height + Math.Int(24 * screen_scale)", script)
+        self.assertNotIn("progress_vertical_alignment", script)
 
     def test_logo_and_progress_scale_from_reference_resolution(self):
         script = (THEME / "cambonos.script").read_text(encoding="utf-8")
