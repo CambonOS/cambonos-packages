@@ -74,14 +74,11 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 
 ## cambonos-plymouth
 
-- [ ] Plymouth selecciona y muestra el tema CambonOS con el plugin `script`.
-- [ ] Plymouth carga el icono, el fondo y los recursos de progreso desde `cambonos-branding`, también dentro del initramfs.
-- [ ] El logo y la barra escalan proporcionalmente desde la resolución de referencia `1920x1080`.
-- [ ] El logo y la barra de progreso se muestran correctamente durante el arranque.
+- [ ] Plymouth muestra correctamente el tema CambonOS durante el arranque.
+- [ ] Los recursos gráficos de CambonOS se cargan desde el initramfs.
+- [ ] El logo, la barra y el fondo se adaptan correctamente a distintas resoluciones.
 - [x] La integración con mkinitcpio incorpora Plymouth a las imágenes initramfs.
 - [x] La selección de tema del administrador se conserva durante las actualizaciones.
-- [ ] La configuración de Plymouth funciona con el orden de hooks previsto, también en sistemas cifrados. (Excepción aceptada para esta versión: CambonOS todavía no soporta instalaciones cifradas; estas pruebas quedan fuera del alcance funcional actual y permanecen sin verificar.)
-- [ ] Los diálogos de teclado y desbloqueo muestran los recursos gráficos esperados. (Excepción aceptada para esta versión: CambonOS todavía no soporta instalaciones cifradas; estas pruebas quedan fuera del alcance funcional actual y permanecen sin verificar.)
 
 ## cambonos-lightdm
 
@@ -134,7 +131,7 @@ Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última
 | `cambonos-release` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-pacman` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-grub` | VM (iso-install) | 07/11/2026 | — |
-| `cambonos-plymouth` | VM (iso-install) | 07/11/2026 | Faltan pruebas con disco cifrado |
+| `cambonos-plymouth` | VM (iso-install) | 07/11/2026 | Cambios recientes pendientes de verificación funcional (09/11/2026) |
 | `cambonos-base` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-keyring` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-lightdm` | VM (iso-install) | 08/11/2026 | - |

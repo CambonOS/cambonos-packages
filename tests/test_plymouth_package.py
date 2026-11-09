@@ -34,6 +34,18 @@ class PlymouthPackageTests(unittest.TestCase):
         self.assertIn("cambonos.script", assets)
         self.assertNotIn("header-image.png", assets)
         self.assertNotIn("background.png", assets)
+        unused_assets = {
+            "box.png",
+            "bullet.png",
+            "capslock.png",
+            "entry.png",
+            "keyboard.png",
+            "keymap-render.png",
+            "lock.png",
+        }
+        self.assertFalse(unused_assets.intersection(assets))
+        for filename in unused_assets:
+            self.assertNotIn(f'"$startdir/files/themes/cambonos/{filename}"', pkgb)
         self.assertFalse(any(name.startswith(("animation-", "throbber-")) for name in assets))
         self.assertNotIn('"$startdir/files/themes/cambonos/background.png"', pkgb)
         self.assertNotIn('"$startdir/files/themes/cambonos/header-image.png"', pkgb)
@@ -118,17 +130,17 @@ class PlymouthPackageTests(unittest.TestCase):
         self.assertIn("UseProgressBar=true", theme)
         self.assertNotIn("ShowDelay=", theme)
 
-    def test_mkinitcpio_dropin_preserves_hooks_and_places_plymouth_safely(self):
+    def test_mkinitcpio_dropin_preserves_hooks_and_places_plymouth_after_startup_hook(self):
         dropin = FILES / "mkinitcpio" / "90-cambonos-plymouth.conf"
         content = dropin.read_text(encoding="utf-8")
         for hooks, expected in (
             (
                 "base udev autodetect block encrypt filesystems",
-                "base udev autodetect block plymouth encrypt filesystems",
+                "base udev autodetect block encrypt plymouth filesystems",
             ),
             (
                 "base systemd autodetect block sd-encrypt filesystems",
-                "base systemd autodetect block plymouth sd-encrypt filesystems",
+                "base systemd autodetect block sd-encrypt plymouth filesystems",
             ),
             (
                 "base udev autodetect block filesystems",
@@ -168,6 +180,23 @@ class PlymouthPackageTests(unittest.TestCase):
         self.assertRegex(
             content,
             re.compile(r"HOOKS=\(\"\$\{_cambonos_plymouth_hooks\[@\]\}\"\)"),
+        )
+
+    def test_systemd_plymouth_start_waits_for_cryptsetup_without_pulling_it_in(self):
+        unit_dropin = (
+            FILES
+            / "systemd"
+            / "plymouth-start.service.d"
+            / "90-cambonos-plymouth.conf"
+        )
+        content = unit_dropin.read_text(encoding="utf-8")
+        pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
+        self.assertIn("After=cryptsetup.target", content)
+        self.assertNotIn("Wants=", content)
+        self.assertNotIn("Requires=", content)
+        self.assertIn(
+            '"$pkgdir/usr/lib/systemd/system/plymouth-start.service.d/90-cambonos-plymouth.conf"',
+            pkgb,
         )
 
     def test_lifecycle_selects_respects_and_resets_theme(self):
