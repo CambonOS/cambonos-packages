@@ -15,7 +15,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.4.6", pkgb)
-        self.assertIn("pkgrel=10", pkgb)
+        self.assertIn("pkgrel=12", pkgb)
         self.assertIn("license=('GPL-3.0-only')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -91,12 +91,39 @@ class GtkThemePackageTests(unittest.TestCase):
         self.assertIn("XfdesktopIconView.view label", gtk3)
         self.assertIn("success_color #149246", gtk4)
 
-    def test_whisker_and_thunar_integrations_remain(self):
+    def test_gtk3_gtk4_visual_policy_correlates(self):
+        gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
+        gtk4 = (THEME / "gtk-4.0/gtk.css").read_text(encoding="utf-8")
+        shared_colors = {
+            "theme_fg_color": "#F7F5EC",
+            "theme_text_color": "#F7F5EC",
+            "theme_bg_color": "rgba(6, 28, 49, 0.88)",
+            "theme_selected_bg_color": "#019FA7",
+            "theme_selected_fg_color": "#F7F5EC",
+            "warning_color": "#FBC02D",
+            "error_color": "#F44336",
+            "success_color": "#149246",
+        }
+        for name, value in shared_colors.items():
+            for toolkit, css in (("GTK3", gtk3), ("GTK4", gtk4)):
+                self.assertRegex(
+                    css,
+                    rf"(?m)^@define-color {name} {re.escape(value)};",
+                    f"{toolkit} {name} diverges from the shared theme palette",
+                )
+        for gtk_css in (gtk3, gtk4):
+            self.assertIn("background-color: rgba(1, 159, 167, 0.28);", gtk_css)
+            self.assertIn("border: 1px solid rgba(112, 231, 230, 0.92);", gtk_css)
+            self.assertIn("outline-color: #70E7E6;", gtk_css)
+            self.assertIn("background-color: rgba(6, 28, 49, 0.88);", gtk_css)
+
+    def test_xfce_desktop_integrations_remain(self):
         gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
         self.assertIn("window#whiskermenu-window", gtk3)
-        self.assertIn(".thunar .standard-view.frame", gtk3)
         self.assertIn("XfdesktopIconView.view", gtk3)
         self.assertIn(".xfce4-panel.background", gtk3)
+        self.assertIn("window.background .view:selected", gtk3)
+        self.assertNotIn(".thunar headerbar.titlebar toolbar", gtk3)
 
     def test_no_invasive_libadwaita_or_user_configuration(self):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
@@ -156,7 +183,6 @@ class GtkThemePackageTests(unittest.TestCase):
         self.assertIn("window.background notebook", gtk3)
         self.assertIn("background-color: rgba(6, 28, 49, 0.08);", gtk3)
         self.assertIn("statusbar,", gtk3)
-        self.assertIn(".thunar statusbar", gtk3)
         self.assertIn("menubar,", gtk3)
         self.assertIn(".menubar,", gtk3)
         self.assertIn("background-color: rgba(6, 28, 49, 0.88);", gtk3)
@@ -168,8 +194,7 @@ class GtkThemePackageTests(unittest.TestCase):
         gtk4 = (THEME / "gtk-4.0/gtk.css").read_text(encoding="utf-8")
         for selector in ("check:checked", "check:indeterminate", "radio:checked",
                          "radio:indeterminate", "rubberband",
-                         "XfdesktopIconView.view rubberband",
-                         ".thunar .standard-view.frame iconview.view > rubberband"):
+                         "XfdesktopIconView.view rubberband"):
             self.assertIn(selector, gtk3)
         for asset in ("unchecked-symbolic.svg", "checkbox-checked-symbolic.svg",
                       "radio-checked-symbolic.svg", "mixed-symbolic.svg"):
@@ -177,7 +202,6 @@ class GtkThemePackageTests(unittest.TestCase):
         self.assertIn("background-color: rgba(1, 159, 167, 0.28);", gtk3)
         self.assertIn("border: 1px solid rgba(112, 231, 230, 0.92);", gtk3)
         self.assertIn("XfdesktopIconView.view:selected", gtk3)
-        self.assertIn(".thunar .standard-view.frame iconview.view > .rubberband", gtk3)
         self.assertNotIn("XfdesktopIconView.view .rubberband", gtk3[:gtk3.rfind("/* Mouse-drag selection")])
         for css in (gtk3, gtk4):
             self.assertIn("background-color: rgba(1, 159, 167, 0.28);", css)
@@ -194,7 +218,6 @@ class GtkThemePackageTests(unittest.TestCase):
             self.assertIn("outline-color: #70E7E6;", css)
         self.assertIn("window#whiskermenu-window box.categories > button.radio:checked", gtk3)
         self.assertIn("window#whiskermenu-window scrolledwindow.frame treeview.view:selected", gtk3)
-        self.assertIn(".thunar .standard-view.frame .view:selected", gtk3)
         self.assertIn("window.background treeview.view:selected", gtk3)
         self.assertIn("window.background listview > row:selected", gtk4)
         self.assertIn("window .view:not(:selected)", gtk3)
@@ -206,11 +229,11 @@ class GtkThemePackageTests(unittest.TestCase):
         gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
         gtk4 = (THEME / "gtk-4.0/gtk.css").read_text(encoding="utf-8")
         for css, selectors, alpha in (
-            (gtk3, ".titlebar,", "0.12"),
+            (gtk3, ".titlebar,\n.titlebar:backdrop", "0.12"),
             (gtk3, "window.solid-csd,", "0.88"),
             (gtk3, ".solid-csd decoration,", "0.88"),
-            (gtk3, "menubar,\n.menubar,\nmenubar:backdrop", "0.88"),
-            (gtk4, "menubar,\nmenubar:backdrop", "0.88"),
+            (gtk3, "menubar,\n.menubar,\nmenubar:backdrop", "0.4"),
+            (gtk4, "menubar,\nmenubar:backdrop", "0.4"),
             (gtk4, "headerbar,\nheaderbar:backdrop", "0.12"),
             (gtk4, "window.solid-csd,", "0.88"),
             (gtk4, "popover.background,\npopover.background:backdrop", "0.16"),
@@ -246,6 +269,19 @@ class GtkThemePackageTests(unittest.TestCase):
             svg = path.read_text(encoding="utf-8")
             self.assertIn("fill:#019FA7", svg, path.name)
             self.assertIn("fill:#F7F5EC", svg, path.name)
+
+    def test_xfwm4_theme_is_selectable_and_matches_gtk_palette(self):
+        xfwm4 = THEME / "xfwm4"
+        metadata = (THEME / "index.theme").read_text(encoding="utf-8")
+        themerc = (THEME / "xfwm4/themerc").read_text(encoding="utf-8")
+        self.assertIn("Name=CambonOS-Dark", metadata)
+        self.assertIn("full_width_title=true", themerc)
+        self.assertIn("active_text_color=active_text_color_2", themerc)
+        self.assertIn("inactive_text_color=inactive_text_color_2", themerc)
+        self.assertIn("#061C31", (THEME / "xfwm4/title-active.xpm").read_text(encoding="utf-8"))
+        self.assertIn("#0A2942", (THEME / "xfwm4/title-inactive.xpm").read_text(encoding="utf-8"))
+        for path in xfwm4.glob("*-prelight.svg"):
+            self.assertIn("fill:#019FA7", path.read_text(encoding="utf-8"), path.name)
 
 
 if __name__ == "__main__":

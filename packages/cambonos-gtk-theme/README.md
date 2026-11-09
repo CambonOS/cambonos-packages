@@ -41,5 +41,8 @@ opacos que una aplicación dibuje por su cuenta.
 ## Instalación y procedencia
 
 Instala `cambonos-gtk-theme` y selecciona `CambonOS-Dark` en Apariencia de
-XFCE. La licencia GPL-3.0-only y el aviso de atribución de Orchis se instalan
-con el paquete; consulta `files/upstream/ORCHIS-NOTICE`.
+XFCE. Para aplicar también los marcos de ventana, selecciona `CambonOS-Dark`
+por separado en Gestor de ventanas > Estilo; XFCE mantiene esa elección fuera
+de la configuración del tema GTK. El tema de iconos y el cursor siguen siendo
+independientes. La licencia GPL-3.0-only y el aviso de atribución de Orchis se
+instalan con el paquete; consulta `files/upstream/ORCHIS-NOTICE`.
