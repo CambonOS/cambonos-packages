@@ -15,6 +15,8 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 - [x] Los recursos PNG de identidad se muestran correctamente.
 - [x] La fuente CambonOS Symbols se reconoce y sus glifos se representan correctamente.
 - [x] Fontconfig encuentra y aplica la configuración de la fuente.
+- [ ] La paleta ANSI de CambonOS se aplica a cada TTY virtual al inicializarse.
+- [ ] Los 16 colores de consola corresponden a la paleta publicada.
 
 ## cambonos-fastfetch
 
@@ -124,7 +126,7 @@ Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última
 
 | Paquete | Entorno de prueba | Fecha | Observaciones |
 |---|---|---|---|
-| `cambonos-branding` | VM (iso-install) | 07/11/2026 | — |
+| `cambonos-branding` | VM (iso-install) | 07/11/2026 | Paleta TTY pendiente de verificación funcional (09/11/2026) |
 | `cambonos-fastfetch` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-shell-prompt` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-zsh` | VM (iso-install) | 07/11/2026 | — |

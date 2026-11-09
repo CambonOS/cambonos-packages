@@ -1,18 +1,19 @@
 pkgname=cambonos-branding
 pkgver=0.1.1
-pkgrel=8
+pkgrel=9
 pkgdesc="CambonOS visual identity assets"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
 groups=('cambonos-base')
-depends=('fontconfig')
+depends=('fontconfig' 'kbd')
 
 package() {
   local branding_dir="$pkgdir/usr/share/cambonos/branding"
   local font_dir="$pkgdir/usr/share/fonts/TTF"
   local fontconfig_avail="$pkgdir/usr/share/fontconfig/conf.avail"
   local fontconfig_default="$pkgdir/usr/share/fontconfig/conf.default"
+  local udev_rules_dir="$pkgdir/usr/lib/udev/rules.d"
 
   # Canonical location: all original branding assets live here.
   install -Dm644 "$startdir/files/cambonos-icon.svg" \
@@ -29,6 +30,10 @@ package() {
     > "$branding_dir/progress-background.png"
   base64 --decode "$startdir/files/progress-foreground.png.base64" \
     > "$branding_dir/progress-foreground.png"
+  install -Dm644 "$startdir/files/console-colors" \
+    "$branding_dir/console-colors"
+  install -Dm644 "$startdir/files/90-cambonos-console-colors.rules" \
+    "$udev_rules_dir/90-cambonos-console-colors.rules"
 
   # Install the prebuilt symbol font as a static branding resource.
   install -Dm644 "$startdir/files/ttf/CambonOS-Symbols.ttf" \
