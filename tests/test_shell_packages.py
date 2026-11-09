@@ -38,7 +38,7 @@ class ShellPackageMetadataTests(unittest.TestCase):
 
     def test_shell_prompt_declares_nerd_fonts_symbols_dependency(self):
         text = (ROOT / "packages/cambonos-shell-prompt/PKGBUILD").read_text()
-        self.assertIn("pkgrel=8", text)
+        self.assertIn("pkgrel=9", text)
         self.assertIn("'ttf-nerd-fonts-symbols-mono'", text.split("optdepends=", 1)[0])
         readme = (ROOT / "packages/cambonos-shell-prompt/README.md").read_text()
         self.assertIn("`ttf-nerd-fonts-symbols-mono`", readme)
@@ -55,19 +55,20 @@ class ShellPackageMetadataTests(unittest.TestCase):
 
     def test_fastfetch_uses_simplified_four_color_logo_palette(self):
         package = ROOT / "packages/cambonos-fastfetch"
+        self.assertIn("pkgrel=3", (package / "PKGBUILD").read_text())
         config = json.loads((package / "files/cambonos/fastfetch/config.jsonc").read_text())
         self.assertEqual(
             config["logo"]["color"],
             {
-                "1": "#061C31",
-                "2": "#AEFA50",
-                "3": "#F7F5EC",
-                "4": "#70E7E6",
+                "1": "black",
+                "2": "light_green",
+                "3": "white",
+                "4": "light_blue",
             },
         )
         self.assertEqual(
             config["display"]["color"],
-            {"keys": "#AEFA50", "title": "#70E7E6"},
+            {"keys": "light_green", "title": "light_blue"},
         )
 
     def test_fastfetch_uses_zsh_conf_d_and_shared_lock(self):
@@ -82,9 +83,12 @@ class ShellPackageMetadataTests(unittest.TestCase):
         path = ROOT / "packages/cambonos-shell-prompt/files/starship.toml"
         config = tomllib.loads(path.read_text())
         self.assertEqual(config["palette"], "cambonos")
-        self.assertEqual(config["palettes"]["cambonos"]["primary"], "#AEFA50")
-        self.assertEqual(config["palettes"]["cambonos"]["accent"], "#70E7E6")
-        self.assertEqual(config["palettes"]["cambonos"]["deep_blue"], "#019FA7")
+        self.assertEqual(config["palettes"]["cambonos"]["primary"], "bright-green")
+        self.assertEqual(config["palettes"]["cambonos"]["secondary"], "green")
+        self.assertEqual(config["palettes"]["cambonos"]["accent"], "bright-blue")
+        self.assertEqual(config["palettes"]["cambonos"]["deep_blue"], "blue")
+        self.assertEqual(config["palettes"]["cambonos"]["background"], "black")
+        self.assertEqual(config["palettes"]["cambonos"]["text"], "white")
         lines = config["format"].splitlines()
         self.assertIn("$git_branch", lines[0])
         self.assertIn("$fill$python", lines[0])

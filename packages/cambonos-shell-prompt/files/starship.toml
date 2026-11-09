@@ -19,12 +19,12 @@ $status$jobs$cmd_duration
 """
 
 [palettes.cambonos]
-primary = "#AEFA50"
-secondary = "#149246"
-accent = "#70E7E6"
-deep_blue = "#019FA7"
-background = "#061C31"
-text = "#F7F5EC"
+primary = "bright-green"
+secondary = "green"
+accent = "bright-blue"
+deep_blue = "blue"
+background = "black"
+text = "white"
 
 [fill]
 symbol = " "
