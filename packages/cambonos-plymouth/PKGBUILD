@@ -1,6 +1,6 @@
 pkgname=cambonos-plymouth
 pkgver=0.1.0
-pkgrel=6
+pkgrel=7
 pkgdesc="CambonOS Plymouth theme and mkinitcpio integration"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
