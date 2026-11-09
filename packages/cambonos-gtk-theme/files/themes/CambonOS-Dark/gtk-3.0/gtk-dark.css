@@ -1694,21 +1694,21 @@ menubar,
   -GtkWidget-window-dragging: true;
   padding: 3px;
   box-shadow: inset 0 -1px rgba(255, 255, 255, 0.12);
-  background-color: rgba(6, 28, 49, 0.84);
+  background-color: rgba(6, 28, 49, 0.4);
   background-image: none;
   color: #F7F5EC;
 }
 
 menubar:backdrop,
 .menubar:backdrop {
-  background-color: rgba(10, 41, 66, 0.45);
+  background-color: rgba(6, 28, 49, 0.4);
   background-image: none;
   color: rgba(247, 245, 236, 0.7);
 }
 
 /* Menubars embedded in headerbars keep the same functional tint. */
 headerbar menubar, headerbar menubar:backdrop, headerbar .menubar, headerbar .menubar:backdrop {
-  background-color: rgba(6, 28, 49, 0.84);
+  background-color: rgba(6, 28, 49, 0.4);
   background-image: none;
   box-shadow: none;
 }
@@ -3318,19 +3318,19 @@ calendar:indeterminate {
  * Dialogs *
  ***********/
 messagedialog.background {
-  background-color: #0A2942;
+  background-color: rgba(6, 28, 49, 0.88);
 }
 
 messagedialog .titlebar {
   min-height: 24px;
   border-style: none;
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.1);
-  background-color: #0A2942;
+  background-color: rgba(6, 28, 49, 0.88);
   color: #F7F5EC;
 }
 
 messagedialog .titlebar:backdrop {
-  background-color: #0A2942;
+  background-color: rgba(6, 28, 49, 0.88);
   color: rgba(247, 245, 236, 0.7);
 }
 
@@ -3854,7 +3854,8 @@ tooltip.csd decoration {
   box-shadow: none;
 }
 
-messagedialog.csd decoration {
+messagedialog.csd decoration,
+.xfsm-logout-dialog decoration {
   border-radius: 18px;
 }
 
@@ -4743,7 +4744,7 @@ menubar,
 .menubar,
 headerbar menubar,
 headerbar .menubar {
-  background-color: rgba(6, 28, 49, 0.88);
+  background-color: rgba(6, 28, 49, 0.4);
   background-image: none;
 }
 
@@ -4751,7 +4752,7 @@ menubar:backdrop,
 .menubar:backdrop,
 headerbar menubar:backdrop,
 headerbar .menubar:backdrop {
-  background-color: rgba(6, 28, 49, 0.88);
+  background-color: rgba(6, 28, 49, 0.4);
   background-image: none;
 }
 
@@ -4913,7 +4914,7 @@ headerbar menubar,
 headerbar .menubar,
 headerbar menubar:backdrop,
 headerbar .menubar:backdrop {
-  background-color: rgba(6, 28, 49, 0.88);
+  background-color: rgba(6, 28, 49, 0.4);
   background-image: none;
 }
 
@@ -4950,5 +4951,40 @@ window.solid-csd:backdrop,
 popover.background,
 popover.background:backdrop {
   background-color: rgba(6, 28, 49, 0.16);
+  background-image: none;
+}
+
+/* Dialog shells use the same translucent midnight surface in every state. */
+dialog,
+dialog.background,
+window.dialog,
+window.dialog:backdrop,
+messagedialog.background {
+  background-color: rgba(6, 28, 49, 0.88);
+  background-image: none;
+}
+
+messagedialog .titlebar,
+messagedialog .titlebar:backdrop {
+  background-color: rgba(6, 28, 49, 0.88);
+  background-image: none;
+}
+
+/* Dialog decoration and frame nodes must carry the dialog surface too. */
+window.dialog decoration,
+window.dialog:backdrop decoration,
+dialog.csd decoration,
+messagedialog.csd decoration,
+.xfsm-logout-dialog decoration {
+  background-color: rgba(6, 28, 49, 0.88);
+  background-image: none;
+}
+
+window.dialog frame,
+window.dialog:backdrop frame,
+dialog.background frame,
+messagedialog frame,
+.xfsm-logout-dialog frame {
+  background-color: rgba(6, 28, 49, 0.88);
   background-image: none;
 }
