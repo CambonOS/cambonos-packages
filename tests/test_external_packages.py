@@ -16,12 +16,15 @@ from cambonos_lib.validation import validate_package
 
 
 class ExternalPackageStagingTests(unittest.TestCase):
-    def _checkout(self, root):
+    def _checkout(
+        self, root, package_name="cambonos-installer",
+        repository="https://github.com/CambonOS/cambonos-installer.git",
+    ):
         source = root / "installer-source"
         source.mkdir()
         (source / "files").mkdir()
         (source / "PKGBUILD").write_text(
-            "pkgname=cambonos-installer\npkgver=1\npkgrel=1\n"
+            f"pkgname={package_name}\npkgver=1\npkgrel=1\n"
             "arch=('any')\n"
             'package() { install -Dm644 "$startdir/payload" '
             '"$pkgdir/usr/share/sample/payload"; }\n'
@@ -32,7 +35,7 @@ class ExternalPackageStagingTests(unittest.TestCase):
         subprocess.run(["git", "-C", str(source), "config", "user.email", "test@example.invalid"], check=True)
         subprocess.run(
             ["git", "-C", str(source), "remote", "add", "origin",
-             "https://github.com/CambonOS/cambonos-installer.git"], check=True
+             repository], check=True
         )
         subprocess.run(["git", "-C", str(source), "add", "."], check=True)
         subprocess.run(["git", "-C", str(source), "commit", "-qm", "package source"], check=True)
@@ -81,6 +84,66 @@ class ExternalPackageStagingTests(unittest.TestCase):
             ).stdout.strip()
             with self.assertRaisesRegex(CambonosError, "symlink externo que escapa"):
                 stage_external_package(root / "central", "cambonos-installer", source, commit)
+
+    def test_stages_system_root_symlinks_in_mkiso_airootfs(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, _commit = self._checkout(
+                root, "cambonos-mkiso",
+                "https://github.com/CambonOS/cambonos-mkiso.git",
+            )
+            system_dir = source / "files/profile/airootfs/etc/systemd/system"
+            wants_dir = system_dir / "multi-user.target.wants"
+            wants_dir.mkdir(parents=True)
+            (system_dir / "systemd-firstboot.service").symlink_to("/dev/null")
+            (wants_dir / "NetworkManager.service").symlink_to(
+                "/usr/lib/systemd/system/NetworkManager.service"
+            )
+            (wants_dir / "pacman-init.service").symlink_to("../pacman-init.service")
+            subprocess.run(["git", "-C", str(source), "add", "."], check=True)
+            subprocess.run(
+                ["git", "-C", str(source), "commit", "-qm", "add airootfs links"], check=True
+            )
+            commit = subprocess.run(
+                ["git", "-C", str(source), "rev-parse", "HEAD"],
+                check=True, text=True, capture_output=True,
+            ).stdout.strip()
+
+            staged = stage_external_package(root / "central", "cambonos-mkiso", source, commit)
+
+            staged_system_dir = staged / "files/profile/airootfs/etc/systemd/system"
+            self.assertEqual((staged_system_dir / "systemd-firstboot.service").readlink(), Path("/dev/null"))
+            self.assertEqual(
+                (staged_system_dir / "multi-user.target.wants/NetworkManager.service").readlink(),
+                Path("/usr/lib/systemd/system/NetworkManager.service"),
+            )
+            self.assertEqual(
+                (staged_system_dir / "multi-user.target.wants/pacman-init.service").readlink(),
+                Path("../pacman-init.service"),
+            )
+
+    def test_rejects_relative_symlink_escaping_airootfs(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, _commit = self._checkout(
+                root, "cambonos-mkiso",
+                "https://github.com/CambonOS/cambonos-mkiso.git",
+            )
+            system_dir = source / "files/profile/airootfs/etc/systemd/system"
+            system_dir.mkdir(parents=True)
+            (system_dir / "escape").symlink_to("../../../../PKGBUILD")
+            subprocess.run(["git", "-C", str(source), "add", "."], check=True)
+            subprocess.run(
+                ["git", "-C", str(source), "commit", "-qm", "add escaping airootfs link"],
+                check=True,
+            )
+            commit = subprocess.run(
+                ["git", "-C", str(source), "rev-parse", "HEAD"],
+                check=True, text=True, capture_output=True,
+            ).stdout.strip()
+
+            with self.assertRaisesRegex(CambonosError, "escapa de airootfs"):
+                stage_external_package(root / "central", "cambonos-mkiso", source, commit)
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -35,6 +36,27 @@ def _git(source: Path, *args: str) -> str:
     return result.stdout.strip()
 
 
+def _validate_symlinks(source: Path) -> None:
+    airootfs = source / "files/profile/airootfs"
+    for path in source.rglob("*"):
+        if not path.is_symlink():
+            continue
+        if path.is_relative_to(airootfs):
+            target = path.readlink()
+            if target.is_absolute():
+                continue
+            relative_target = path.parent.relative_to(airootfs) / target
+            normalized_target = Path(os.path.normpath(str(relative_target)))
+            if ".." in normalized_target.parts:
+                raise CambonosError(
+                    f"symlink externo que escapa de airootfs: {path.relative_to(source)}"
+                )
+        elif not path.resolve().is_relative_to(source):
+            raise CambonosError(
+                f"symlink externo que escapa del checkout: {path.relative_to(source)}"
+            )
+
+
 def stage_external_package(
     source_root: Path,
     package_name: str,
@@ -62,9 +84,7 @@ def stage_external_package(
         )
     if _git(source, "status", "--porcelain", "--untracked-files=all"):
         raise CambonosError(f"el checkout externo contiene cambios: {package_name}")
-    for path in source.rglob("*"):
-        if path.is_symlink() and not path.resolve().is_relative_to(source):
-            raise CambonosError(f"symlink externo que escapa del checkout: {path.relative_to(source)}")
+    _validate_symlinks(source)
 
     pkgb = source / "PKGBUILD"
     if not pkgb.is_file() or extract_scalar(pkgb.read_text(encoding="utf-8"), "pkgname") != package_name:
