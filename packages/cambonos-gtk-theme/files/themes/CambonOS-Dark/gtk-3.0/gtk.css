@@ -8277,15 +8277,18 @@ window#whiskermenu-window entry.search:focus {
   box-shadow: 0 0 0 1px rgba(112, 231, 230, 0.22);
 }
 
-/* Whisker already draws its own popup surface. Keep the internal frame
- * transparent so it does not create a second rectangular panel. */
+/* Whisker's direct frame is the visible outer shell around its inner panes.
+ * Paint it with the same material as the XFCE panel; leaving it transparent
+ * exposes the desktop through the menu's outer margin. */
+window#whiskermenu-window.background,
 window#whiskermenu-window > frame,
 window#whiskermenu-window > frame > border {
   border: none;
   border-radius: 0;
   padding: 0;
   margin: 0;
-  background: transparent;
+  background-color: rgba(6, 28, 49, 0.86);
+  background-image: none;
   box-shadow: none;
 }
 
