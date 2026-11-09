@@ -8759,12 +8759,12 @@ window,
 window.background,
 window.csd,
 window.background.csd {
-  background-color: rgba(6, 28, 49, 0.78);
+  background-color: rgba(6, 28, 49, 0.74);
   background-image: none;
 }
 
 dialog {
-  background-color: rgba(6, 28, 49, 0.82);
+  background-color: rgba(6, 28, 49, 0.78);
   background-image: none;
 }
 
@@ -8775,7 +8775,7 @@ menu,
 .menu,
 tooltip,
 .tooltip {
-  background-color: rgba(6, 28, 49, 0.84);
+  background-color: rgba(6, 28, 49, 0.80);
   background-image: none;
 }
 
@@ -8790,7 +8790,7 @@ textview,
 .sidebar,
 .content-view,
 .card {
-  background-color: rgba(6, 28, 49, 0.72);
+  background-color: rgba(6, 28, 49, 0.66);
   background-image: none;
 }
 
@@ -8809,7 +8809,7 @@ spinbutton,
 combobox,
 .searchbar entry,
 .search-bar entry {
-  background-color: rgba(6, 28, 49, 0.78);
+  background-color: rgba(6, 28, 49, 0.76);
   background-image: none;
 }
 
@@ -8833,7 +8833,7 @@ popover.background > contents,
 popover.background > contents > list,
 popover.background > contents > .view,
 popover.background > contents > toolbar {
-  background-color: rgba(6, 28, 49, 0.82);
+  background-color: rgba(6, 28, 49, 0.78);
   background-image: none;
 }
 

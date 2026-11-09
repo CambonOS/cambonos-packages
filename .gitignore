@@ -29,3 +29,4 @@ ENV/
 cambonos-signing-subkey.asc
 *-signing-subkey.asc
 *.private.asc
+cambonos-packages.tar.gz

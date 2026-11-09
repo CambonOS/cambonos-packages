@@ -8819,13 +8819,13 @@ window,
 window.background,
 window.csd,
 window.background.csd {
-  background-color: rgba(6, 28, 49, 0.78);
+  background-color: rgba(6, 28, 49, 0.74);
   background-image: none;
 }
 
 dialog,
 .xfsm-logout-dialog {
-  background-color: rgba(6, 28, 49, 0.82);
+  background-color: rgba(6, 28, 49, 0.78);
   background-image: none;
 }
 
@@ -8836,7 +8836,7 @@ menu,
 .context-menu,
 tooltip,
 .tooltip {
-  background-color: rgba(6, 28, 49, 0.84);
+  background-color: rgba(6, 28, 49, 0.80);
   background-image: none;
 }
 
@@ -8848,7 +8848,7 @@ listview,
 .content-view,
 .sidebar,
 .sidebar .view {
-  background-color: rgba(6, 28, 49, 0.72);
+  background-color: rgba(6, 28, 49, 0.66);
   background-image: none;
 }
 
@@ -8874,7 +8874,7 @@ combobox,
 combobox > box,
 .searchbar entry,
 .search-bar entry {
-  background-color: rgba(6, 28, 49, 0.78);
+  background-color: rgba(6, 28, 49, 0.76);
   background-image: none;
 }
 
@@ -8905,7 +8905,7 @@ window#whiskermenu-window {
 }
 
 window#whiskermenu-window box.categories {
-  background-color: rgba(6, 28, 49, 0.80);
+  background-color: rgba(6, 28, 49, 0.65);
   background-image: none;
 }
 
@@ -8926,7 +8926,7 @@ window#whiskermenu-window box.categories > button.radio:active {
 }
 
 window#whiskermenu-window scrolledwindow.frame {
-  background-color: rgba(6, 28, 49, 0.84);
+  background-color: rgba(6, 28, 49, 0.68);
   background-image: none;
 }
 
@@ -8937,12 +8937,12 @@ window#whiskermenu-window scrolledwindow.frame iconview {
 }
 
 window#whiskermenu-window entry.search {
-  background-color: rgba(6, 28, 49, 0.90);
+  background-color: rgba(6, 28, 49, 0.76);
   background-image: none;
 }
 
 window#whiskermenu-window entry.search:focus {
-  background-color: rgba(6, 28, 49, 0.92);
+  background-color: rgba(6, 28, 49, 0.84);
 }
 
 /* Desktop icon labels are text overlays, never independent surfaces. */
@@ -8974,4 +8974,27 @@ XfdesktopIconView.view .label {
 scrollbar trough,
 progressbar.osd trough {
   background-color: rgba(1, 159, 167, 0.16);
+}
+
+/* Thunar: explicitly tint the real file pane and sidebar surfaces.
+ * Keep icon labels and selection overlays independent from these surfaces. */
+.thunar .standard-view.frame,
+.thunar .standard-view.frame widget.view {
+  background-color: rgba(6, 28, 49, 0.66);
+  background-image: none;
+}
+
+.thunar .sidebar {
+  background-color: rgba(6, 28, 49, 0.72);
+  background-image: none;
+}
+
+.thunar .sidebar .view:not(:selected) {
+  background-color: transparent;
+  background-image: none;
+}
+
+.thunar statusbar {
+  background-color: rgba(6, 28, 49, 0.78);
+  background-image: none;
 }

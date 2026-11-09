@@ -69,38 +69,48 @@ during pointer-drag selection.
 
 ## Translucent surface policy
 
-GTK 3 and GTK 4 use a deliberately assertive transparency hierarchy: top-level
-windows (`0.78` alpha), dialogs (`0.82`), floating menus/popovers (`0.84`),
-content views (`0.72`), window chrome (`0.68`) and editable fields (`0.78`).
-Lower alpha means more of the desktop or parent surface remains visible. These
-values are intended to make transparency perceptible rather than merely
-nominal, while retaining a dark midnight-blue tint.
+Translucency is a defining visual characteristic of CambonOS-Dark. GTK 3 and
+GTK 4 use a layered midnight-blue material (`#061C31`) so the wallpaper remains
+visible through functional surfaces without sacrificing contrast:
 
-The policy paints only independent functional surfaces. Generic buttons at
-rest, labels, icons, separators and nested layout containers do not receive a
-background of their own. They inherit the already-painted parent. Hover,
-active and selected states may add a turquoise interaction background.
-The XFCE panel and Whisker Menu outer shell share the same midnight-blue
-material (`#061C31`, `0.86` alpha), making the menu visually extend from its
-launcher panel. The Whisker top-level background and its direct frame/border
-are explicitly painted: leaving that frame transparent exposes the wallpaper
-around the inner panes and makes the menu appear lighter than the panel.
-Whisker's inner surfaces step down subtly: categories use
-`0.80`, the application list `0.84`, and the search field `0.90` (`0.92`
-while focused). Panel and menu surface rules are defined once in the GTK 3
-transparency policy to avoid competing declarations. XFdesktop icon labels
-remain explicitly transparent.
+| Surface | GTK alpha |
+| --- | ---: |
+| Main GTK windows | `0.74` |
+| Dialogs | `0.78` |
+| Menus, popovers and tooltips | `0.80` |
+| Document/list surfaces | `0.66` |
+| Headerbars and toolbars | `0.68` |
+| Editable fields | `0.76` |
 
-GTK 2 uses the legacy GtkRcStyle/GdkColor model and this package's GTK 2
-resource format exposes opaque named colors rather than GTK 3/4 CSS alpha
-colors. It therefore retains a solid midnight-blue fallback. GTK window alpha
-also depends on GTK selecting an alpha-capable visual and on a functioning
-compositor; CSS alone cannot force transparency if the display/compositor does
-not provide it. XFWM4 decorations are image assets whose opacity is controlled
-by the window manager/compositor, not GTK CSS.
+Lower alpha reveals more of the desktop. The values are intentionally assertive,
+but labels, icons, separators, desktop icon captions, resting-state buttons and
+nested layout containers remain transparent and inherit their parent surface.
+Hover, active and selected states may add a turquoise interaction tint.
 
-The policy applies to GTK 3/4 applications that use the selected theme and
-honor GTK CSS. It does not override libadwaita's independent styling system,
-applications with custom-rendered surfaces, or non-GTK toolkits such as Qt.
-The package's automated checks validate CSS syntax and policy invariants, but
-the final rendering still requires validation in a real XFCE session.
+The XFCE panel and Whisker Menu outer shell share the same midnight-blue material
+(`#061C31`, `0.86` alpha). Whisker's inner surfaces are more transparent:
+categories `0.65`, application list `0.68`, search field `0.76` and focused
+search `0.84`. Thunar's file pane uses a scoped `0.66` surface, while its sidebar
+and status area use denser supporting surfaces. The file-view labels and
+selection/hover feedback remain independent of the pane background.
+
+GTK CSS alpha is only effective when the application window has an
+alpha-capable visual and the X11 compositor is active. A theme cannot force an
+application to request an ARGB visual, so some GTK applications may continue
+to render an opaque top-level background even when child surfaces are
+translucent. GTK 4/libadwaita applications may also use their own styling and
+rendering paths.
+
+XFWM4 window decorations (titlebar and resize frame) are drawn by the window
+manager, not GTK. Their overall opacity is controlled by XFWM4's compositor
+settings rather than GTK CSS or the theme's SVG/XPM button artwork. In
+**Window Manager Tweaks → Compositor**, enable compositing and adjust
+**Opacity of window decorations** to a value below 100 if a translucent
+titlebar/frame is desired. The XFWM4 `frame_opacity` Xfconf setting controls
+this value. The theme package deliberately does not overwrite per-user Xfconf
+settings. Window content opacity and decoration opacity are separate controls.
+
+GTK 2 retains a solid midnight-blue fallback because its legacy GtkRcStyle
+resources do not provide the same CSS alpha model. The package's automated
+checks validate stylesheet syntax and policy invariants; final rendering must
+still be verified in a real XFCE session.
