@@ -8815,3 +8815,240 @@ FIXME this is really an API */
 @define-color BLACK_500 #393634;
 @define-color BLACK_700 #33302F;
 @define-color BLACK_900 #2B2928;
+
+/***************************************************************
+ * CambonOS translucent-surface policy (GTK 3)
+ *
+ * Functional surfaces always receive a tinted background. Alpha 1.0
+ * (fully transparent) is reserved for structural paint layers such as
+ * labels, icons, separators, focus outlines, and child wrappers that must
+ * reveal the already-painted parent surface. Do not use transparent as a
+ * substitute for a readable application/window surface.
+ ***************************************************************/
+
+/* Top-level application and dialog surfaces: almost opaque for readability. */
+window,
+window.background,
+dialog,
+window.csd,
+window.background.csd,
+.xfsm-logout-dialog {
+  background-color: rgba(6, 28, 49, 0.96);
+  background-image: none;
+}
+
+/* Floating surfaces are slightly denser than the application canvas. */
+popover,
+popover.background,
+menu,
+.menu,
+.context-menu,
+tooltip,
+.tooltip {
+  background-color: rgba(6, 28, 49, 0.97);
+  background-image: none;
+}
+
+/* Main content, document views and scrollable work areas. */
+.view,
+treeview.view,
+iconview.view,
+textview,
+textview text,
+list,
+list row,
+flowbox,
+flowbox flowboxchild,
+scrolledwindow,
+frame,
+.frame,
+notebook,
+notebook > stack,
+.content-view,
+.sidebar,
+.sidebar .view {
+  background-color: rgba(6, 28, 49, 0.94);
+  background-image: none;
+}
+
+/* Navigation and chrome use a little more translucency than content. */
+headerbar,
+.titlebar,
+toolbar,
+.toolbar,
+.inline-toolbar,
+.searchbar,
+.search-bar,
+.xfce4-panel.background {
+  background-color: rgba(6, 28, 49, 0.92);
+  background-image: none;
+}
+
+/* Editable controls retain a clear, tinted field instead of a transparent hole. */
+entry,
+spinbutton,
+combobox,
+combobox > box,
+textview text,
+GtkTreeView,
+.searchbar entry,
+.search-bar entry {
+  background-color: rgba(6, 28, 49, 0.93);
+}
+
+/* Buttons and selectable controls have a subtle surface even at rest. */
+button,
+button.flat,
+modelbutton,
+.menuitem,
+.inline-toolbar button,
+.linked > button {
+  background-color: rgba(1, 159, 167, 0.14);
+  background-image: none;
+}
+
+button:hover,
+button.flat:hover,
+modelbutton:hover,
+.menuitem:hover,
+row.activatable:hover {
+  background-color: rgba(1, 159, 167, 0.26);
+  background-image: none;
+}
+
+button:active,
+button:checked,
+button.flat:active,
+button.flat:checked,
+modelbutton:active,
+modelbutton:checked,
+.menuitem:selected {
+  background-color: rgba(1, 159, 167, 0.42);
+  background-image: none;
+}
+
+/* Whisker Menu follows the same rule: no fully transparent functional panel. */
+window#whiskermenu-window {
+  background-color: rgba(6, 28, 49, 0.94);
+  background-image: none;
+}
+
+window#whiskermenu-window box.categories {
+  background-color: rgba(6, 28, 49, 0.82);
+  background-image: none;
+}
+
+window#whiskermenu-window scrolledwindow.frame,
+window#whiskermenu-window scrolledwindow.frame treeview.view,
+window#whiskermenu-window scrolledwindow.frame iconview {
+  background-color: rgba(6, 28, 49, 0.90);
+  background-image: none;
+}
+
+window#whiskermenu-window entry.search {
+  background-color: rgba(6, 28, 49, 0.92);
+  background-image: none;
+}
+
+window#whiskermenu-window entry.search:focus {
+  background-color: rgba(6, 28, 49, 0.95);
+}
+
+/* XFCE logout: the dialog and its actionable controls remain readable. */
+.xfsm-logout-dialog,
+.xfsm-logout-dialog > box,
+.xfsm-logout-dialog .dialog-vbox,
+.xfsm-logout-dialog .dialog-action-box {
+  background-color: rgba(6, 28, 49, 0.96);
+  background-image: none;
+}
+
+.xfsm-logout-dialog button {
+  background-color: rgba(1, 159, 167, 0.18);
+  background-image: none;
+}
+
+.xfsm-logout-dialog button:hover {
+  background-color: rgba(1, 159, 167, 0.32);
+}
+
+.xfsm-logout-dialog button:active,
+.xfsm-logout-dialog button:checked {
+  background-color: rgba(1, 159, 167, 0.48);
+}
+
+/* Explicit upstream transparent surfaces that are real application panels. */
+entry.flat,
+spinbutton.flat.vertical,
+spinbutton.flat:not(.vertical),
+.entry-tag.button,
+.button.photos-entry-tag,
+.button.documents-entry-tag,
+button.suggested-action.flat,
+button.destructive-action.flat,
+.budgie-settings-window buttonbox.inline-toolbar button,
+.budgie-session-dialog .linked.horizontal > button,
+.budgie-polkit-dialog .linked.horizontal > button,
+.budgie-run-dialog .linked.horizontal > button,
+.stackswitcher:not(.vertical) > button:not(.suggested-action):not(.destructive-action) {
+  background-color: rgba(1, 159, 167, 0.14);
+  background-image: none;
+}
+
+.background.popup,
+popover.background > list,
+popover.background > .view,
+popover.background > toolbar,
+filechooser stack.view,
+filechooser stack.view scrolledwindow,
+filechooser stack.view scrolledwindow list,
+filechooser stack.view scrolledwindow treeview.view,
+filechooser stack.view > placesview,
+filechooser stack.view > placesview > actionbar,
+filechooser actionbar,
+.sidebar list,
+.documents-scrolledwin,
+.documents-scrolledwin .content-view,
+.documents-scrolledwin viewport.frame,
+.nautilus-window.background.csd placessidebar,
+.nautilus-window.background.csd .nautilus-list-view,
+.nautilus-window.background.csd notebook scrolledwindow > .view,
+.nautilus-window.background.csd notebook placesview > stack > frame > scrolledwindow > viewport > list,
+.nautilus-window.background.csd notebook placesview > actionbar,
+.thunar .sidebar .view,
+.nemo-window scrolledwindow.frame .view,
+window.background.chromium textview.view,
+XfdesktopIconView.view,
+.budgie-container,
+.budgie-popover list,
+.budgie-popover.budgie-menu .sidebar,
+.budgie-popover.budgie-menu entry.search,
+.budgie-notification-window,
+.budgie-switcher-window,
+.budgie-osd-window,
+.budgie-run-dialog entry.search,
+.budgie-settings-window > box > scrolledwindow list.sidebar,
+.brisk-menu .apps-list,
+.brisk-menu entry,
+.mate-panel-menu-bar menubar,
+#panel_window,
+#MatePanelPopupWindow calendar,
+.geary-main-window .geary-main-layout,
+.meld-status-bar {
+  background-color: rgba(6, 28, 49, 0.94);
+  background-image: none;
+}
+
+/* Scrollbars/progress tracks are controls, not transparent holes. */
+scrollbar,
+scrollbar.overlay-indicator:not(.dragging):not(.hovering),
+treeview.view.trough,
+treeview.view.progressbar,
+progressbar.osd,
+progressbar.osd trough {
+  background-color: rgba(1, 159, 167, 0.18);
+}
+
+/* Structural-only transparency: separators, undershoot/overshoot markers,
+ * icon/image nodes, text labels, focus decoration and nested wrapper boxes
+ * intentionally reveal their already-painted parent surface. */

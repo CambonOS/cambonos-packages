@@ -14,7 +14,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.2.0", pkgb)
-        self.assertIn("pkgrel=7", pkgb)
+        self.assertIn("pkgrel=8", pkgb)
         self.assertIn("license=('GPL-3.0-or-later')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -154,15 +154,17 @@ class GtkThemePackageTests(unittest.TestCase):
             self.assertIn("box-shadow: none;", rubberband.group(1))
             self.assertIn("transition: none;", rubberband.group(1))
 
-    def test_xfce_panel_uses_opaque_midnight_background(self):
+    def test_xfce_panel_uses_translucent_midnight_background(self):
         for filename in ("gtk.css", "gtk-dark.css"):
             css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
             match = re.search(
                 r"\.xfce4-panel\.background\s*\{([^}]*)\}", css
             )
             self.assertIsNotNone(match, filename)
-            self.assertIn("background-color: #061C31;", match.group(1))
-            self.assertNotRegex(match.group(1), r"background-color:\s*rgba?\(")
+            policy = css[css.rfind("CambonOS translucent-surface policy"):]
+            self.assertIn(".xfce4-panel.background", policy)
+            self.assertIn("background-color: rgba(6, 28, 49, 0.92);", policy)
+            self.assertNotIn("background-color: #061C31;", policy)
 
     def test_selection_uses_cambonos_turquoise_across_gtk_versions(self):
         for toolkit in ("gtk-3.0", "gtk-4.0"):
@@ -205,6 +207,43 @@ class GtkThemePackageTests(unittest.TestCase):
         metadata = (THEME / "index.theme").read_text(encoding="utf-8")
         self.assertNotIn("MetacityTheme=", metadata)
         self.assertTrue((THEME / "xfwm4" / "themerc").is_file())
+
+    def test_translucent_surface_policy_covers_gtk3_and_gtk4(self):
+        required = {
+            "gtk-3.0": ("window.background", "popover.background", "treeview.view",
+                        "headerbar", "toolbar", "entry", "button", "xfce4-panel.background"),
+            "gtk-4.0": ("window.background", "popover.background", "listview",
+                        "gridview", "columnview", "headerbar", "toolbar", "entry", "button"),
+        }
+        for toolkit, selectors in required.items():
+            for filename in ("gtk.css", "gtk-dark.css"):
+                css = (THEME / toolkit / filename).read_text(encoding="utf-8")
+                self.assertIn("CambonOS translucent-surface policy", css)
+                policy = css[css.rfind("CambonOS translucent-surface policy"):]
+                for selector in selectors:
+                    self.assertIn(selector, policy, f"{toolkit}/{filename}: {selector}")
+                self.assertIn("background-color: rgba(6, 28, 49, 0.96);", policy)
+                self.assertIn("background-color: rgba(6, 28, 49, 0.94);", policy)
+                self.assertIn("background-color: rgba(6, 28, 49, 0.92);", policy)
+                self.assertIn("background-color: rgba(6, 28, 49, 0.93);", policy)
+                self.assertNotRegex(policy, r"rgba\([^)]*,\s*0(?:\.0+)?\s*\)")
+
+    def test_transparency_exceptions_are_documented_and_gtk2_has_solid_fallback(self):
+        readme = (PACKAGE / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Fully transparent paint remains intentional only", readme)
+        self.assertIn("GTK 2 uses the legacy GtkRcStyle/GdkColor model", readme)
+        gtkrc = (THEME / "gtk-2.0" / "gtkrc").read_text(encoding="utf-8")
+        self.assertIn("bg_color:#061C31", gtkrc)
+        self.assertIn("base_color:#061C31", gtkrc)
+
+    def test_all_four_css_variants_parse_without_syntax_errors(self):
+        import tinycss2
+        for toolkit in ("gtk-3.0", "gtk-4.0"):
+            for filename in ("gtk.css", "gtk-dark.css"):
+                css = (THEME / toolkit / filename).read_text(encoding="utf-8")
+                rules = tinycss2.parse_stylesheet(css, skip_whitespace=True, skip_comments=True)
+                errors = [r for r in rules if r.type == "error"]
+                self.assertEqual(errors, [], f"{toolkit}/{filename}: {errors}")
 
     def test_pkgbuild_has_valid_bash_syntax(self):
         result = subprocess.run(["bash", "-n", str(PACKAGE / "PKGBUILD")],

@@ -65,3 +65,36 @@ The GTK3 theme scopes the rubberband overlay to Thunar's `GtkIconView` CSS
 node and disables the generic hover shadow on that view. This avoids applying
 a large inset hover effect while the icon view is continuously repainted
 during pointer-drag selection.
+
+
+## Translucent surface policy
+
+GTK 3 and GTK 4 stylesheets apply a consistent, tinted transparency hierarchy
+across application windows, dialogs, popovers, menus, document views, sidebars,
+headers, toolbars, editable fields, buttons and desktop-shell surfaces. Window
+surfaces use a near-opaque midnight blue; document/content surfaces are slightly
+more translucent; navigation chrome and controls use progressively lighter
+teal-tinted layers. No functional surface is intentionally assigned a fully
+transparent background by the CambonOS policy.
+
+Fully transparent paint remains intentional only for non-surface decoration
+(such as icons, labels, separators, focus outlines and child wrappers that
+must reveal an already-painted parent), plus interaction overlays whose
+geometry is itself the visual affordance. These exceptions do not constitute
+transparent application backgrounds. Background images/gradients on the
+surface nodes are suppressed where necessary so they cannot hide the tinted
+surface color.
+
+GTK 2 uses the legacy GtkRcStyle/GdkColor model and this package's GTK 2
+resource format exposes opaque named colors rather than GTK 3/4 CSS alpha
+colors. It therefore retains a solid midnight-blue fallback instead of
+pretending to offer per-widget alpha transparency. XFWM4 window decorations
+are image assets controlled by the window manager/compositor, not GTK CSS
+surfaces; their opacity is governed by XFCE compositor settings and cannot be
+reliably expressed as a GTK widget background.
+
+The policy applies to GTK 3/4 applications that use the selected theme and
+honor GTK CSS. It does not override libadwaita's independent styling system,
+applications with custom-rendered surfaces, or non-GTK toolkits such as Qt.
+Those require their own supported theming interfaces and are intentionally not
+modified by this package.
