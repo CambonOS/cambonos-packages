@@ -8750,22 +8750,24 @@ FIXME this is really an API */
 /***************************************************************
  * CambonOS translucent-surface policy (GTK 4)
  *
- * Functional surfaces always receive a tinted background. Fully transparent
- * paint is reserved for non-surface structure (icons, labels, separators,
- * focus decoration and child wrappers that reveal a painted parent).
+ * Only independent, functional surfaces receive a painted background.
+ * Buttons at rest, labels, icons, separators and nested layout containers
+ * remain transparent and inherit the surface behind them.
  ***************************************************************/
 
-/* Application windows and dialogs. */
 window,
 window.background,
-dialog,
 window.csd,
 window.background.csd {
-  background-color: rgba(6, 28, 49, 0.96);
+  background-color: rgba(6, 28, 49, 0.78);
   background-image: none;
 }
 
-/* Menus, popovers and tooltips. */
+dialog {
+  background-color: rgba(6, 28, 49, 0.82);
+  background-image: none;
+}
+
 popover,
 popover.background,
 popover contents,
@@ -8773,12 +8775,11 @@ menu,
 .menu,
 tooltip,
 .tooltip {
-  background-color: rgba(6, 28, 49, 0.97);
+  background-color: rgba(6, 28, 49, 0.84);
   background-image: none;
 }
 
-/* Document and collection surfaces. */
-.view,
+/* Actual document/list surfaces; avoid generic .view/frame/wrapper rules. */
 listview,
 gridview,
 columnview,
@@ -8786,159 +8787,57 @@ listview.view,
 gridview.view,
 columnview.view,
 textview,
-textview text,
-scrolledwindow,
-frame,
-.frame,
-notebook,
-notebook > stack,
 .sidebar,
 .content-view,
 .card {
-  background-color: rgba(6, 28, 49, 0.94);
+  background-color: rgba(6, 28, 49, 0.72);
   background-image: none;
 }
 
-/* Window chrome and navigation. */
 headerbar,
 .titlebar,
 toolbar,
 .toolbar,
 .searchbar,
 .search-bar {
-  background-color: rgba(6, 28, 49, 0.92);
+  background-color: rgba(6, 28, 49, 0.68);
   background-image: none;
 }
 
-/* Editable controls. */
 entry,
 spinbutton,
 combobox,
-textview text,
 .searchbar entry,
 .search-bar entry {
-  background-color: rgba(6, 28, 49, 0.93);
-}
-
-/* Buttons have a subtle tinted base in every state. */
-button,
-button.flat,
-modelbutton,
-.menuitem,
-.linked > button {
-  background-color: rgba(1, 159, 167, 0.14);
+  background-color: rgba(6, 28, 49, 0.78);
   background-image: none;
 }
 
 button:hover,
-button.flat:hover,
 modelbutton:hover,
-.menuitem:hover,
 row.activatable:hover {
-  background-color: rgba(1, 159, 167, 0.26);
+  background-color: rgba(1, 159, 167, 0.24);
   background-image: none;
 }
 
 button:active,
 button:checked,
-button.flat:active,
-button.flat:checked,
 modelbutton:active,
-modelbutton:checked,
-.menuitem:selected {
-  background-color: rgba(1, 159, 167, 0.42);
+modelbutton:checked {
+  background-color: rgba(1, 159, 167, 0.40);
   background-image: none;
 }
 
-/* Explicit upstream transparent surfaces that are real application panels. */
-entry.flat,
-.entry-tag.button,
-button.suggested-action.flat,
-button.destructive-action.flat,
-.nautilus-window tabbar tab:active > button.flat,
-.nautilus-window tabbar tab:checked > button.flat,
-.nautilus-window tabbar tab:selected > button.flat,
-list > row button.image-button:not(.flat),
-list.operations-list > row,
-list.operations-list > row:focus,
-row.activatable,
-row.entry.activatable,
-row.spin.activatable,
-.sidebar listview.view,
-.sidebar list,
-.navigation-sidebar,
-.navigation-sidebar.view,
-.fr-sidebar > row:not(.fr-sidebar-row),
-.nautilus-window .content-pane,
-.nautilus-window .sidebar-pane,
-.main-window .content-pane,
-.main-window .sidebar-pane,
-.sidebar-pane .sidebar,
-.sidebar-pane .navigation-sidebar,
-.content-pane headerbar,
-.sidebar-pane headerbar,
-window.about headerbar,
-window.about .top-bar,
-window > contents leaflet,
-window > contents leaflet stack.background,
-window > widget leaflet,
-window > widget leaflet stack.background,
-.calendar-list,
-monthpopover > box,
-agenda-view > scrolledwindow > viewport > list.background,
-.preferencesgroup > box flowbox.background-flowbox > flowboxchild:selected,
-.sidebar-pane .top-bar,
-.sidebar-pane .bottom-bar,
-.content-pane .top-bar,
-.content-pane .bottom-bar,
-toolbarview > .top-bar searchbar > revealer > box,
-toolbarview > .bottom-bar searchbar > revealer > box,
-toolbarview > .top-bar actionbar > revealer > box,
-toolbarview > .bottom-bar actionbar > revealer > box,
-toolbarview > .top-bar .toolbar,
-toolbarview > .bottom-bar .toolbar,
-toolbarview > .top-bar.raised,
-toolbarview > .bottom-bar.raised {
-  background-color: rgba(6, 28, 49, 0.94);
-  background-image: none;
-}
-
-/* Popovers and their contents must paint their own tinted surfaces. */
-popover.background,
-popover.background:backdrop,
+/* A popover is one surface, not a stack of nested opaque panels. */
+popover.background > contents,
 popover.background > contents > list,
 popover.background > contents > .view,
-popover.background > contents > toolbar,
-popover.background > contents list,
-popover.emoji-picker entry {
-  background-color: rgba(6, 28, 49, 0.96);
+popover.background > contents > toolbar {
+  background-color: rgba(6, 28, 49, 0.82);
   background-image: none;
 }
 
-/* GTK4 flat controls and tab actions retain a low-contrast tinted base. */
-button.suggested-action.flat,
-button.destructive-action.flat,
-.nautilus-window tabbar tab > button.flat,
-menubutton.suggested-action > button,
-menubutton.destructive-action > button,
-splitbutton.suggested-action > button,
-splitbutton.destructive-action > button {
-  background-color: rgba(1, 159, 167, 0.14);
-  background-image: none;
-}
-
-/* Scrollbars/progress tracks are controls, not transparent holes. */
-scrollbar,
-scrollbar.overlay-indicator:not(.dragging):not(.hovering),
-columnview.view.trough,
-treeview.view.trough,
-columnview.view.progressbar,
-treeview.view.progressbar,
-progressbar.osd,
+scrollbar trough,
 progressbar.osd trough {
-  background-color: rgba(1, 159, 167, 0.18);
+  background-color: rgba(1, 159, 167, 0.16);
 }
-
-/* Structural-only transparency: separators, overshoot markers, icon/image
- * nodes, text labels, focus decoration and nested wrapper boxes reveal their
- * already-painted parent surface intentionally. */

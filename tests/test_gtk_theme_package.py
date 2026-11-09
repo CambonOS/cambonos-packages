@@ -14,7 +14,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.2.0", pkgb)
-        self.assertIn("pkgrel=8", pkgb)
+        self.assertIn("pkgrel=9", pkgb)
         self.assertIn("license=('GPL-3.0-or-later')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -84,27 +84,35 @@ class GtkThemePackageTests(unittest.TestCase):
     def test_whiskermenu_surfaces_use_layered_transparency(self):
         for filename in ("gtk.css", "gtk-dark.css"):
             css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
+            policy = css[css.rfind("CambonOS translucent-surface policy"):]
             self.assertRegex(
-                css,
-                r"window#whiskermenu-window\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.58\)",
-            )
-            self.assertIn("window#whiskermenu-window box.categories", css)
-            self.assertRegex(
-                css,
-                r"window#whiskermenu-window scrolledwindow\.frame\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.84\)",
+                policy,
+                r"window#whiskermenu-window\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.78\)",
             )
             self.assertRegex(
-                css,
-                r"window#whiskermenu-window entry\.search\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.90\)",
+                policy,
+                r"window#whiskermenu-window box\.categories\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.64\)",
             )
-            self.assertIn("background-color: rgba(6, 28, 49, 0.94);", css)
+            self.assertRegex(
+                policy,
+                r"window#whiskermenu-window scrolledwindow\.frame\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.80\)",
+            )
+            self.assertRegex(
+                policy,
+                r"window#whiskermenu-window entry\.search\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.82\)",
+            )
+            self.assertRegex(
+                policy,
+                r"window#whiskermenu-window box\.categories > button\.radio\s*\{[^}]*background-color:\s*transparent",
+            )
 
     def test_xfce_logout_dialog_uses_cambonos_palette_and_translucency(self):
         for filename in ("gtk.css", "gtk-dark.css"):
             css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
+            policy = css[css.rfind("CambonOS translucent-surface policy"):]
             self.assertRegex(
-                css,
-                r"\.xfsm-logout-dialog\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.94\)",
+                policy,
+                r"\.xfsm-logout-dialog\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.82\)",
             )
             self.assertIn(".xfsm-logout-dialog button:hover", css)
             self.assertIn(".xfsm-logout-dialog button:active", css)
@@ -163,7 +171,7 @@ class GtkThemePackageTests(unittest.TestCase):
             self.assertIsNotNone(match, filename)
             policy = css[css.rfind("CambonOS translucent-surface policy"):]
             self.assertIn(".xfce4-panel.background", policy)
-            self.assertIn("background-color: rgba(6, 28, 49, 0.92);", policy)
+            self.assertIn("background-color: rgba(6, 28, 49, 0.68);", policy)
             self.assertNotIn("background-color: #061C31;", policy)
 
     def test_selection_uses_cambonos_turquoise_across_gtk_versions(self):
@@ -211,9 +219,9 @@ class GtkThemePackageTests(unittest.TestCase):
     def test_translucent_surface_policy_covers_gtk3_and_gtk4(self):
         required = {
             "gtk-3.0": ("window.background", "popover.background", "treeview.view",
-                        "headerbar", "toolbar", "entry", "button", "xfce4-panel.background"),
+                        "headerbar", "toolbar", "entry", "xfce4-panel.background"),
             "gtk-4.0": ("window.background", "popover.background", "listview",
-                        "gridview", "columnview", "headerbar", "toolbar", "entry", "button"),
+                        "gridview", "columnview", "headerbar", "toolbar", "entry"),
         }
         for toolkit, selectors in required.items():
             for filename in ("gtk.css", "gtk-dark.css"):
@@ -222,19 +230,29 @@ class GtkThemePackageTests(unittest.TestCase):
                 policy = css[css.rfind("CambonOS translucent-surface policy"):]
                 for selector in selectors:
                     self.assertIn(selector, policy, f"{toolkit}/{filename}: {selector}")
-                self.assertIn("background-color: rgba(6, 28, 49, 0.96);", policy)
-                self.assertIn("background-color: rgba(6, 28, 49, 0.94);", policy)
-                self.assertIn("background-color: rgba(6, 28, 49, 0.92);", policy)
-                self.assertIn("background-color: rgba(6, 28, 49, 0.93);", policy)
-                self.assertNotRegex(policy, r"rgba\([^)]*,\s*0(?:\.0+)?\s*\)")
+                for alpha in ("0.78", "0.82", "0.84", "0.72", "0.68"):
+                    self.assertIn(f"rgba(6, 28, 49, {alpha})", policy)
+                # No global resting-state button surface or broad wrapper paint.
+                self.assertNotRegex(policy, r"(?m)^button\s*,?\s*\n?\s*button\.flat")
+                self.assertNotRegex(policy, r"(?m)^\.view\s*,|^scrolledwindow\s*,|^frame\s*,")
+                self.assertNotIn("background-color: rgba(1, 159, 167, 0.14);", policy)
 
-    def test_transparency_exceptions_are_documented_and_gtk2_has_solid_fallback(self):
-        readme = (PACKAGE / "README.md").read_text(encoding="utf-8")
-        self.assertIn("Fully transparent paint remains intentional only", readme)
-        self.assertIn("GTK 2 uses the legacy GtkRcStyle/GdkColor model", readme)
-        gtkrc = (THEME / "gtk-2.0" / "gtkrc").read_text(encoding="utf-8")
-        self.assertIn("bg_color:#061C31", gtkrc)
-        self.assertIn("base_color:#061C31", gtkrc)
+    def test_gtk3_desktop_icon_labels_and_whisker_idle_categories_stay_transparent(self):
+        for filename in ("gtk.css", "gtk-dark.css"):
+            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
+            labels = re.search(
+                r"XfdesktopIconView\.view,\s*XfdesktopIconView\.view label,\s*"
+                r"XfdesktopIconView\.view \.label\s*\{([^}]*)\}", css
+            )
+            self.assertIsNotNone(labels, filename)
+            self.assertIn("background-color: transparent;", labels.group(1))
+            policy = css[css.rfind("CambonOS translucent-surface policy"):]
+            idle = re.search(
+                r"window#whiskermenu-window box\.categories > button\.radio\s*\{([^}]*)\}", policy
+            )
+            self.assertIsNotNone(idle, filename)
+            self.assertIn("background-color: transparent;", idle.group(1))
+            self.assertIn("window#whiskermenu-window box.categories > button.radio:hover", css)
 
     def test_all_four_css_variants_parse_without_syntax_errors(self):
         import tinycss2

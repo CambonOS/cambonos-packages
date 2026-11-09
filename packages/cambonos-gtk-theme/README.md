@@ -69,32 +69,31 @@ during pointer-drag selection.
 
 ## Translucent surface policy
 
-GTK 3 and GTK 4 stylesheets apply a consistent, tinted transparency hierarchy
-across application windows, dialogs, popovers, menus, document views, sidebars,
-headers, toolbars, editable fields, buttons and desktop-shell surfaces. Window
-surfaces use a near-opaque midnight blue; document/content surfaces are slightly
-more translucent; navigation chrome and controls use progressively lighter
-teal-tinted layers. No functional surface is intentionally assigned a fully
-transparent background by the CambonOS policy.
+GTK 3 and GTK 4 use a deliberately assertive transparency hierarchy: top-level
+windows (`0.78` alpha), dialogs (`0.82`), floating menus/popovers (`0.84`),
+content views (`0.72`), window chrome (`0.68`) and editable fields (`0.78`).
+Lower alpha means more of the desktop or parent surface remains visible. These
+values are intended to make transparency perceptible rather than merely
+nominal, while retaining a dark midnight-blue tint.
 
-Fully transparent paint remains intentional only for non-surface decoration
-(such as icons, labels, separators, focus outlines and child wrappers that
-must reveal an already-painted parent), plus interaction overlays whose
-geometry is itself the visual affordance. These exceptions do not constitute
-transparent application backgrounds. Background images/gradients on the
-surface nodes are suppressed where necessary so they cannot hide the tinted
-surface color.
+The policy paints only independent functional surfaces. Generic buttons at
+rest, labels, icons, separators and nested layout containers do not receive a
+background of their own. They inherit the already-painted parent. Hover,
+active and selected states may add a turquoise interaction background.
+Whisker Menu has a denser outer frame, quieter category navigation, a readable
+application-list panel and a separate search field. XFdesktop icon labels are
+explicitly kept transparent.
 
 GTK 2 uses the legacy GtkRcStyle/GdkColor model and this package's GTK 2
 resource format exposes opaque named colors rather than GTK 3/4 CSS alpha
-colors. It therefore retains a solid midnight-blue fallback instead of
-pretending to offer per-widget alpha transparency. XFWM4 window decorations
-are image assets controlled by the window manager/compositor, not GTK CSS
-surfaces; their opacity is governed by XFCE compositor settings and cannot be
-reliably expressed as a GTK widget background.
+colors. It therefore retains a solid midnight-blue fallback. GTK window alpha
+also depends on GTK selecting an alpha-capable visual and on a functioning
+compositor; CSS alone cannot force transparency if the display/compositor does
+not provide it. XFWM4 decorations are image assets whose opacity is controlled
+by the window manager/compositor, not GTK CSS.
 
 The policy applies to GTK 3/4 applications that use the selected theme and
 honor GTK CSS. It does not override libadwaita's independent styling system,
 applications with custom-rendered surfaces, or non-GTK toolkits such as Qt.
-Those require their own supported theming interfaces and are intentionally not
-modified by this package.
+The package's automated checks validate CSS syntax and policy invariants, but
+the final rendering still requires validation in a real XFCE session.
