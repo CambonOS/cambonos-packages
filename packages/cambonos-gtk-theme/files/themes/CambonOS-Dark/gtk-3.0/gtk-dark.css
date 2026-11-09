@@ -72,7 +72,7 @@ modelbutton.flat:hover label,
   background-color: #019FA7;
 }
 
- XfdesktopIconView.view:active, XfdesktopIconView.view:selected, XfdesktopIconView.view:checked, window.background.csd evview.view.content-view:selected, window.background.csd evview.view.content-view:selected:backdrop, statuspage.search-view entry.search > window.background treeview.view:selected, calendar:selected, spinbutton.vertical selection, spinbutton:not(.vertical) selection,
+ window.background.csd evview.view.content-view:selected, window.background.csd evview.view.content-view:selected:backdrop, statuspage.search-view entry.search > window.background treeview.view:selected, calendar:selected, spinbutton.vertical selection, spinbutton:not(.vertical) selection,
 entry selection, label selection, textview text selection:focus, textview text selection, .view:selected {
   color: #F7F5EC;
   background-color: #019FA7;
@@ -1694,21 +1694,21 @@ menubar,
   -GtkWidget-window-dragging: true;
   padding: 3px;
   box-shadow: inset 0 -1px rgba(255, 255, 255, 0.12);
-  background-color: rgba(6, 28, 49, 0.4);
+  background-color: rgba(6, 28, 49, 0.6);
   background-image: none;
   color: #F7F5EC;
 }
 
 menubar:backdrop,
 .menubar:backdrop {
-  background-color: rgba(6, 28, 49, 0.4);
+  background-color: rgba(6, 28, 49, 0.6);
   background-image: none;
   color: rgba(247, 245, 236, 0.7);
 }
 
 /* Menubars embedded in headerbars keep the same functional tint. */
 headerbar menubar, headerbar menubar:backdrop, headerbar .menubar, headerbar .menubar:backdrop {
-  background-color: rgba(6, 28, 49, 0.4);
+  background-color: rgba(6, 28, 49, 0.6);
   background-image: none;
   box-shadow: none;
 }
@@ -4090,10 +4090,6 @@ XfdesktopIconView.view {
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
-XfdesktopIconView.view:active, XfdesktopIconView.view:selected, XfdesktopIconView.view:checked {
-  box-shadow: none;
-}
-
 #XfceNotifyWindow buttonbox {
   padding: 0;
 }
@@ -4661,7 +4657,7 @@ menubar,
 .menubar,
 headerbar menubar,
 headerbar .menubar {
-  background-color: rgba(6, 28, 49, 0.4);
+  background-color: rgba(6, 28, 49, 0.6);
   background-image: none;
 }
 
@@ -4669,7 +4665,7 @@ menubar:backdrop,
 .menubar:backdrop,
 headerbar menubar:backdrop,
 headerbar .menubar:backdrop {
-  background-color: rgba(6, 28, 49, 0.4);
+  background-color: rgba(6, 28, 49, 0.6);
   background-image: none;
 }
 
@@ -4710,7 +4706,7 @@ radio:disabled {
   color: rgba(247, 245, 236, 0.38);
 }
 
-/* Mouse-drag selection: one translucent turquoise treatment for desktop and Thunar. */
+/* Mouse-drag selection: translucent turquoise fill with a crisp edge. */
 rubberband,
 .rubberband,
 .view > rubberband,
@@ -4718,11 +4714,7 @@ rubberband,
 iconview.view > rubberband,
 iconview.view > .rubberband,
 treeview.view rubberband,
-treeview.view .rubberband,
-XfdesktopIconView.view rubberband,
-XfdesktopIconView.view .rubberband,
-.thunar .standard-view.frame iconview.view > rubberband,
-.thunar .standard-view.frame iconview.view > .rubberband {
+treeview.view .rubberband {
   border: 1px solid rgba(112, 231, 230, 0.92);
   border-radius: 3px;
   background-color: rgba(1, 159, 167, 0.28);
@@ -4734,9 +4726,7 @@ XfdesktopIconView.view .rubberband,
 /* Selected items remain distinct from the drag-selection overlay. */
 .view:selected,
 treeview.view:selected,
-iconview.view:selected,
-XfdesktopIconView.view:selected,
-.thunar .standard-view.frame .view:selected {
+iconview.view:selected {
   color: #F7F5EC;
   background-color: #019FA7;
   background-image: none;
@@ -4831,7 +4821,7 @@ headerbar menubar,
 headerbar .menubar,
 headerbar menubar:backdrop,
 headerbar .menubar:backdrop {
-  background-color: rgba(6, 28, 49, 0.4);
+  background-color: rgba(6, 28, 49, 0.6);
   background-image: none;
 }
 

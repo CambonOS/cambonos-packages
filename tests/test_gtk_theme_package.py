@@ -15,7 +15,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.4.6", pkgb)
-        self.assertIn("pkgrel=13", pkgb)
+        self.assertIn("pkgrel=14", pkgb)
         self.assertIn("license=('GPL-3.0-only')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -200,20 +200,21 @@ class GtkThemePackageTests(unittest.TestCase):
             self.assertIn("background-color: rgba(6, 28, 49, 0.88);", block)
             self.assertIn("background-image: none;", block)
 
-    def test_gtk3_selection_indicators_and_rubberband(self):
+    def test_gtk3_selection_indicators_and_general_rubberband(self):
         gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
         gtk4 = (THEME / "gtk-4.0/gtk.css").read_text(encoding="utf-8")
         for selector in ("check:checked", "check:indeterminate", "radio:checked",
-                         "radio:indeterminate", "rubberband",
-                         "XfdesktopIconView.view rubberband"):
+                         "radio:indeterminate", "rubberband"):
             self.assertIn(selector, gtk3)
         for asset in ("unchecked-symbolic.svg", "checkbox-checked-symbolic.svg",
                       "radio-checked-symbolic.svg", "mixed-symbolic.svg"):
             self.assertIn(f'url("assets/scalable/{asset}")', gtk3)
         self.assertIn("background-color: rgba(1, 159, 167, 0.28);", gtk3)
         self.assertIn("border: 1px solid rgba(112, 231, 230, 0.92);", gtk3)
-        self.assertIn("XfdesktopIconView.view:selected", gtk3)
-        self.assertNotIn("XfdesktopIconView.view .rubberband", gtk3[:gtk3.rfind("/* Mouse-drag selection")])
+        mouse_selection = gtk3[gtk3.rfind("/* Mouse-drag selection"):]
+        self.assertNotIn("XfdesktopIconView", mouse_selection)
+        self.assertNotIn(".thunar", mouse_selection)
+        self.assertIn("treeview.view .rubberband", mouse_selection)
         for css in (gtk3, gtk4):
             self.assertIn("background-color: rgba(1, 159, 167, 0.28);", css)
             self.assertIn("border: 1px solid rgba(112, 231, 230, 0.92);", css)
@@ -243,8 +244,8 @@ class GtkThemePackageTests(unittest.TestCase):
             (gtk3, ".titlebar,\n.titlebar:backdrop", "0.12"),
             (gtk3, "window.solid-csd,", "0.88"),
             (gtk3, ".solid-csd decoration,", "0.88"),
-            (gtk3, "menubar,\n.menubar,\nmenubar:backdrop", "0.4"),
-            (gtk4, "menubar,\nmenubar:backdrop", "0.4"),
+            (gtk3, "menubar,\n.menubar,\nmenubar:backdrop", "0.6"),
+            (gtk4, "menubar,\nmenubar:backdrop", "0.6"),
             (gtk4, "headerbar,\nheaderbar:backdrop", "0.12"),
             (gtk4, "window.solid-csd,", "0.88"),
             (gtk4, "popover.background,\npopover.background:backdrop", "0.16"),

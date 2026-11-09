@@ -2239,12 +2239,12 @@ treeview.view acceleditor > label {
  *********/
 menubar {
   padding: 0;
-  background-color: rgba(6, 28, 49, 0.4);
+  background-color: rgba(6, 28, 49, 0.6);
   color: #F7F5EC;
 }
 
 menubar:backdrop {
-  background-color: rgba(6, 28, 49, 0.4);
+  background-color: rgba(6, 28, 49, 0.6);
   color: rgba(247, 245, 236, 0.7);
 }
 
@@ -5704,7 +5704,7 @@ window.dialog.message .titlebar:backdrop {
 menubar,
 menubar:backdrop {
   color: #F7F5EC;
-  background-color: rgba(6, 28, 49, 0.4);
+  background-color: rgba(6, 28, 49, 0.6);
   background-image: none;
 }
 
