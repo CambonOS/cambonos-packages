@@ -118,7 +118,7 @@ entry selection, label selection, textview text selection:focus, textview text s
  * Base States *
  ***************/
 .background {
-  background-color: #061C31;
+  background-color: rgba(6, 28, 49, 0.88);
   color: #F7F5EC;
 }
 
@@ -160,7 +160,7 @@ entry selection, label selection, textview text selection:focus, textview text s
 }
 
 .view {
-  background-color: #061C31;
+  background-color: transparent;
   color: #F7F5EC;
 }
 
@@ -177,7 +177,7 @@ entry selection, label selection, textview text selection:focus, textview text s
 }
 
 textview text {
-  background-color: #061C31;
+  background-color: transparent;
 }
 
 textview border {
@@ -1755,18 +1755,22 @@ menubar,
   -GtkWidget-window-dragging: true;
   padding: 3px;
   box-shadow: inset 0 -1px rgba(255, 255, 255, 0.12);
-  background-color: #061C31;
+  background-color: rgba(6, 28, 49, 0.84);
+  background-image: none;
   color: #F7F5EC;
 }
 
 menubar:backdrop,
 .menubar:backdrop {
-  background-color: #0A2942;
+  background-color: rgba(10, 41, 66, 0.45);
+  background-image: none;
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* Menubars embedded in headerbars keep the same functional tint. */
 headerbar menubar, headerbar menubar:backdrop, headerbar .menubar, headerbar .menubar:backdrop {
-  background-color: transparent;
+  background-color: rgba(6, 28, 49, 0.84);
+  background-image: none;
   box-shadow: none;
 }
 
@@ -2048,7 +2052,8 @@ tabbox > tab:checked.reorderable-page, notebook > header tab:checked.reorderable
 }
 
 notebook {
-  background-color: #061C31;
+  background-color: rgba(6, 28, 49, 0.50);
+  background-image: none;
 }
 
 frame > paned > notebook > header, notebook.frame > header {
@@ -6022,14 +6027,16 @@ window.background:not(.solid-csd):not(.csd) > notebook:not(.frame) {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-left: none;
   border-right: none;
-  background-color: #061C31;
+  background-color: rgba(6, 28, 49, 0.50);
+  background-image: none;
   box-shadow: none;
 }
 
 window.background:not(.solid-csd):not(.csd) > notebook:not(.frame) > stack {
   border: none;
   box-shadow: none;
-  background-color: #061C31;
+  background-color: transparent;
+  background-image: none;
 }
 
 window.background:not(.solid-csd):not(.csd) > notebook:not(.frame) > header {
@@ -7491,10 +7498,10 @@ text color for entries, views and content in general */
 @define-color theme_text_color #F7F5EC;
 /*
 widget base background color */
-@define-color theme_bg_color #061C31;
+@define-color theme_bg_color rgba(6, 28, 49, 0.88);
 /*
 text widgets and the like base background color */
-@define-color theme_base_color #061C31;
+@define-color theme_base_color rgba(6, 28, 49, 0.88);
 /*
 base background color of selections */
 @define-color theme_selected_bg_color #019FA7;
@@ -7518,10 +7525,10 @@ text color for entries, views and content in general on backdrop windows */
 @define-color theme_unfocused_text_color #F7F5EC;
 /*
 widget base background color on backdrop windows */
-@define-color theme_unfocused_bg_color #061C31;
+@define-color theme_unfocused_bg_color rgba(6, 28, 49, 0.88);
 /*
 text widgets and the like base background color on backdrop windows */
-@define-color theme_unfocused_base_color #061C31;
+@define-color theme_unfocused_base_color rgba(6, 28, 49, 0.88);
 /*
 base background color of selections on backdrop windows */
 @define-color theme_unfocused_selected_bg_color #019FA7;
@@ -7560,92 +7567,99 @@ read if you used those and something break with a version upgrade you're on your
 @define-color wm_button_min_active_bg #c29102;
 /*
 FIXME this is really an API */
-@define-color content_view_bg #061C31;
+@define-color content_view_bg transparent;
 @define-color placeholder_text_color silver;
 /* Very contrasty background for text views (@theme_text_color foreground) */
-@define-color text_view_bg #1d1d1d;
+@define-color text_view_bg transparent;
 
 /***************************************************************
- * CambonOS translucent-surface policy (GTK 3)
+ * CambonOS glass-surface system (GTK 3)
  *
- * Paint only widgets that represent an actual, independent surface. Generic
- * buttons, labels, icons, separators and nested layout containers inherit
- * their parent surface and must not acquire a background of their own.
- * Alpha values are intentionally assertive; GTK/compositor support is still
- * required for top-level window transparency to reach the desktop.
+ * One translucent midnight-blue canvas per toplevel. Nested layout
+ * containers and content views do not repaint that canvas. Only controls
+ * that need an independent functional surface paint a second layer.
  ***************************************************************/
 
 window,
 window.background,
 window.csd,
-window.background.csd {
-  background-color: rgba(6, 28, 49, 0.74);
+window.background.csd,
+.background {
+  background-color: rgba(6, 28, 49, 0.88);
+  background-image: none;
+  color: #F7F5EC;
+}
+
+/* Layout and content containers reveal the single parent canvas. */
+window > box,
+window > grid,
+window > paned,
+window > overlay,
+window > stack,
+window > revealer,
+window > scrolledwindow,
+window viewport,
+window scrolledwindow,
+window frame,
+window .view,
+window treeview.view,
+window iconview.view,
+window textview,
+window textview text,
+window .content-view,
+window .sidebar,
+window .sidebar .view,
+.thunar .standard-view,
+.thunar .standard-view.frame,
+.thunar .standard-view.frame widget.view {
+  background-color: transparent;
   background-image: none;
 }
 
-dialog,
-.xfsm-logout-dialog {
-  background-color: rgba(6, 28, 49, 0.78);
-  background-image: none;
-}
-
-popover,
-popover.background,
-menu,
-.menu,
-.context-menu,
-tooltip,
-.tooltip {
-  background-color: rgba(6, 28, 49, 0.80);
-  background-image: none;
-}
-
-/* Actual content surfaces only; no generic .view/frame/scrolledwindow rules. */
-treeview.view,
-iconview.view,
-textview,
-listview,
-.content-view,
-.sidebar,
-.sidebar .view {
-  background-color: rgba(6, 28, 49, 0.66);
-  background-image: none;
-}
-
+/* Independent surfaces: adjacent bars and detached popup surfaces. */
 headerbar,
 .titlebar,
 toolbar,
 .toolbar,
-.inline-toolbar,
 .searchbar,
-.search-bar {
-  border: none;
-  border-color: transparent;
-  background-color: rgba(6, 28, 49, 0.68);
+.search-bar,
+.inline-toolbar,
+menubar,
+.menubar,
+notebook > header {
+  background-color: rgba(6, 28, 49, 0.84);
   background-image: none;
-  color: #F7F5EC;
-  font-weight: 500;
 }
 
-.xfce4-panel.background {
-  border: none;
-  border-color: transparent;
-  background-color: rgba(6, 28, 49, 0.86);
+menu,
+.background.popup,
+popover.background,
+tooltip,
+.tooltip,
+.xfsm-logout-dialog {
+  background-color: rgba(6, 28, 49, 0.72);
   background-image: none;
-  color: #F7F5EC;
 }
 
+/* Controls retain a modest independent surface; ordinary buttons do not. */
 entry,
 spinbutton,
 combobox,
 combobox > box,
 .searchbar entry,
-.search-bar entry {
-  background-color: rgba(6, 28, 49, 0.76);
+.search-bar entry,
+treeview entry {
+  background-color: rgba(6, 28, 49, 0.88);
   background-image: none;
 }
 
-/* Buttons inherit their parent at rest; only interaction states tint teal. */
+button:not(.suggested-action):not(.destructive-action):not(.osd):not(.card):not(:checked):not(:active),
+modelbutton:not(:checked):not(:active),
+.menuitem:not(:selected) {
+  background-color: transparent;
+  background-image: none;
+}
+
 button:hover,
 modelbutton:hover,
 .menuitem:hover,
@@ -7663,16 +7677,21 @@ modelbutton:checked,
   background-image: none;
 }
 
-/* Whisker: denser outer frame, quiet categories, readable app list. */
-window#whiskermenu-window {
-  border-radius: 0;
-  border: none;
+/* XFCE panel and Whisker are deliberately independent desktop surfaces. */
+.xfce4-panel.background {
   background-color: rgba(6, 28, 49, 0.86);
   background-image: none;
 }
 
+window#whiskermenu-window {
+  border-radius: 0;
+  border: none;
+  background-color: rgba(6, 28, 49, 0.72);
+  background-image: none;
+}
+
 window#whiskermenu-window box.categories {
-  background-color: rgba(6, 28, 49, 0.65);
+  background-color: rgba(6, 28, 49, 0.52);
   background-image: none;
 }
 
@@ -7693,12 +7712,6 @@ window#whiskermenu-window box.categories > button.radio:active {
 }
 
 window#whiskermenu-window scrolledwindow.frame {
-  background-color: rgba(6, 28, 49, 0.68);
-  background-image: none;
-}
-
-window#whiskermenu-window scrolledwindow.frame treeview.view,
-window#whiskermenu-window scrolledwindow.frame iconview {
   background-color: transparent;
   background-image: none;
 }
@@ -7709,18 +7722,38 @@ window#whiskermenu-window entry.search {
 }
 
 window#whiskermenu-window entry.search:focus {
-  background-color: rgba(6, 28, 49, 0.84);
+  background-color: rgba(6, 28, 49, 0.82);
 }
 
-/* Desktop icon labels are text overlays, never independent surfaces. */
-XfdesktopIconView.view,
-XfdesktopIconView.view label,
-XfdesktopIconView.view .label {
+/* Thunar panes are transparent over the main window surface. */
+.thunar .sidebar,
+.thunar .sidebar .view,
+.thunar .standard-view,
+.thunar .standard-view.frame,
+.thunar .standard-view.frame widget.view {
   background-color: transparent;
   background-image: none;
 }
 
-/* Logout content inherits the dialog surface. */
+
+/* Content views are not independent surfaces: reveal the translucent
+ * toplevel canvas instead of repainting an almost opaque .view layer. */
+window.background .view,
+window.background treeview.view,
+window.background iconview.view,
+window.background textview,
+window.background textview text,
+.thunar window.background .standard-view,
+.thunar window.background .standard-view.frame,
+.thunar window.background .standard-view.frame widget.view {
+  background-color: transparent;
+  background-image: none;
+}
+
+/* Desktop labels, icons and logout internals never paint extra surfaces. */
+XfdesktopIconView.view,
+XfdesktopIconView.view label,
+XfdesktopIconView.view .label,
 .xfsm-logout-dialog > box,
 .xfsm-logout-dialog .dialog-vbox,
 .xfsm-logout-dialog .dialog-action-box,
@@ -7743,25 +7776,167 @@ progressbar.osd trough {
   background-color: rgba(1, 159, 167, 0.16);
 }
 
-/* Thunar: explicitly tint the real file pane and sidebar surfaces.
- * Keep icon labels and selection overlays independent from these surfaces. */
-.thunar .standard-view.frame,
-.thunar .standard-view.frame widget.view {
-  background-color: rgba(6, 28, 49, 0.66);
+/***************************************************************
+/***************************************************************
+ * CambonOS GTK3 — authoritative surface and interaction policy
+ *
+ * Keep this block after upstream Orchis rules. It deliberately targets
+ * GTK CSS nodes rather than applying backgrounds to shared utility classes.
+ ***************************************************************/
+
+/* GtkWindow: the single translucent base canvas. */
+window.background,
+window.background.csd,
+window.background.solid-csd {
+  background-color: rgba(6, 28, 49, 0.88);
   background-image: none;
 }
 
-.thunar .sidebar {
-  background-color: rgba(6, 28, 49, 0.72);
-  background-image: none;
-}
-
-.thunar .sidebar .view:not(:selected) {
+/* GtkFrame: remove the fill, but retain frame > border geometry. */
+frame,
+window.background frame,
+window.background.csd frame,
+window#whiskermenu-window > frame,
+window#whiskermenu-window > frame > border {
   background-color: transparent;
   background-image: none;
 }
 
-.thunar statusbar {
-  background-color: rgba(6, 28, 49, 0.78);
+/* Whisker outer frame must not repaint an opaque shell. */
+window#whiskermenu-window,
+window#whiskermenu-window.background,
+window#whiskermenu-window > frame,
+window#whiskermenu-window > frame > border {
+  background-color: transparent;
   background-image: none;
+  box-shadow: none;
+}
+
+/* GtkNotebook: intentional tinted surface; its content stack is clear. */
+notebook,
+notebook.frame,
+window.background notebook,
+window.background.csd notebook,
+.thunar paned paned paned > notebook.frame {
+  background-color: rgba(6, 28, 49, 0.50);
+  background-image: none;
+}
+
+notebook > stack,
+window.background notebook > stack,
+window.background.csd notebook > stack,
+.thunar paned paned paned > notebook.frame > stack {
+  background-color: transparent;
+  background-image: none;
+}
+
+/* GTK Terminal uses boxes for its terminal pane layout. Keep this scoped
+ * to the app's window class; do not tint every GtkBox in every application. */
+window.background > box.background {
+  background-color: rgba(6, 28, 49, 0.50);
+  background-image: none;
+}
+
+window.background > box.background notebook,
+window.background > box.background menubar {
+  background-color: rgba(6, 28, 49, 0.50);
+  background-image: none;
+}
+
+window.background > box.background menubar {
+  background-color: rgba(6, 28, 49, 0.84);
+}
+
+/* GtkStatusbar: transparent in all GTK3 applications. */
+statusbar,
+.thunar statusbar {
+  background-color: transparent;
+  background-image: none;
+}
+
+/* GtkMenuBar: consistent midnight-blue independent surface. */
+menubar,
+.menubar,
+headerbar menubar,
+headerbar .menubar {
+  background-color: rgba(6, 28, 49, 0.84);
+  background-image: none;
+}
+
+menubar:backdrop,
+.menubar:backdrop,
+headerbar menubar:backdrop,
+headerbar .menubar:backdrop {
+  background-color: rgba(10, 41, 66, 0.45);
+  background-image: none;
+}
+
+/* Restore explicit GTK3 checkbox/radio indicator assets and their states.
+ * Do not clear background-image or -gtk-icon-source on these nodes. */
+check {
+  -gtk-icon-source: -gtk-recolor(url("assets/scalable/unchecked-symbolic.svg"));
+  color: #F7F5EC;
+}
+
+check:checked {
+  -gtk-icon-source: -gtk-recolor(url("assets/scalable/checkbox-checked-symbolic.svg"));
+  color: #70E7E6;
+}
+
+check:indeterminate {
+  -gtk-icon-source: -gtk-recolor(url("assets/scalable/mixed-symbolic.svg"));
+  color: #70E7E6;
+}
+
+radio {
+  -gtk-icon-source: -gtk-recolor(url("assets/scalable/unchecked-symbolic.svg"));
+  color: #F7F5EC;
+}
+
+radio:checked {
+  -gtk-icon-source: -gtk-recolor(url("assets/scalable/radio-checked-symbolic.svg"));
+  color: #70E7E6;
+}
+
+radio:indeterminate {
+  -gtk-icon-source: -gtk-recolor(url("assets/scalable/mixed-symbolic.svg"));
+  color: #70E7E6;
+}
+
+check:disabled,
+radio:disabled {
+  color: rgba(247, 245, 236, 0.38);
+}
+
+/* Drag-selection rectangle shared by Thunar, Xfdesktop and GTK views. */
+rubberband,
+.view rubberband,
+iconview.view > rubberband,
+treeview.view rubberband,
+XfdesktopIconView.view rubberband,
+.thunar .standard-view.frame iconview.view > rubberband {
+  border: 1px solid #70E7E6;
+  border-radius: 2px;
+  background-color: rgba(1, 159, 167, 0.24);
+  background-image: none;
+  box-shadow: none;
+  transition: none;
+}
+
+/* Selected items remain distinct from the drag-selection overlay. */
+.view:selected,
+treeview.view:selected,
+iconview.view:selected,
+XfdesktopIconView.view:selected,
+.thunar .standard-view.frame .view:selected {
+  color: #061C31;
+  background-color: #019FA7;
+  background-image: none;
+}
+
+/* Focused selection gets a visible turquoise outline without hiding text. */
+.view:selected:focus,
+treeview.view:selected:focus,
+iconview.view:selected:focus {
+  outline-color: #70E7E6;
 }

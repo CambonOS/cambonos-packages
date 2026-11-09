@@ -62,21 +62,21 @@
 @define-color error_bg_color #F44336;
 @define-color error_fg_color white;
 @define-color error_color #F44336;
-@define-color window_bg_color #061C31;
+@define-color window_bg_color rgba(6, 28, 49, 0.88);
 @define-color window_fg_color white;
-@define-color view_bg_color #061C31;
+@define-color view_bg_color transparent;
 @define-color view_fg_color white;
-@define-color headerbar_bg_color #061C31;
+@define-color headerbar_bg_color rgba(6, 28, 49, 0.84);
 @define-color headerbar_fg_color white;
 @define-color headerbar_border_color rgba(255, 255, 255, 0.12);
-@define-color headerbar_backdrop_color #0A2942;
+@define-color headerbar_backdrop_color rgba(6, 28, 49, 0.84);
 @define-color headerbar_shade_color rgba(255, 255, 255, 0.12);
-@define-color card_bg_color #061C31;
+@define-color card_bg_color rgba(6, 28, 49, 0.84);
 @define-color card_fg_color white;
 @define-color card_shade_color rgba(255, 255, 255, 0.12);
-@define-color dialog_bg_color #0A2942;
+@define-color dialog_bg_color rgba(6, 28, 49, 0.82);
 @define-color dialog_fg_color white;
-@define-color popover_bg_color #0A2942;
+@define-color popover_bg_color rgba(6, 28, 49, 0.82);
 @define-color popover_fg_color white;
 @define-color shade_color rgba(255, 255, 255, 0.12);
 @define-color scrollbar_outline_color rgba(255, 255, 255, 0.12);
@@ -111,7 +111,7 @@
  * Base States *
  ***************/
 .background {
-  background-color: #061C31;
+  background-color: rgba(6, 28, 49, 0.88);
   color: #F7F5EC;
 }
 
@@ -149,7 +149,7 @@ treeview.expander:disabled {
 }
 
 iconview, .view {
-  background-color: #061C31;
+  background-color: transparent;
   color: #F7F5EC;
 }
 
@@ -158,7 +158,7 @@ iconview:disabled, .view:disabled {
 }
 
 textview text {
-  background-color: #061C31;
+  background-color: transparent;
 }
 
 textview border {
@@ -8280,10 +8280,10 @@ text color for entries, views and content in general */
 @define-color theme_text_color white;
 /*
 widget base background color */
-@define-color theme_bg_color #061C31;
+@define-color theme_bg_color rgba(6, 28, 49, 0.88);
 /*
 text widgets and the like base background color */
-@define-color theme_base_color #061C31;
+@define-color theme_base_color rgba(6, 28, 49, 0.88);
 /*
 base background color of selections */
 @define-color theme_selected_bg_color #019FA7;
@@ -8307,10 +8307,10 @@ text color for entries, views and content in general on backdrop windows */
 @define-color theme_unfocused_text_color white;
 /*
 widget base background color on backdrop windows */
-@define-color theme_unfocused_bg_color #061C31;
+@define-color theme_unfocused_bg_color rgba(6, 28, 49, 0.88);
 /*
 text widgets and the like base background color on backdrop windows */
-@define-color theme_unfocused_base_color #061C31;
+@define-color theme_unfocused_base_color rgba(6, 28, 49, 0.88);
 /*
 base background color of selections on backdrop windows */
 @define-color theme_unfocused_selected_bg_color #019FA7;
@@ -8349,10 +8349,10 @@ read if you used those and something break with a version upgrade you're on your
 @define-color wm_button_min_active_bg #c29102;
 /*
 FIXME this is really an API */
-@define-color content_view_bg #061C31;
+@define-color content_view_bg transparent;
 @define-color placeholder_text_color silver;
 /* Very contrasty background for text views (@theme_text_color foreground) */
-@define-color text_view_bg #1d1d1d;
+@define-color text_view_bg transparent;
 @define-color budgie_tasklist_indicator_color rgba(255, 255, 255, 0.7);
 @define-color budgie_tasklist_indicator_color_active #70E7E6;
 @define-color budgie_tasklist_indicator_color_active_window rgba(76, 130, 79, 0.8075);
@@ -8409,92 +8409,123 @@ FIXME this is really an API */
 @define-color BLACK_900 #2B2928;
 
 /***************************************************************
- * CambonOS translucent-surface policy (GTK 4)
+ * CambonOS glass-surface system (GTK 4)
  *
- * Only independent, functional surfaces receive a painted background.
- * Buttons at rest, labels, icons, separators and nested layout containers
- * remain transparent and inherit the surface behind them.
+ * One translucent midnight-blue canvas per toplevel. Nested layout and
+ * content widgets remain transparent. Independent controls and detached
+ * popup surfaces receive their own intentional treatment.
  ***************************************************************/
 
 window,
 window.background,
 window.csd,
-window.background.csd {
-  background-color: rgba(6, 28, 49, 0.74);
+window.background.csd,
+.background {
+  background-color: rgba(6, 28, 49, 0.88);
+  background-image: none;
+  color: #F7F5EC;
+}
+
+/* Content and layout reveal the parent window canvas. */
+window > box,
+window > grid,
+window > paned,
+window > overlay,
+window > stack,
+window > revealer,
+window > scrolledwindow,
+window viewport,
+window scrolledwindow,
+window frame,
+window .view,
+window iconview,
+window listview,
+window gridview,
+window columnview,
+window textview,
+window textview text,
+window .content-view,
+window .sidebar {
+  background-color: transparent;
   background-image: none;
 }
 
-dialog {
-  background-color: rgba(6, 28, 49, 0.78);
-  background-image: none;
-}
-
-popover,
-popover.background,
-popover contents,
-menu,
-.menu,
-tooltip,
-.tooltip {
-  background-color: rgba(6, 28, 49, 0.80);
-  background-image: none;
-}
-
-/* Actual document/list surfaces; avoid generic .view/frame/wrapper rules. */
-listview,
-gridview,
-columnview,
-listview.view,
-gridview.view,
-columnview.view,
-textview,
-.sidebar,
-.content-view,
-.card {
-  background-color: rgba(6, 28, 49, 0.66);
-  background-image: none;
-}
-
+/* Independent adjacent and detached surfaces. */
 headerbar,
 .titlebar,
 toolbar,
 .toolbar,
 .searchbar,
-.search-bar {
-  background-color: rgba(6, 28, 49, 0.68);
+.search-bar,
+notebook > header,
+tabbar {
+  background-color: rgba(6, 28, 49, 0.84);
   background-image: none;
 }
 
+dialog,
+popover,
+popover.background,
+popover.background > contents,
+menu,
+.menu,
+tooltip,
+.tooltip {
+  background-color: rgba(6, 28, 49, 0.72);
+  background-image: none;
+}
+
+/* Editable controls are independent functional surfaces. */
 entry,
 spinbutton,
 combobox,
+combobox > box,
 .searchbar entry,
 .search-bar entry {
-  background-color: rgba(6, 28, 49, 0.76);
+  background-color: rgba(6, 28, 49, 0.88);
   background-image: none;
 }
 
-button:hover,
+/* Ordinary buttons reveal their parent; interaction states stay distinct. */
+button:not(.suggested-action):not(.destructive-action):not(.opaque):not(.card):not(:checked):not(:active),
+modelbutton:not(:checked):not(:active),
+row.activatable:not(:selected) {
+  background-color: transparent;
+  background-image: none;
+}
+
+button:hover:not(.suggested-action):not(.destructive-action),
 modelbutton:hover,
 row.activatable:hover {
   background-color: rgba(1, 159, 167, 0.24);
   background-image: none;
 }
 
-button:active,
-button:checked,
+button:active:not(.suggested-action):not(.destructive-action),
+button:checked:not(.suggested-action):not(.destructive-action),
 modelbutton:active,
 modelbutton:checked {
   background-color: rgba(1, 159, 167, 0.40);
   background-image: none;
 }
 
-/* A popover is one surface, not a stack of nested opaque panels. */
-popover.background > contents,
+/* A popover is one surface; its inner content does not stack another one. */
 popover.background > contents > list,
 popover.background > contents > .view,
 popover.background > contents > toolbar {
-  background-color: rgba(6, 28, 49, 0.78);
+  background-color: transparent;
+  background-image: none;
+}
+
+/* Do not let upstream view defaults repaint the content canvas. */
+window.background .view,
+window.background iconview,
+window.background listview,
+window.background gridview,
+window.background columnview,
+window.background textview,
+window.background textview text {
+  background-color: transparent;
   background-image: none;
 }
 

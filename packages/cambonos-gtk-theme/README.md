@@ -36,26 +36,47 @@ sólidos se utiliza texto azul noche para conservar el contraste. Los estados de
 éxito usan iconos, indicadores y bordes verdes; las superficies pueden emplear
 verde translúcido con texto blanco cálido.
 
-## Transparencias
+## Sistema de superficies translúcidas (0.4.2)
 
-| Superficie | GTK3 | GTK4 |
-| --- | ---: | ---: |
-| Ventanas | 0.74 | 0.74 |
-| Diálogos, incluido cierre de sesión XFCE | 0.78 | 0.78 |
-| Menús, popovers y tooltips | 0.80 | 0.80 |
-| Contenido y listas | 0.66 | 0.66 |
-| Headerbar, titlebar y toolbar | 0.68 | 0.68 |
-| Campos editables | 0.76 | 0.76 |
-| Panel XFCE | 0.86 | — |
-| Whisker exterior | 0.86 | — |
+La base visual de cada ventana GTK3/GTK4 es una única superficie de azul
+medianoche `#061C31` al `0.88` (88 %). Los contenedores de composición y las
+vistas de contenido anidadas permanecen transparentes: no vuelven a pintar el
+mismo azul sobre la superficie de la ventana. Solo las superficies funcionales
+independientes (barras adyacentes, controles editables, menús y popovers)
+pintan un fondo propio. Los estados interactivos, iconos y etiquetas conservan
+sus estilos específicos. Botones, etiquetas, iconos,
+selecciones y estados semánticos conservan sus estilos propios cuando cumplen
+una función visual o interactiva específica.
 
-Whisker mantiene categorías `0.65`, lista `0.68`, búsqueda `0.76` y búsqueda
-enfocada `0.84`. Thunar mantiene el panel de archivos `0.66`, barra lateral
-`0.72` y barra de estado `0.78`.
+| Superficie | Opacidad objetivo |
+| --- | ---: |
+| Ventana base (GtkWindow) | 0.88 |
+| GtkFrame | Transparente |
+| GtkNotebook | 0.50 |
+| GtkStatusbar | Transparente |
+| GtkMenubar | 0.84 |
+| Vistas y contenedores internos | Transparente |
+| Campos editables | 0.88 |
+| Barras y cabeceras adyacentes | 0.84 |
+| Diálogos, menús, popovers y tooltips | 0.72 |
+| Panel XFCE | 0.86 |
+| Whisker exterior | 0.72 |
+| Whisker categorías | 0.52 |
+| Whisker búsqueda | 0.76–0.82 |
 
-La transparencia GTK depende de un visual con canal alfa y de la composición
-del escritorio. XFWM4 dibuja las decoraciones de ventana; su opacidad depende
-de la configuración del compositor y no se modifica desde este paquete.
+Las vistas GTK3/GTK4 y las áreas de contenido de Thunar se fuerzan a transparentes también mediante selectores específicos de mayor prioridad, para evitar que las reglas heredadas de Orchis vuelvan a pintar el contenido. Los menús y Whisker reducen su opacidad; la del panel XFCE se mantiene sin cambios. Las superficies transparentes no añaden una segunda capa. Los valores son opacidades CSS, no porcentajes de transparencia: `0.88`
+significa 88 % de azul medianoche y 12 % de contenido subyacente. Los estados
+interactivos mantienen el turquesa `#019FA7`; los colores de éxito, advertencia
+y error mantienen su semántica. Los iconos y etiquetas no reciben fondos
+indiscriminados.
+
+La transparencia GTK depende de que la ventana GTK3 solicite un visual RGBA y
+de que exista composición en el escritorio. GTK4 utiliza visuales RGBA, pero
+sigue necesitando un compositor para mostrar el escritorio a través de la
+ventana. Un tema no puede obligar a una aplicación GTK3 a solicitar un visual
+con canal alfa ni neutralizar fondos que la propia aplicación dibuje de forma
+opaca. Las decoraciones XFWM4 las dibuja el gestor de ventanas; su opacidad
+inactiva corresponde al compositor, no a las reglas CSS del tema.
 
 ## GTK4 y libadwaita
 
@@ -84,3 +105,44 @@ modifica preferencias del usuario y no incorpora scripts ni hooks ALPM.
 
 La validación final de renderizado debe realizarse en una sesión XFCE real,
 con compositor activado y desactivado y en distintas resoluciones y escalados.
+
+
+### 0.4.3 — GTK3 surface roles
+
+- GtkWindow: midnight-blue base surface at 0.88 opacity.
+- GtkFrame: transparent, without an independent background image.
+- GtkNotebook: tinted midnight-blue content surface at 0.40 opacity.
+- GtkStatusbar: transparent.
+- GtkMenubar: midnight-blue surface at 0.55 opacity; inactive windows use 0.45 opacity.
+
+
+### 0.4.4 — Consolidated GTK3 surface cascade
+
+- Reconciles the inherited Orchis base declarations with the CambonOS surface policy instead of relying on competing duplicate rules.
+- GtkWindow remains the 0.88 midnight-blue base surface.
+- GtkFrame remains transparent without removing its borders or functional states.
+- GtkNotebook uses the 0.40 tinted surface in both framed and unframed forms; its stack remains transparent.
+- GtkStatusbar and its frame containers are transparent, including the Thunar-specific statusbar.
+- GtkMenubar uses the 0.55 midnight-blue surface, including when embedded in a headerbar; inactive menubars use 0.45.
+- GTK4 styling, XFCE panel, Whisker Menu, window decorations, and functional interaction states are otherwise unchanged.
+
+
+### 0.4.5 — Normalized GTK3 surface policy
+
+- Consolidates GTK3 surface declarations into one authoritative policy with selectors scoped to window backgrounds.
+- GtkWindow uses the 0.88 midnight-blue base surface.
+- GtkFrame backgrounds are transparent while frame borders remain styled.
+- GtkNotebook uses a 0.50 midnight-blue tint; its content stack is transparent.
+- GtkStatusbar is transparent, including the Thunar statusbar, while retaining spacing and separator styling.
+- GtkMenubar uses a 0.84 midnight-blue surface; inactive menubars retain the 0.45 backdrop treatment.
+- GTK4, XFCE panel, Whisker Menu, XFWM4 decorations and functional interaction states are unchanged.
+
+
+## 0.4.6 — GTK3 surface and selection corrections
+
+- Consolidates GTK3 frame, notebook, statusbar and menubar surface treatments after upstream Orchis rules.
+- Keeps the Whisker outer frame transparent without changing its category, application-list or search treatments.
+- Targets the XFCE Terminal root content box using its GTK `background` style class rather than an invented application CSS class.
+- Restores explicit GTK3 checkbox/radio indicator icon sources and their checked/indeterminate/disabled states.
+- Defines a shared turquoise rubberband treatment for GTK3 icon/tree views, Thunar and Xfdesktop, while retaining a separate selected-item state.
+- GTK4 styling is unchanged; GTK3-specific widget selectors are not copied into GTK4.

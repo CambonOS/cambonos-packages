@@ -14,7 +14,7 @@ class GtkThemePackageTests(unittest.TestCase):
     def test_package_metadata_and_version(self):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
-        self.assertIn("pkgver=0.3.0", pkgb)
+        self.assertIn("pkgver=0.4.6", pkgb)
         self.assertIn("pkgrel=1", pkgb)
         self.assertIn("license=('GPL-3.0-only')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
@@ -77,11 +77,14 @@ class GtkThemePackageTests(unittest.TestCase):
     def test_translucency_policy(self):
         gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
         gtk4 = (THEME / "gtk-4.0/gtk.css").read_text(encoding="utf-8")
-        self.assertRegex(gtk3, re.compile(r"headerbar,\s*\.titlebar,.*?background-color: rgba\(6, 28, 49, 0\.68\)", re.S))
+        self.assertIn("@define-color theme_bg_color rgba(6, 28, 49, 0.88);", gtk3)
+        self.assertIn("@define-color window_bg_color rgba(6, 28, 49, 0.88);", gtk4)
+        self.assertRegex(gtk3, re.compile(r"window,\s*window\.background,.*?background-color: rgba\(6, 28, 49, 0\.88\)", re.S))
         self.assertRegex(gtk3, r"\.xfce4-panel\.background\s*\{[^}]*background-color: rgba\(6, 28, 49, 0\.86\)", re.S)
-        self.assertRegex(gtk3, r"\.xfsm-logout-dialog\s*\{[^}]*background-color: rgba\(6, 28, 49, 0\.78\)", re.S)
-        self.assertIn("background-color: rgba(6, 28, 49, 0.68);", gtk4)
-        self.assertIn("background-color: rgba(6, 28, 49, 0.78);", gtk4)
+        self.assertIn("background-color: rgba(6, 28, 49, 0.88);", gtk4)
+        self.assertIn("button:not(.suggested-action):not(.destructive-action)", gtk3)
+        self.assertIn("XfdesktopIconView.view label", gtk3)
+        self.assertIn("success_color #149246", gtk4)
 
     def test_whisker_and_thunar_integrations_remain(self):
         gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
@@ -139,6 +142,35 @@ class GtkThemePackageTests(unittest.TestCase):
                 if ref.startswith(("data:", "http:", "https:")):
                     continue
                 self.assertTrue((directory / ref).resolve().exists(), f"{toolkit}: {ref}")
+
+    def test_gtk3_surface_policy_and_xfce_terminal_root_box(self):
+        gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
+        self.assertIn("window.background frame,", gtk3)
+        self.assertIn("notebook.frame,", gtk3)
+        self.assertIn("window.background notebook", gtk3)
+        self.assertIn("background-color: rgba(6, 28, 49, 0.50);", gtk3)
+        self.assertIn("statusbar,", gtk3)
+        self.assertIn(".thunar statusbar", gtk3)
+        self.assertIn("menubar,", gtk3)
+        self.assertIn(".menubar,", gtk3)
+        self.assertIn("background-color: rgba(6, 28, 49, 0.84);", gtk3)
+        self.assertIn("window.background > box.background", gtk3)
+        self.assertIn("window.background > box.background notebook", gtk3)
+        self.assertIn("window.background > box.background menubar", gtk3)
+        self.assertNotIn("window.xfce4-terminal box", gtk3)
+
+    def test_gtk3_selection_indicators_and_rubberband(self):
+        gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
+        for selector in ("check:checked", "check:indeterminate", "radio:checked",
+                         "radio:indeterminate", "rubberband",
+                         "XfdesktopIconView.view rubberband",
+                         ".thunar .standard-view.frame iconview.view > rubberband"):
+            self.assertIn(selector, gtk3)
+        for asset in ("unchecked-symbolic.svg", "checkbox-checked-symbolic.svg",
+                      "radio-checked-symbolic.svg", "mixed-symbolic.svg"):
+            self.assertIn(f'url("assets/scalable/{asset}")', gtk3)
+        self.assertIn("background-color: rgba(1, 159, 167, 0.24);", gtk3)
+        self.assertIn("XfdesktopIconView.view:selected", gtk3)
 
     def test_xfwm4_symlinks_resolve(self):
         for path in (THEME / "xfwm4").rglob("*"):
