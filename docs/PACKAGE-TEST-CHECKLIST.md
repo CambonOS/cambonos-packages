@@ -75,6 +75,7 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 ## cambonos-plymouth
 
 - [ ] Plymouth selecciona y muestra el tema CambonOS con el plugin `script`.
+- [ ] Plymouth carga el icono, el fondo y los recursos de progreso desde `cambonos-branding`, también dentro del initramfs.
 - [ ] El logo y la barra escalan proporcionalmente desde la resolución de referencia `1920x1080`.
 - [ ] El logo y la barra de progreso se muestran correctamente durante el arranque.
 - [x] La integración con mkinitcpio incorpora Plymouth a las imágenes initramfs.

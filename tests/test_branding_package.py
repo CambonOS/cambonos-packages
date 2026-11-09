@@ -11,7 +11,12 @@ PKGBUILD = PACKAGE / "PKGBUILD"
 
 CANONICAL_SVGS = {"cambonos-icon.svg", "cambonos-text.svg"}
 CANONICAL_PNGS = {"cambonos-icon.png", "cambonos-text.png"}
-GRAPHIC_ASSETS = CANONICAL_SVGS | CANONICAL_PNGS
+PLYMOUTH_ASSETS = {
+    "plymouth-background.png",
+    "progress-background.png.base64",
+    "progress-foreground.png.base64",
+}
+GRAPHIC_ASSETS = CANONICAL_SVGS | CANONICAL_PNGS | {"plymouth-background.png"}
 REMOVED_ASSETS = {
     "cambonos-icon-black.svg",
     "cambonos-icon-white.svg",
@@ -22,13 +27,14 @@ REMOVED_ASSETS = {
 PNG_DIMENSIONS = {
     "cambonos-icon.png": (1024, 1024),
     "cambonos-text.png": (3792, 1024),
+    "plymouth-background.png": (3840, 2160),
 }
 
 
 class BrandingPackageTests(unittest.TestCase):
     def test_source_contains_graphic_assets_license_and_ttf_directory(self):
         names = {path.name for path in FILES.iterdir()}
-        self.assertEqual(names, GRAPHIC_ASSETS | {"LICENSE", "ttf"})
+        self.assertEqual(names, GRAPHIC_ASSETS | PLYMOUTH_ASSETS | {"LICENSE", "ttf"})
         self.assertTrue((TTF_DIR / "CambonOS-Symbols.ttf").is_file())
         self.assertTrue((TTF_DIR / "65-cambonos-symbols.conf").is_file())
         self.assertFalse(REMOVED_ASSETS.intersection(names))
@@ -37,6 +43,10 @@ class BrandingPackageTests(unittest.TestCase):
         content = PKGBUILD.read_text(encoding="utf-8")
         for name in sorted(GRAPHIC_ASSETS):
             self.assertIn(f'"$branding_dir/{name}"', content)
+        self.assertIn('"$startdir/files/progress-background.png.base64"', content)
+        self.assertIn('"$startdir/files/progress-foreground.png.base64"', content)
+        self.assertIn('"$branding_dir/progress-background.png"', content)
+        self.assertIn('"$branding_dir/progress-foreground.png"', content)
         self.assertIn('"$font_dir/CambonOS-Symbols.ttf"', content)
         self.assertIn('"$fontconfig_avail/65-cambonos-symbols.conf"', content)
         self.assertIn('"$fontconfig_default/65-cambonos-symbols.conf"', content)

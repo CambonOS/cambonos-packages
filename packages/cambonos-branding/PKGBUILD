@@ -1,6 +1,6 @@
 pkgname=cambonos-branding
 pkgver=0.1.1
-pkgrel=6
+pkgrel=8
 pkgdesc="CambonOS visual identity assets"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
@@ -23,6 +23,12 @@ package() {
     "$branding_dir/cambonos-icon.png"
   install -Dm644 "$startdir/files/cambonos-text.png" \
     "$branding_dir/cambonos-text.png"
+  install -Dm644 "$startdir/files/plymouth-background.png" \
+    "$branding_dir/plymouth-background.png"
+  base64 --decode "$startdir/files/progress-background.png.base64" \
+    > "$branding_dir/progress-background.png"
+  base64 --decode "$startdir/files/progress-foreground.png.base64" \
+    > "$branding_dir/progress-foreground.png"
 
   # Install the prebuilt symbol font as a static branding resource.
   install -Dm644 "$startdir/files/ttf/CambonOS-Symbols.ttf" \

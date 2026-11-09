@@ -3,6 +3,7 @@ reference_height = 1080;
 logo_vertical_alignment = 0.5;
 progress_reference_width = 420;
 progress_reference_height = 8;
+logo_reference_width = 512;
 
 Window.SetBackgroundTopColor(0.0235, 0.1098, 0.1922);
 Window.SetBackgroundBottomColor(0.0235, 0.1098, 0.1922);
@@ -18,7 +19,7 @@ if (scale_x < scale_y)
 else
   screen_scale = scale_y;
 
-background_original = Image("background.png");
+background_original = Image("plymouth-background.png");
 background_scale_x = window_width / background_original.GetWidth();
 background_scale_y = window_height / background_original.GetHeight();
 if (background_scale_x > background_scale_y)
@@ -37,9 +38,9 @@ background_image = background_scaled.Crop(
 background_sprite = Sprite(background_image);
 background_sprite.SetPosition(window_x, window_y, 0);
 
-logo_original = Image("header-image.png");
-logo_width = Math.Int(logo_original.GetWidth() * screen_scale);
-logo_height = Math.Int(logo_original.GetHeight() * screen_scale);
+logo_original = Image("cambonos-icon.png");
+logo_width = Math.Int(logo_reference_width * screen_scale);
+logo_height = Math.Int(logo_width * logo_original.GetHeight() / logo_original.GetWidth());
 logo_image = logo_original.Scale(logo_width, logo_height);
 logo_sprite = Sprite(logo_image);
 logo_x = window_x + Math.Int((window_width - logo_width) / 2);

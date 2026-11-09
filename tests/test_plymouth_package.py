@@ -10,13 +10,14 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "packages" / "cambonos-plymouth"
 FILES = PACKAGE / "files"
 THEME = FILES / "themes" / "cambonos"
+BRANDING_FILES = ROOT / "packages" / "cambonos-branding" / "files"
 
 
 class PlymouthPackageTests(unittest.TestCase):
     def test_metadata_dependencies_and_mkinitcpio_backup(self):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-plymouth", pkgb)
-        self.assertIn("depends=('plymouth' 'mkinitcpio>=36')", pkgb)
+        self.assertIn("depends=('plymouth' 'mkinitcpio>=36' 'cambonos-branding')", pkgb)
         self.assertIn(
             "backup=('etc/mkinitcpio.conf.d/90-cambonos-plymouth.conf')", pkgb
         )
@@ -30,21 +31,12 @@ class PlymouthPackageTests(unittest.TestCase):
         )
         self.assertEqual(referenced, assets)
         self.assertIn("cambonos.plymouth", assets)
-        self.assertIn("header-image.png", assets)
-        self.assertIn("background.png", assets)
+        self.assertIn("cambonos.script", assets)
+        self.assertNotIn("header-image.png", assets)
+        self.assertNotIn("background.png", assets)
         self.assertFalse(any(name.startswith(("animation-", "throbber-")) for name in assets))
-        for filename, dimensions in (
-            ("background.png", "3840 x 2160"),
-            ("header-image.png", "512 x 512"),
-        ):
-            result = subprocess.run(
-                ["file", str(THEME / filename)],
-                text=True,
-                capture_output=True,
-                check=False,
-            )
-            self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn(dimensions, result.stdout)
+        self.assertNotIn('"$startdir/files/themes/cambonos/background.png"', pkgb)
+        self.assertNotIn('"$startdir/files/themes/cambonos/header-image.png"', pkgb)
 
     def test_theme_uses_progress_bar_without_spinner(self):
         theme = (THEME / "cambonos.plymouth").read_text(encoding="utf-8")
@@ -70,6 +62,9 @@ class PlymouthPackageTests(unittest.TestCase):
         script = (THEME / "cambonos.script").read_text(encoding="utf-8")
         self.assertIn("reference_width = 1920", script)
         self.assertIn("reference_height = 1080", script)
+        self.assertIn("logo_reference_width = 512", script)
+        self.assertIn("logo_width = Math.Int(logo_reference_width * screen_scale)", script)
+        self.assertIn("logo_height = Math.Int(logo_width * logo_original.GetHeight() / logo_original.GetWidth())", script)
         self.assertIn("logo_original.Scale(logo_width, logo_height)", script)
         self.assertIn("progress_background_original.Scale(progress_width, progress_height)", script)
         self.assertIn("progress_foreground_original.Scale(filled_width, progress_height)", script)
@@ -78,11 +73,12 @@ class PlymouthPackageTests(unittest.TestCase):
         theme = (THEME / "cambonos.plymouth").read_text(encoding="utf-8")
         script = (THEME / "cambonos.script").read_text(encoding="utf-8")
         for value in (
-            "ImageDir=/usr/share/plymouth/themes/cambonos",
+            "ImageDir=/usr/share/cambonos/branding",
             "ConsoleLogBackgroundColor=0x061C31",
         ):
             self.assertIn(value, theme)
-        self.assertIn('Image("background.png")', script)
+        self.assertIn('Image("plymouth-background.png")', script)
+        self.assertIn('Image("cambonos-icon.png")', script)
         self.assertIn('Image("progress-background.png")', script)
         self.assertIn('Image("progress-foreground.png")', script)
         for filename, color in (
@@ -90,7 +86,7 @@ class PlymouthPackageTests(unittest.TestCase):
             ("progress-foreground.png.base64", bytes.fromhex("70E7E6")),
         ):
             decoded = subprocess.run(
-                ["base64", "--decode", str(THEME / filename)],
+                ["base64", "--decode", str(BRANDING_FILES / filename)],
                 capture_output=True,
                 check=False,
             )

@@ -1,11 +1,11 @@
 pkgname=cambonos-plymouth
 pkgver=0.1.1
-pkgrel=4
+pkgrel=6
 pkgdesc="CambonOS Plymouth theme and mkinitcpio integration"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
-depends=('plymouth' 'mkinitcpio>=36')
+depends=('plymouth' 'mkinitcpio>=36' 'cambonos-branding')
 backup=('etc/mkinitcpio.conf.d/90-cambonos-plymouth.conf')
 install=cambonos-plymouth.install
 
@@ -22,16 +22,8 @@ package() {
     "$startdir/files/themes/cambonos/cambonos.script" \
     "$startdir/files/themes/cambonos/capslock.png" \
     "$startdir/files/themes/cambonos/entry.png" \
-    "$startdir/files/themes/cambonos/background.png" \
-    "$startdir/files/themes/cambonos/header-image.png" \
     "$startdir/files/themes/cambonos/keyboard.png" \
     "$startdir/files/themes/cambonos/keymap-render.png" \
     "$startdir/files/themes/cambonos/lock.png" \
-    "$startdir/files/themes/cambonos/progress-background.png.base64" \
-    "$startdir/files/themes/cambonos/progress-foreground.png.base64" \
     "$pkgdir/usr/share/plymouth/themes/cambonos/"
-  base64 --decode "$startdir/files/themes/cambonos/progress-background.png.base64" \
-    > "$pkgdir/usr/share/plymouth/themes/cambonos/progress-background.png"
-  base64 --decode "$startdir/files/themes/cambonos/progress-foreground.png.base64" \
-    > "$pkgdir/usr/share/plymouth/themes/cambonos/progress-foreground.png"
 }
