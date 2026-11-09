@@ -26,8 +26,9 @@ adaptaciones propias se limitan a la paleta y a integraciones XFCE.
 | Texto, también sobre selección | `#F7F5EC` |
 | Barra y desplegables de menú | Azul medianoche al 88 % |
 
-Las ventanas GTK usan una sola superficie azul medianoche con alpha `0.88`.
-Contenedores internos son transparentes; barras y campos usan capas de baja
+Las ventanas GTK usan una superficie azul medianoche con alpha `0.88`. Los
+`GtkBox` hijos directos de la ventana usan esa misma superficie; otros
+contenedores internos son transparentes. Barras y campos usan capas de baja
 opacidad. La barra y los menús desplegables usan azul medianoche al 88 % para
 que el texto del menú conserve contraste. Selección y foco permanecen turquesa para
 conservar contraste. Las superficies conservan el mismo alpha al perder el

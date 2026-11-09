@@ -15,7 +15,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.4.6", pkgb)
-        self.assertIn("pkgrel=12", pkgb)
+        self.assertIn("pkgrel=13", pkgb)
         self.assertIn("license=('GPL-3.0-only')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -188,6 +188,17 @@ class GtkThemePackageTests(unittest.TestCase):
         self.assertIn("background-color: rgba(6, 28, 49, 0.88);", gtk3)
         self.assertNotIn("terminal-window.background.csd", gtk3)
         self.assertNotIn("#MozillaGtkWidget", gtk3)
+
+    def test_direct_window_boxes_use_window_surface(self):
+        for toolkit in ("gtk-3.0", "gtk-4.0"):
+            css = (THEME / toolkit / "gtk.css").read_text(encoding="utf-8")
+            start = css.rfind("window > box {")
+            self.assertGreaterEqual(start, 0, toolkit)
+            block_start = css.find("{", start)
+            block_end = css.find("}", block_start)
+            block = css[block_start:block_end]
+            self.assertIn("background-color: rgba(6, 28, 49, 0.88);", block)
+            self.assertIn("background-image: none;", block)
 
     def test_gtk3_selection_indicators_and_rubberband(self):
         gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")

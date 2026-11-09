@@ -5476,8 +5476,13 @@ window.background.csd {
   color: #F7F5EC;
 }
 
-/* Content and layout reveal the parent window canvas. */
-window > box,
+/* Direct GtkBox children keep the window's midnight surface. */
+window > box {
+  background-color: rgba(6, 28, 49, 0.88);
+  background-image: none;
+}
+
+/* Other content and layout widgets reveal the parent window canvas. */
 window > grid,
 window > paned,
 window > overlay,
