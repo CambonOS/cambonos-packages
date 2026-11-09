@@ -3017,12 +3017,16 @@ printdialog .dialog-action-box {
 /**********
  * Frames *
  **********/
-frame > border, .frame {
+frame,
+frame > border,
+.frame {
   margin: 0;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0;
   box-shadow: none;
+  background-color: rgba(6, 28, 49, 0.88);
+  background-image: none;
 }
 
 .frame.view {
@@ -4404,7 +4408,6 @@ window > revealer,
 window > scrolledwindow,
 window viewport,
 window scrolledwindow,
-window frame,
 window .view:not(:selected),
 window treeview.view:not(:selected),
 window iconview.view:not(:selected),
@@ -4413,8 +4416,7 @@ window textview text,
 window .content-view,
 window .sidebar,
 window .sidebar .view:not(:selected),
-.thunar .standard-view,
-.thunar .standard-view.frame,
+.thunar .standard-view:not(.frame),
 .thunar .standard-view.frame widget.view:not(:selected) {
   background-color: transparent;
   background-image: none;
@@ -4522,7 +4524,7 @@ window#whiskermenu-window box.categories > button.radio:active {
 }
 
 window#whiskermenu-window scrolledwindow.frame {
-  background-color: transparent;
+  background-color: rgba(6, 28, 49, 0.88);
   background-image: none;
 }
 
@@ -4538,8 +4540,7 @@ window#whiskermenu-window entry.search:focus {
 /* Thunar panes are transparent over the main window surface. */
 .thunar .sidebar,
 .thunar .sidebar .view:not(:selected),
-.thunar .standard-view,
-.thunar .standard-view.frame,
+.thunar .standard-view:not(.frame),
 .thunar .standard-view.frame widget.view:not(:selected) {
   background-color: transparent;
   background-image: none;
@@ -4547,13 +4548,12 @@ window#whiskermenu-window entry.search:focus {
 
 /* Content views are not independent surfaces: reveal the translucent
  * toplevel canvas instead of repainting an almost opaque .view layer. */
-window.background .view:not(:selected),
+window.background .view:not(.frame):not(:selected),
 window.background treeview.view:not(:selected),
 window.background iconview.view:not(:selected),
 window.background textview,
 window.background textview text,
-.thunar window.background .standard-view,
-.thunar window.background .standard-view.frame,
+.thunar window.background .standard-view:not(.frame),
 .thunar window.background .standard-view.frame widget.view:not(:selected) {
   background-color: transparent;
   background-image: none;
@@ -4600,13 +4600,13 @@ window.background.solid-csd {
   background-image: none;
 }
 
-/* GtkFrame: remove the fill, but retain frame > border geometry. */
+/* GtkFrame surfaces use the same translucent midnight window color. */
 frame,
 window.background frame,
 window.background.csd frame,
 window#whiskermenu-window > frame,
 window#whiskermenu-window > frame > border {
-  background-color: transparent;
+  background-color: rgba(6, 28, 49, 0.88);
   background-image: none;
 }
 
@@ -4622,7 +4622,7 @@ window#whiskermenu-window.background {
 
 window#whiskermenu-window > frame,
 window#whiskermenu-window > frame > border {
-  background-color: transparent;
+  background-color: rgba(6, 28, 49, 0.88);
   background-image: none;
   box-shadow: none;
 }

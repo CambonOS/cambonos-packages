@@ -3551,6 +3551,8 @@ window.dialog.print .dialog-action-box {
 frame,
 .frame {
   border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: rgba(6, 28, 49, 0.88);
+  background-image: none;
 }
 
 frame > list,
@@ -5491,8 +5493,7 @@ window > revealer,
 window > scrolledwindow,
 window viewport,
 window scrolledwindow,
-window frame,
-window .view:not(:selected),
+window .view:not(.frame):not(:selected),
 window iconview,
 window listview,
 window gridview,
