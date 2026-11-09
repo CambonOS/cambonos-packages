@@ -1,0 +1,14 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Package
+Target = xfce4-terminal
+
+[Action]
+Description = Actualizando la paleta predeterminada de Xfce Terminal de CambonOS...
+When = PostTransaction
+Depends = bash
+Depends = coreutils
+Depends = gawk
+Exec = /usr/lib/cambonos-branding/manage-xfce-terminal --sync

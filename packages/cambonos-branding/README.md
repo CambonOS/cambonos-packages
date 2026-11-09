@@ -8,7 +8,13 @@ Recursos visuales oficiales de CambonOS para aplicaciones, instaladores y compon
 - Fondo 4K y recursos gráficos de la barra de progreso de Plymouth.
 - Tipografía CambonOS Symbols y configuración de Fontconfig.
 - Paleta ANSI de CambonOS aplicada a las consolas virtuales.
+- Predeterminado global de colores para Xfce Terminal cuando está instalado.
+
+La integración de Xfce Terminal modifica solo los valores globales de paleta,
+fondo y texto en `/etc/xdg/xfce4/terminal/terminalrc`. Conserva las demás
+opciones y las configuraciones de usuario; al desinstalar `xfce4-terminal`
+restaura los valores globales anteriores.
 
 ## Dependencias
 
-`fontconfig`, `kbd`.
+`bash`, `coreutils`, `fontconfig`, `gawk`, `kbd`.

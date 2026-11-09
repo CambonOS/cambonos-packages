@@ -1,3 +1,6 @@
+import os
+import subprocess
+import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -17,6 +20,7 @@ PLYMOUTH_ASSETS = {
     "progress-foreground.png.base64",
 }
 CONSOLE_ASSETS = {"console-colors", "90-cambonos-console-colors.rules"}
+XFCE_TERMINAL_ASSETS = {"hooks", "lib", "xfce-terminalrc"}
 GRAPHIC_ASSETS = CANONICAL_SVGS | CANONICAL_PNGS | {"plymouth-background.png"}
 REMOVED_ASSETS = {
     "cambonos-icon-black.svg",
@@ -37,10 +41,17 @@ class BrandingPackageTests(unittest.TestCase):
         names = {path.name for path in FILES.iterdir()}
         self.assertEqual(
             names,
-            GRAPHIC_ASSETS | PLYMOUTH_ASSETS | CONSOLE_ASSETS | {"LICENSE", "ttf"},
+            GRAPHIC_ASSETS
+            | PLYMOUTH_ASSETS
+            | CONSOLE_ASSETS
+            | XFCE_TERMINAL_ASSETS
+            | {"LICENSE", "ttf"},
         )
         self.assertTrue((TTF_DIR / "CambonOS-Symbols.ttf").is_file())
         self.assertTrue((TTF_DIR / "65-cambonos-symbols.conf").is_file())
+        self.assertTrue((FILES / "lib/manage-xfce-terminal").is_file())
+        self.assertTrue((FILES / "hooks/cambonos-branding-xfce-terminal.hook").is_file())
+        self.assertTrue((FILES / "xfce-terminalrc").is_file())
         self.assertFalse(REMOVED_ASSETS.intersection(names))
 
     def test_pkgbuild_installs_svg_png_and_font_assets(self):
@@ -54,11 +65,18 @@ class BrandingPackageTests(unittest.TestCase):
         self.assertIn('"$font_dir/CambonOS-Symbols.ttf"', content)
         self.assertIn('"$fontconfig_avail/65-cambonos-symbols.conf"', content)
         self.assertIn('"$fontconfig_default/65-cambonos-symbols.conf"', content)
-        self.assertIn("depends=('fontconfig' 'kbd')", content)
+        self.assertIn(
+            "depends=('bash' 'coreutils' 'fontconfig' 'gawk' 'kbd')", content
+        )
+        self.assertIn("pkgrel=10", content)
+        self.assertIn("install=cambonos-branding.install", content)
         self.assertIn('"$branding_dir/console-colors"', content)
         self.assertIn(
             '"$udev_rules_dir/90-cambonos-console-colors.rules"', content
         )
+        self.assertIn('"$pkgdir/usr/share/cambonos/branding/xfce-terminalrc"', content)
+        self.assertIn('"$pkgdir/usr/lib/cambonos-branding/manage-xfce-terminal"', content)
+        self.assertIn('"$libalpm_hooks_dir/cambonos-branding-xfce-terminal.hook"', content)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', content)
         self.assertNotIn("/usr/share/icons/", content)
         self.assertNotIn("/usr/share/pixmaps/", content)
@@ -103,6 +121,23 @@ class BrandingPackageTests(unittest.TestCase):
             "/usr/share/cambonos/branding/console-colors\"",
         )
 
+    def test_xfce_terminal_hook_tracks_package_lifecycle(self):
+        hook = (FILES / "hooks/cambonos-branding-xfce-terminal.hook").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("Operation = Install", hook)
+        self.assertIn("Operation = Upgrade", hook)
+        self.assertIn("Operation = Remove", hook)
+        self.assertIn("Type = Package", hook)
+        self.assertIn("Target = xfce4-terminal", hook)
+        self.assertIn("When = PostTransaction", hook)
+        self.assertIn(
+            "Exec = /usr/lib/cambonos-branding/manage-xfce-terminal --sync", hook
+        )
+        self.assertIn("post_install()", (PACKAGE / "cambonos-branding.install").read_text())
+        self.assertIn("post_upgrade()", (PACKAGE / "cambonos-branding.install").read_text())
+        self.assertIn("pre_remove()", (PACKAGE / "cambonos-branding.install").read_text())
+
     def test_canonical_svgs_are_well_formed_xml(self):
         for name in sorted(CANONICAL_SVGS):
             with self.subTest(asset=name):
@@ -131,6 +166,140 @@ class BrandingPackageTests(unittest.TestCase):
     def test_ttf_has_a_valid_sfnt_signature(self):
         signature = (TTF_DIR / "CambonOS-Symbols.ttf").read_bytes()[:4]
         self.assertIn(signature, {b"\x00\x01\x00\x00", b"OTTO", b"true", b"typ1"})
+
+
+class XfceTerminalDefaultTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="cambonos-xfce-terminal-")
+        self.root = Path(self.temp.name)
+        self.config_dir = self.root / "etc/xdg/xfce4/terminal"
+        self.config = self.config_dir / "terminalrc"
+        self.state = self.root / "var/lib/cambonos-branding/xfce4-terminal"
+        self.fake_bin = self.root / "bin"
+        self.fake_bin.mkdir()
+        self.installed_marker = self.root / "xfce4-terminal-installed"
+        self.helper = self.root / "manage-xfce-terminal"
+
+        source = (FILES / "lib/manage-xfce-terminal").read_text(encoding="utf-8")
+        source = source.replace(
+            '"/etc/xdg/xfce4/terminal"', f'"{self.config_dir}"'
+        )
+        source = source.replace(
+            '"/etc/xdg/xfce4/terminal/terminalrc"', f'"{self.config}"'
+        )
+        source = source.replace(
+            '"/var/lib/cambonos-branding/xfce4-terminal"', f'"{self.state}"'
+        )
+        source = source.replace(
+            '"/usr/share/cambonos/branding/xfce-terminalrc"',
+            f'"{FILES / "xfce-terminalrc"}"',
+        )
+        self.assertIn(f'CONFIG_DIR="{self.config_dir}"', source)
+        self.assertIn('CONFIG_FILE="$CONFIG_DIR/terminalrc"', source)
+        self.assertIn(f'STATE_DIR="{self.state}"', source)
+        self.assertNotIn('CONFIG_DIR="/etc/xdg/', source)
+        self.assertNotIn('STATE_DIR="/var/lib/', source)
+        self.assertNotIn('"/etc/xdg/', source)
+        self.helper.write_text(source, encoding="utf-8")
+        pacman = self.fake_bin / "pacman"
+        pacman.write_text(
+            '#!/usr/bin/bash\n[[ -f "$TEST_XFCE_INSTALLED" ]]\n', encoding="utf-8"
+        )
+        pacman.chmod(0o755)
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def run_helper(self, *args):
+        env = os.environ.copy()
+        env["PATH"] = f"{self.fake_bin}:{env['PATH']}"
+        env["TEST_XFCE_INSTALLED"] = str(self.installed_marker)
+        return subprocess.run(
+            ["bash", str(self.helper), *args],
+            text=True,
+            capture_output=True,
+            env=env,
+            check=False,
+        )
+
+    def test_sync_and_remove_restore_existing_global_configuration(self):
+        self.config_dir.mkdir(parents=True)
+        original = (
+            "[Configuration]\n"
+            "FontName=Monospace 10\n"
+            "ColorUseTheme=TRUE\n"
+            "ColorBackground=#101010\n"
+            "ColorForeground=#EEEEEE\n"
+            "ColorPalette=old-palette\n"
+            "MiscAlwaysShowTabs=TRUE\n"
+        )
+        self.config.write_text(original, encoding="utf-8")
+        self.installed_marker.touch()
+
+        result = self.run_helper("--sync")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        configured = self.config.read_text(encoding="utf-8")
+        self.assertIn("ColorUseTheme=FALSE", configured)
+        self.assertIn("ColorBackground=#061C31", configured)
+        self.assertIn("ColorForeground=#F7F5EC", configured)
+        self.assertIn("ColorPalette=#061C31;#A63E4B;", configured)
+        self.assertIn("FontName=Monospace 10", configured)
+        self.assertIn("MiscAlwaysShowTabs=TRUE", configured)
+
+        self.installed_marker.unlink()
+        result = self.run_helper("--sync")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.config.read_text(encoding="utf-8"), original)
+        self.assertFalse(self.state.exists())
+
+    def test_sync_does_nothing_when_terminal_is_not_installed(self):
+        result = self.run_helper("--sync")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(self.config.exists())
+        self.assertFalse(self.state.exists())
+
+    def test_remove_deletes_managed_config_when_no_original_existed(self):
+        self.installed_marker.touch()
+        result = self.run_helper("--sync")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(self.config.is_file())
+
+        self.installed_marker.unlink()
+        result = self.run_helper("--sync")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(self.config.exists())
+        self.assertFalse(self.state.exists())
+
+    def test_remove_preserves_administrator_edits(self):
+        self.config_dir.mkdir(parents=True)
+        original = (
+            "[Configuration]\n"
+            "FontName=Monospace 10\n"
+            "ColorUseTheme=TRUE\n"
+            "ColorBackground=#101010\n"
+            "ColorForeground=#EEEEEE\n"
+            "ColorPalette=old-palette\n"
+        )
+        self.config.write_text(original, encoding="utf-8")
+        self.installed_marker.touch()
+        result = self.run_helper("--sync")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+        configured = self.config.read_text(encoding="utf-8")
+        configured = configured.replace("ColorBackground=#061C31", "ColorBackground=#ABCDEF")
+        configured += "MiscAlwaysShowTabs=TRUE\n"
+        self.config.write_text(configured, encoding="utf-8")
+        self.installed_marker.unlink()
+        result = self.run_helper("--sync")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+        restored = self.config.read_text(encoding="utf-8")
+        self.assertIn("ColorBackground=#ABCDEF", restored)
+        self.assertIn("ColorUseTheme=TRUE", restored)
+        self.assertIn("ColorForeground=#EEEEEE", restored)
+        self.assertIn("ColorPalette=old-palette", restored)
+        self.assertIn("MiscAlwaysShowTabs=TRUE", restored)
+        self.assertFalse(self.state.exists())
 
 
 

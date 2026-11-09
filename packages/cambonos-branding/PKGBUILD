@@ -1,12 +1,13 @@
 pkgname=cambonos-branding
 pkgver=0.1.1
-pkgrel=9
+pkgrel=10
 pkgdesc="CambonOS visual identity assets"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
 groups=('cambonos-base')
-depends=('fontconfig' 'kbd')
+depends=('bash' 'coreutils' 'fontconfig' 'gawk' 'kbd')
+install=cambonos-branding.install
 
 package() {
   local branding_dir="$pkgdir/usr/share/cambonos/branding"
@@ -14,6 +15,7 @@ package() {
   local fontconfig_avail="$pkgdir/usr/share/fontconfig/conf.avail"
   local fontconfig_default="$pkgdir/usr/share/fontconfig/conf.default"
   local udev_rules_dir="$pkgdir/usr/lib/udev/rules.d"
+  local libalpm_hooks_dir="$pkgdir/usr/share/libalpm/hooks"
 
   # Canonical location: all original branding assets live here.
   install -Dm644 "$startdir/files/cambonos-icon.svg" \
@@ -34,6 +36,12 @@ package() {
     "$branding_dir/console-colors"
   install -Dm644 "$startdir/files/90-cambonos-console-colors.rules" \
     "$udev_rules_dir/90-cambonos-console-colors.rules"
+  install -Dm644 "$startdir/files/xfce-terminalrc" \
+    "$pkgdir/usr/share/cambonos/branding/xfce-terminalrc"
+  install -Dm755 "$startdir/files/lib/manage-xfce-terminal" \
+    "$pkgdir/usr/lib/cambonos-branding/manage-xfce-terminal"
+  install -Dm644 "$startdir/files/hooks/cambonos-branding-xfce-terminal.hook" \
+    "$libalpm_hooks_dir/cambonos-branding-xfce-terminal.hook"
 
   # Install the prebuilt symbol font as a static branding resource.
   install -Dm644 "$startdir/files/ttf/CambonOS-Symbols.ttf" \

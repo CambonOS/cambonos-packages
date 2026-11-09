@@ -1,0 +1,13 @@
+post_install() {
+  /usr/lib/cambonos-branding/manage-xfce-terminal --sync || \
+    printf '%s\n' 'cambonos-branding: no se pudo sincronizar el predeterminado de Xfce Terminal.' >&2
+}
+
+post_upgrade() {
+  post_install
+}
+
+pre_remove() {
+  /usr/lib/cambonos-branding/manage-xfce-terminal --remove || \
+    printf '%s\n' 'cambonos-branding: no se pudo restaurar la configuración previa de Xfce Terminal.' >&2
+}
