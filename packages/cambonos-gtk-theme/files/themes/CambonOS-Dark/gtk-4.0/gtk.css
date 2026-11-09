@@ -5656,21 +5656,17 @@ tabbar tab:active {
   background-image: none;
 }
 
-/* Mouse-drag selection: translucent turquoise fill with a crisp edge. */
-rubberband,
+/* GTK 4 rubberband selection, based on Adwaita with the CambonOS palette. */
 .rubberband,
+rubberband,
 .content-view rubberband,
 .content-view .rubberband,
-columnview.view > rubberband,
-treeview.view > rubberband,
+treeview.view rubberband,
+flowbox rubberband,
 gridview > rubberband,
-flowbox > rubberband {
-  border: 1px solid rgba(112, 231, 230, 0.92);
-  border-radius: 3px;
-  background-color: rgba(1, 159, 167, 0.28);
-  background-image: none;
-  box-shadow: none;
-  transition: none;
+columnview > rubberband {
+  border: 1px solid #70E7E6;
+  background-color: rgba(112, 231, 230, 0.32);
 }
 
 /* Keep tooltip surfaces and link labels within the CambonOS palette. */

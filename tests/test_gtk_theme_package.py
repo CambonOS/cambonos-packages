@@ -15,7 +15,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.4.6", pkgb)
-        self.assertIn("pkgrel=14", pkgb)
+        self.assertIn("pkgrel=15", pkgb)
         self.assertIn("license=('GPL-3.0-only')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -112,8 +112,8 @@ class GtkThemePackageTests(unittest.TestCase):
                     f"{toolkit} {name} diverges from the shared theme palette",
                 )
         for gtk_css in (gtk3, gtk4):
-            self.assertIn("background-color: rgba(1, 159, 167, 0.28);", gtk_css)
-            self.assertIn("border: 1px solid rgba(112, 231, 230, 0.92);", gtk_css)
+            self.assertIn("background-color: rgba(112, 231, 230, 0.32);", gtk_css)
+            self.assertIn("border: 1px solid #70E7E6;", gtk_css)
             self.assertIn("outline-color: #70E7E6;", gtk_css)
             self.assertIn("background-color: rgba(6, 28, 49, 0.88);", gtk_css)
 
@@ -209,16 +209,16 @@ class GtkThemePackageTests(unittest.TestCase):
         for asset in ("unchecked-symbolic.svg", "checkbox-checked-symbolic.svg",
                       "radio-checked-symbolic.svg", "mixed-symbolic.svg"):
             self.assertIn(f'url("assets/scalable/{asset}")', gtk3)
-        self.assertIn("background-color: rgba(1, 159, 167, 0.28);", gtk3)
-        self.assertIn("border: 1px solid rgba(112, 231, 230, 0.92);", gtk3)
-        mouse_selection = gtk3[gtk3.rfind("/* Mouse-drag selection"):]
+        self.assertIn("background-color: rgba(112, 231, 230, 0.32);", gtk3)
+        self.assertIn("border: 1px solid #70E7E6;", gtk3)
+        mouse_selection = gtk3[gtk3.rfind("/* GTK 3 rubberband selection"):]
         self.assertNotIn("XfdesktopIconView", mouse_selection)
         self.assertNotIn(".thunar", mouse_selection)
-        self.assertIn("treeview.view .rubberband", mouse_selection)
+        self.assertIn("treeview.view rubberband", mouse_selection)
         for css in (gtk3, gtk4):
-            self.assertIn("background-color: rgba(1, 159, 167, 0.28);", css)
-            self.assertIn("border: 1px solid rgba(112, 231, 230, 0.92);", css)
-            self.assertIn("border-radius: 3px;", css)
+            self.assertIn("background-color: rgba(112, 231, 230, 0.32);", css)
+            self.assertIn("border: 1px solid #70E7E6;", css)
+            self.assertNotIn("border-radius: 3px;", css[css.lower().rfind("rubberband selection"):])
 
 
     def test_selection_and_focus_follow_cambonos_palette(self):
