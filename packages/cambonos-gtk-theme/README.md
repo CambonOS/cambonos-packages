@@ -146,3 +146,10 @@ con compositor activado y desactivado y en distintas resoluciones y escalados.
 - Restores explicit GTK3 checkbox/radio indicator icon sources and their checked/indeterminate/disabled states.
 - Defines a shared turquoise rubberband treatment for GTK3 icon/tree views, Thunar and Xfdesktop, while retaining a separate selected-item state.
 - GTK4 styling is unchanged; GTK3-specific widget selectors are not copied into GTK4.
+
+
+## 0.4.6-2 — Correcciones estéticas
+
+- Recolorea los PNG de controles GTK para acercar sus acentos a la paleta turquesa de CambonOS.
+- Usa el acento turquesa en los colores heredados de controles de ventana y resaltado de tareas.
+- Elimina el fondo GTK3 de contenedores Terminal sin acotar y el relleno GTK4 del selector genérico `.background`.

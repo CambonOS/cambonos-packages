@@ -7561,8 +7561,8 @@ read if you used those and something break with a version upgrade you're on your
 @define-color wm_button_icon #F7F5EC;
 @define-color wm_button_close_hover_bg #fd5f51;
 @define-color wm_button_close_active_bg #fc2714;
-@define-color wm_button_max_hover_bg #38c76a;
-@define-color wm_button_max_active_bg #2b9751;
+@define-color wm_button_max_hover_bg #70E7E6;
+@define-color wm_button_max_active_bg #019FA7;
 @define-color wm_button_min_hover_bg #fdbe04;
 @define-color wm_button_min_active_bg #c29102;
 /*
@@ -7828,23 +7828,6 @@ window.background.csd notebook > stack,
 .thunar paned paned paned > notebook.frame > stack {
   background-color: transparent;
   background-image: none;
-}
-
-/* GTK Terminal uses boxes for its terminal pane layout. Keep this scoped
- * to the app's window class; do not tint every GtkBox in every application. */
-window.background > box.background {
-  background-color: rgba(6, 28, 49, 0.50);
-  background-image: none;
-}
-
-window.background > box.background notebook,
-window.background > box.background menubar {
-  background-color: rgba(6, 28, 49, 0.50);
-  background-image: none;
-}
-
-window.background > box.background menubar {
-  background-color: rgba(6, 28, 49, 0.84);
 }
 
 /* GtkStatusbar: transparent in all GTK3 applications. */
