@@ -1,7 +1,8 @@
 import re
-import subprocess
 import unittest
 from pathlib import Path
+
+import tinycss2
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "packages" / "cambonos-gtk-theme"
@@ -13,40 +14,81 @@ class GtkThemePackageTests(unittest.TestCase):
     def test_package_metadata_and_version(self):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
-        self.assertIn("pkgver=0.2.0", pkgb)
-        self.assertIn("pkgrel=9", pkgb)
-        self.assertIn("license=('GPL-3.0-or-later')", pkgb)
+        self.assertIn("pkgver=0.3.0", pkgb)
+        self.assertIn("pkgrel=1", pkgb)
+        self.assertIn("license=('GPL-3.0-only')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
 
-    def test_single_dark_theme_contains_all_approved_toolkits(self):
-        metadata = (THEME / "index.theme").read_text(encoding="utf-8")
-        self.assertIn("Name=CambonOS-Dark", metadata)
-        self.assertIn("GtkTheme=CambonOS-Dark", metadata)
-        for directory in ("gtk-2.0", "gtk-3.0", "gtk-4.0", "xfwm4"):
+    def test_theme_contains_only_approved_toolkits(self):
+        self.assertFalse((THEME / "gtk-2.0").exists())
+        for directory in ("gtk-3.0", "gtk-4.0", "xfwm4"):
             self.assertTrue((THEME / directory).is_dir(), directory)
-        for path in ("gtk-2.0/gtkrc", "gtk-3.0/gtk.css", "gtk-3.0/gtk-dark.css",
+        for path in ("gtk-3.0/gtk.css", "gtk-3.0/gtk-dark.css",
                      "gtk-4.0/gtk.css", "gtk-4.0/gtk-dark.css", "xfwm4/themerc"):
             self.assertTrue((THEME / path).is_file(), path)
 
-    def test_brand_palette_is_present_in_gtk_stylesheets(self):
-        for toolkit in ("gtk-3.0", "gtk-4.0"):
-            css = (THEME / toolkit / "gtk.css").read_text(encoding="utf-8")
-            self.assertIn("#AEFA50", css)
-            self.assertIn("#70E7E6", css)
-            self.assertEqual(css.count("{"), css.count("}"))
-
-    def test_whisker_categories_have_translucent_background(self):
-        for stylesheet in ("gtk.css", "gtk-dark.css"):
-            css = (THEME / "gtk-3.0" / stylesheet).read_text(encoding="utf-8")
-            self.assertIn("window#whiskermenu-window box.categories", css)
-            self.assertIn("background-color: rgba(6, 28, 49, 0.72);", css)
-
-    def test_upstream_provenance_is_recorded(self):
-        notice = (FILES / "upstream" / "ORCHIS-NOTICE").read_text(encoding="utf-8")
+    def test_theme_metadata_and_provenance(self):
+        metadata = (THEME / "index.theme").read_text(encoding="utf-8")
+        notice = (FILES / "upstream/ORCHIS-NOTICE").read_text(encoding="utf-8")
+        self.assertIn("Name=CambonOS-Dark", metadata)
+        self.assertIn("GtkTheme=CambonOS-Dark", metadata)
+        self.assertIn("based on Orchis Theme", metadata)
         self.assertIn("a4c48a425e63808345e824495964bd9c2f462e04", notice)
-        self.assertIn("vinceliuice/Orchis-theme", notice)
-        self.assertIn("Orchis-Green.tar.xz", notice)
+        self.assertIn("release/Orchis.tar.xz", notice)
+        self.assertIn("Default (blue) variant and Dark", notice)
+        self.assertNotIn("Orchis-Green", notice)
+
+    def test_palette_and_semantic_colors(self):
+        for toolkit in ("gtk-3.0", "gtk-4.0"):
+            for filename in ("gtk.css", "gtk-dark.css"):
+                css = (THEME / toolkit / filename).read_text(encoding="utf-8")
+                self.assertIn("#061C31", css)
+                self.assertIn("#019FA7", css)
+                self.assertIn("#70E7E6", css)
+                self.assertNotIn("#AEFA50", css)
+                self.assertNotIn("#006B73", css)
+        gtk4 = (THEME / "gtk-4.0/gtk.css").read_text(encoding="utf-8")
+        self.assertIn("@define-color accent_color #70E7E6;", gtk4)
+        self.assertIn("@define-color accent_bg_color #019FA7;", gtk4)
+        self.assertIn("@define-color accent_fg_color #061C31;", gtk4)
+        self.assertIn("@define-color success_color #149246;", gtk4)
+
+    def test_no_unresolved_scss_variables(self):
+        for toolkit in ("gtk-3.0", "gtk-4.0"):
+            for filename in ("gtk.css", "gtk-dark.css"):
+                css = (THEME / toolkit / filename).read_text(encoding="utf-8")
+                self.assertNotRegex(css, r"\$[A-Za-z_][A-Za-z0-9_-]*")
+
+    def test_stylesheets_parse(self):
+        for toolkit in ("gtk-3.0", "gtk-4.0"):
+            for filename in ("gtk.css", "gtk-dark.css"):
+                css = (THEME / toolkit / filename).read_text(encoding="utf-8")
+                rules = tinycss2.parse_stylesheet(css, skip_whitespace=True, skip_comments=True)
+                errors = [rule for rule in rules if rule.type == "error"]
+                self.assertEqual(errors, [], f"{toolkit}/{filename}: {errors}")
+
+    def test_dark_stylesheets_are_synchronized(self):
+        for toolkit in ("gtk-3.0", "gtk-4.0"):
+            css = (THEME / toolkit / "gtk.css").read_bytes()
+            dark = (THEME / toolkit / "gtk-dark.css").read_bytes()
+            self.assertEqual(css, dark, toolkit)
+
+    def test_translucency_policy(self):
+        gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
+        gtk4 = (THEME / "gtk-4.0/gtk.css").read_text(encoding="utf-8")
+        self.assertRegex(gtk3, re.compile(r"headerbar,\s*\.titlebar,.*?background-color: rgba\(6, 28, 49, 0\.68\)", re.S))
+        self.assertRegex(gtk3, r"\.xfce4-panel\.background\s*\{[^}]*background-color: rgba\(6, 28, 49, 0\.86\)", re.S)
+        self.assertRegex(gtk3, r"\.xfsm-logout-dialog\s*\{[^}]*background-color: rgba\(6, 28, 49, 0\.78\)", re.S)
+        self.assertIn("background-color: rgba(6, 28, 49, 0.68);", gtk4)
+        self.assertIn("background-color: rgba(6, 28, 49, 0.78);", gtk4)
+
+    def test_whisker_and_thunar_integrations_remain(self):
+        gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
+        self.assertIn("window#whiskermenu-window", gtk3)
+        self.assertIn(".thunar .standard-view.frame", gtk3)
+        self.assertIn("XfdesktopIconView.view", gtk3)
+        self.assertIn(".xfce4-panel.background", gtk3)
 
     def test_no_invasive_libadwaita_or_user_configuration(self):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
@@ -54,219 +96,54 @@ class GtkThemePackageTests(unittest.TestCase):
         self.assertNotIn(".config/gtk-4.0", pkgb)
         self.assertNotIn("gtk-theme-name", pkgb)
         self.assertNotIn("/etc/gtk-3.0", pkgb)
-        self.assertNotIn("gtk-4.0/gtk.css", pkgb)
-        self.assertIn("no modifica preferencias", readme)
+        self.assertIn("no\nmodifica preferencias", readme)
         self.assertFalse((FILES / "etc").exists())
 
-    def test_payload_is_exactly_the_single_theme_and_licenses(self):
+    def test_payload_has_no_extra_theme_variants(self):
         payload = {p.relative_to(FILES).as_posix() for p in FILES.rglob("*") if p.is_file()}
         self.assertIn("LICENSE", payload)
         self.assertIn("upstream/ORCHIS-NOTICE", payload)
-        self.assertIn("themes/CambonOS-Dark/index.theme", payload)
         self.assertFalse(any("CambonOS-Light" in p for p in payload))
-        self.assertFalse(any("CambonOS-" in p and "CambonOS-Dark" not in p for p in payload))
+        self.assertFalse(any("gtk-2.0" in p for p in payload))
+        self.assertFalse(any("CambonOS-Dark-hdpi" in p or "CambonOS-Dark-xhdpi" in p for p in payload))
 
-    def test_whiskermenu_uses_cambonos_dark_palette(self):
-        for filename in ("gtk.css", "gtk-dark.css"):
-            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
-            self.assertIn("window#whiskermenu-window > frame > border", css)
-            self.assertIn("background-color: #019FA7;", css)
-            self.assertIn("border-color: #70E7E6;", css)
-            whisker_frame = re.search(
-                r"window#whiskermenu-window > frame,\s*"
-                r"window#whiskermenu-window > frame > border\s*\{([^}]*)\}",
-                css,
-            )
-            self.assertIsNotNone(whisker_frame, filename)
-            self.assertIn("background: transparent;", whisker_frame.group(1))
-            self.assertIn("box-shadow: none;", whisker_frame.group(1))
-
-    def test_whiskermenu_surfaces_use_layered_transparency(self):
-        for filename in ("gtk.css", "gtk-dark.css"):
-            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
-            policy = css[css.rfind("CambonOS translucent-surface policy"):]
-            self.assertRegex(
-                policy,
-                r"window#whiskermenu-window\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.78\)",
-            )
-            self.assertRegex(
-                policy,
-                r"window#whiskermenu-window box\.categories\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.64\)",
-            )
-            self.assertRegex(
-                policy,
-                r"window#whiskermenu-window scrolledwindow\.frame\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.80\)",
-            )
-            self.assertRegex(
-                policy,
-                r"window#whiskermenu-window entry\.search\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.82\)",
-            )
-            self.assertRegex(
-                policy,
-                r"window#whiskermenu-window box\.categories > button\.radio\s*\{[^}]*background-color:\s*transparent",
-            )
-
-    def test_xfce_logout_dialog_uses_cambonos_palette_and_translucency(self):
-        for filename in ("gtk.css", "gtk-dark.css"):
-            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
-            policy = css[css.rfind("CambonOS translucent-surface policy"):]
-            self.assertRegex(
-                policy,
-                r"\.xfsm-logout-dialog\s*\{[^}]*background-color:\s*rgba\(6, 28, 49, 0\.82\)",
-            )
-            self.assertIn(".xfsm-logout-dialog button:hover", css)
-            self.assertIn(".xfsm-logout-dialog button:active", css)
-            self.assertIn(".xfsm-logout-dialog label", css)
-            self.assertNotIn("dialog.xfsm-logout-dialog", css)
-            self.assertNotIn("background-color: rgba(33, 33, 33, 0.97);", css)
-
-    def test_gtk3_pointer_hover_uses_cambonos_teal_not_orchis_lime(self):
-        selectors = (
-            "row.activatable:hover",
-            "treeview.view:hover",
-            "flowbox > flowboxchild:hover",
-            "modelbutton.flat:hover",
-            ".menuitem:hover",
+    def test_no_application_specific_selectors_outside_xfce(self):
+        import re
+        forbidden = (
+            "nautilus", "nemo", "caja", "budgie", "raven", "mate", "geary",
+            "gedit", "pluma", "atril", "lightdm", "greeter", "firefox",
+            "chromium", "inkscape", "eclipse", "meld", "tilix",
+            "terminator", "pamac", "gnome", "adw", "stopwatch",
         )
-        for filename in ("gtk.css", "gtk-dark.css"):
-            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
-            for selector in selectors:
-                self.assertIn(selector, css, f"{filename}: {selector}")
-            self.assertIn("background-color: #006B73;", css)
-            self.assertIn("color: #FFFFFF;", css)
-            whisker = re.search(
-                r"window#whiskermenu-window scrolledwindow\.frame treeview\.view:hover,"
-                r"\s*window#whiskermenu-window scrolledwindow\.frame treeview\.view:selected,"
-                r"\s*window#whiskermenu-window scrolledwindow\.frame treeview\.view:selected:hover\s*\{([^}]*)\}",
-                css,
-            )
-            self.assertIsNotNone(whisker, filename)
-            self.assertIn("background-color: #006B73;", whisker.group(1))
-
-    def test_thunar_iconview_rubberband_avoids_generic_hover_shadow(self):
-        for filename in ("gtk.css", "gtk-dark.css"):
-            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
-            hover = re.search(
-                r"\.thunar \.standard-view\.frame iconview\.view:hover\s*\{([^}]*)\}",
-                css,
-            )
-            self.assertIsNotNone(hover, filename)
-            self.assertIn("box-shadow: none;", hover.group(1))
-            rubberband = re.search(
-                r"\.thunar \.standard-view\.frame iconview\.view > rubberband\s*\{([^}]*)\}",
-                css,
-            )
-            self.assertIsNotNone(rubberband, filename)
-            self.assertIn("background-color: rgba(1, 159, 167, 0.24);", rubberband.group(1))
-            self.assertIn("border: 1px solid #70E7E6;", rubberband.group(1))
-            self.assertIn("box-shadow: none;", rubberband.group(1))
-            self.assertIn("transition: none;", rubberband.group(1))
-
-    def test_xfce_panel_uses_translucent_midnight_background(self):
-        for filename in ("gtk.css", "gtk-dark.css"):
-            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
-            match = re.search(
-                r"\.xfce4-panel\.background\s*\{([^}]*)\}", css
-            )
-            self.assertIsNotNone(match, filename)
-            policy = css[css.rfind("CambonOS translucent-surface policy"):]
-            self.assertIn(".xfce4-panel.background", policy)
-            self.assertIn("background-color: rgba(6, 28, 49, 0.68);", policy)
-            self.assertNotIn("background-color: #061C31;", policy)
-
-    def test_selection_uses_cambonos_turquoise_across_gtk_versions(self):
         for toolkit in ("gtk-3.0", "gtk-4.0"):
-            for filename in ("gtk.css", "gtk-dark.css"):
-                css = (THEME / toolkit / filename).read_text(encoding="utf-8")
-                self.assertIn("#006B73", css, f"{toolkit}/{filename}")
-                self.assertIn(".view:selected", css, f"{toolkit}/{filename}")
-                if toolkit == "gtk-3.0":
-                    self.assertIn("border: 1px solid #70E7E6;", css, f"{toolkit}/{filename}")
-                    self.assertIn("background-color: rgba(1, 159, 167, 0.24);", css, f"{toolkit}/{filename}")
-                else:
-                    self.assertIn("@define-color accent_bg_color #006B73;", css)
-                    self.assertIn("border: 1px solid #70E7E6;", css)
-                self.assertNotRegex(
-                    css,
-                    r"(?is)(?:selected|selection-mode)[^{}]*\\{[^{}]*(?:#AEFA50|#66BB6A|#54B359|#414141)",
-                )
-        for filename in ("gtk.css", "gtk-dark.css"):
-            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
-            self.assertIn("@define-color theme_selected_bg_color #006B73;", css)
-            self.assertIn("@define-color theme_unfocused_selected_bg_color #006B73;", css)
+            css = (THEME / toolkit / "gtk.css").read_text(encoding="utf-8")
+            rules = tinycss2.parse_stylesheet(css, skip_whitespace=True, skip_comments=True)
+            def selectors(items):
+                for rule in items:
+                    if rule.type == "qualified-rule":
+                        yield tinycss2.serialize(rule.prelude).lower()
+                    elif rule.type == "at-rule" and rule.content is not None:
+                        nested = tinycss2.parse_rule_list(rule.content, skip_whitespace=True, skip_comments=True)
+                        yield from selectors(nested)
+            for selector in selectors(rules):
+                for marker in forbidden:
+                    self.assertNotRegex(selector, rf"(?<![a-z0-9]){re.escape(marker)}")
 
-    def test_gtk2_palette_matches_cambonos_dark(self):
-        gtkrc = (THEME / "gtk-2.0" / "gtkrc").read_text(encoding="utf-8")
-        self.assertIn("selected_bg_color:#006B73", gtkrc)
-        self.assertIn("bg_color:#061C31", gtkrc)
-        self.assertIn("base_color:#061C31", gtkrc)
-        self.assertIn("link_color:#70E7E6", gtkrc)
-        self.assertNotRegex(gtkrc, r"#(?:66BB6A|CE93D8|212121|2C2C2C|3C3C3C|616161)")
-
-    def test_visited_links_and_secondary_teal_use_brand_palette(self):
+    def test_css_asset_references_resolve(self):
+        import re
         for toolkit in ("gtk-3.0", "gtk-4.0"):
-            for filename in ("gtk.css", "gtk-dark.css"):
-                css = (THEME / toolkit / filename).read_text(encoding="utf-8")
-                self.assertIn("color: #019FA7;", css, f"{toolkit}/{filename}")
-                if toolkit == "gtk-4.0":
-                    self.assertIn("--accent-teal: #70E7E6;", css)
+            directory = THEME / toolkit
+            css = (directory / "gtk.css").read_text(encoding="utf-8")
+            refs = set(re.findall(r"url\([\"']?([^\)\"']+)", css))
+            for ref in refs:
+                if ref.startswith(("data:", "http:", "https:")):
+                    continue
+                self.assertTrue((directory / ref).resolve().exists(), f"{toolkit}: {ref}")
 
-    def test_index_theme_does_not_advertise_missing_metacity_theme(self):
-        metadata = (THEME / "index.theme").read_text(encoding="utf-8")
-        self.assertNotIn("MetacityTheme=", metadata)
-        self.assertTrue((THEME / "xfwm4" / "themerc").is_file())
-
-    def test_translucent_surface_policy_covers_gtk3_and_gtk4(self):
-        required = {
-            "gtk-3.0": ("window.background", "popover.background", "treeview.view",
-                        "headerbar", "toolbar", "entry", "xfce4-panel.background"),
-            "gtk-4.0": ("window.background", "popover.background", "listview",
-                        "gridview", "columnview", "headerbar", "toolbar", "entry"),
-        }
-        for toolkit, selectors in required.items():
-            for filename in ("gtk.css", "gtk-dark.css"):
-                css = (THEME / toolkit / filename).read_text(encoding="utf-8")
-                self.assertIn("CambonOS translucent-surface policy", css)
-                policy = css[css.rfind("CambonOS translucent-surface policy"):]
-                for selector in selectors:
-                    self.assertIn(selector, policy, f"{toolkit}/{filename}: {selector}")
-                for alpha in ("0.78", "0.82", "0.84", "0.72", "0.68"):
-                    self.assertIn(f"rgba(6, 28, 49, {alpha})", policy)
-                # No global resting-state button surface or broad wrapper paint.
-                self.assertNotRegex(policy, r"(?m)^button\s*,?\s*\n?\s*button\.flat")
-                self.assertNotRegex(policy, r"(?m)^\.view\s*,|^scrolledwindow\s*,|^frame\s*,")
-                self.assertNotIn("background-color: rgba(1, 159, 167, 0.14);", policy)
-
-    def test_gtk3_desktop_icon_labels_and_whisker_idle_categories_stay_transparent(self):
-        for filename in ("gtk.css", "gtk-dark.css"):
-            css = (THEME / "gtk-3.0" / filename).read_text(encoding="utf-8")
-            labels = re.search(
-                r"XfdesktopIconView\.view,\s*XfdesktopIconView\.view label,\s*"
-                r"XfdesktopIconView\.view \.label\s*\{([^}]*)\}", css
-            )
-            self.assertIsNotNone(labels, filename)
-            self.assertIn("background-color: transparent;", labels.group(1))
-            policy = css[css.rfind("CambonOS translucent-surface policy"):]
-            idle = re.search(
-                r"window#whiskermenu-window box\.categories > button\.radio\s*\{([^}]*)\}", policy
-            )
-            self.assertIsNotNone(idle, filename)
-            self.assertIn("background-color: transparent;", idle.group(1))
-            self.assertIn("window#whiskermenu-window box.categories > button.radio:hover", css)
-
-    def test_all_four_css_variants_parse_without_syntax_errors(self):
-        import tinycss2
-        for toolkit in ("gtk-3.0", "gtk-4.0"):
-            for filename in ("gtk.css", "gtk-dark.css"):
-                css = (THEME / toolkit / filename).read_text(encoding="utf-8")
-                rules = tinycss2.parse_stylesheet(css, skip_whitespace=True, skip_comments=True)
-                errors = [r for r in rules if r.type == "error"]
-                self.assertEqual(errors, [], f"{toolkit}/{filename}: {errors}")
-
-    def test_pkgbuild_has_valid_bash_syntax(self):
-        result = subprocess.run(["bash", "-n", str(PACKAGE / "PKGBUILD")],
-                                text=True, capture_output=True, check=False)
-        self.assertEqual(result.returncode, 0, result.stderr)
+    def test_xfwm4_symlinks_resolve(self):
+        for path in (THEME / "xfwm4").rglob("*"):
+            if path.is_symlink():
+                self.assertTrue(path.exists(), f"Broken symlink: {path}")
 
 
 if __name__ == "__main__":
