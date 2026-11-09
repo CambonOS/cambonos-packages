@@ -1,6 +1,6 @@
 pkgname=cambonos-gtk-theme
 pkgver=0.2.0
-pkgrel=9
+pkgrel=10
 pkgdesc="CambonOS dark GTK 2, GTK 3, GTK 4 and XFWM4 theme"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"

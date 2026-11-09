@@ -80,9 +80,13 @@ The policy paints only independent functional surfaces. Generic buttons at
 rest, labels, icons, separators and nested layout containers do not receive a
 background of their own. They inherit the already-painted parent. Hover,
 active and selected states may add a turquoise interaction background.
-Whisker Menu has a denser outer frame, quieter category navigation, a readable
-application-list panel and a separate search field. XFdesktop icon labels are
-explicitly kept transparent.
+The XFCE panel and Whisker Menu outer frame share the same midnight-blue
+material (`#061C31`, `0.86` alpha), making the menu visually extend from its
+launcher panel. Whisker's inner surfaces step down subtly: categories use
+`0.80`, the application list `0.84`, and the search field `0.90` (`0.92`
+while focused). Panel and menu surface rules are defined once in the GTK 3
+transparency policy to avoid competing declarations. XFdesktop icon labels
+remain explicitly transparent.
 
 GTK 2 uses the legacy GtkRcStyle/GdkColor model and this package's GTK 2
 resource format exposes opaque named colors rather than GTK 3/4 CSS alpha

@@ -8183,13 +8183,7 @@ button.centerbutton:last-child {
 /***************
  * xfce4-panel *
  ***************/
-.xfce4-panel.background {
-  border: none;
-  border-color: transparent;
-  background-color: #061C31;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 500;
-}
+/* Panel surface and base typography are defined in the transparency policy. */
 
 .xfce4-panel.background button, .xfce4-panel.background button.flat {
   color: rgba(255, 255, 255, 0.7);
@@ -8257,23 +8251,17 @@ XfdesktopIconView.view .rubberband {
 /***************
  * Whiskermenu *
  ***************/
-window#whiskermenu-window {
-  border-radius: 0;
-  background-color: rgba(6, 28, 49, 0.58);
-  border: none;
-}
+/* Whisker outer surface is defined once in the policy below. */
 
 /* Keep categories visibly translucent while remaining lighter than the
  * application list and search field. */
 window#whiskermenu-window box.categories {
-  background-color: rgba(6, 28, 49, 0.72);
   background-image: none;
 }
 
 /* The application list and search field stay more opaque for readability. */
 window#whiskermenu-window scrolledwindow.frame {
   padding: 3px;
-  background-color: rgba(6, 28, 49, 0.84);
   border: 1px solid rgba(112, 231, 230, 0.16);
   border-radius: 5px;
 }
@@ -8281,13 +8269,11 @@ window#whiskermenu-window scrolledwindow.frame {
 window#whiskermenu-window entry.search {
   border: 1px solid rgba(112, 231, 230, 0.32);
   border-radius: 5px;
-  background-color: rgba(6, 28, 49, 0.90);
   box-shadow: none;
 }
 
 window#whiskermenu-window entry.search:focus {
   border-color: #70E7E6;
-  background-color: rgba(6, 28, 49, 0.94);
   box-shadow: 0 0 0 1px rgba(112, 231, 230, 0.22);
 }
 
@@ -8871,8 +8857,12 @@ toolbar,
 .searchbar,
 .search-bar,
 .xfce4-panel.background {
-  background-color: rgba(6, 28, 49, 0.68);
+  border: none;
+  border-color: transparent;
+  background-color: rgba(6, 28, 49, 0.86);
   background-image: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
 }
 
 entry,
@@ -8905,12 +8895,14 @@ modelbutton:checked,
 
 /* Whisker: denser outer frame, quiet categories, readable app list. */
 window#whiskermenu-window {
-  background-color: rgba(6, 28, 49, 0.78);
+  border-radius: 0;
+  border: none;
+  background-color: rgba(6, 28, 49, 0.86);
   background-image: none;
 }
 
 window#whiskermenu-window box.categories {
-  background-color: rgba(6, 28, 49, 0.64);
+  background-color: rgba(6, 28, 49, 0.80);
   background-image: none;
 }
 
@@ -8931,7 +8923,7 @@ window#whiskermenu-window box.categories > button.radio:active {
 }
 
 window#whiskermenu-window scrolledwindow.frame {
-  background-color: rgba(6, 28, 49, 0.80);
+  background-color: rgba(6, 28, 49, 0.84);
   background-image: none;
 }
 
@@ -8942,12 +8934,12 @@ window#whiskermenu-window scrolledwindow.frame iconview {
 }
 
 window#whiskermenu-window entry.search {
-  background-color: rgba(6, 28, 49, 0.82);
+  background-color: rgba(6, 28, 49, 0.90);
   background-image: none;
 }
 
 window#whiskermenu-window entry.search:focus {
-  background-color: rgba(6, 28, 49, 0.86);
+  background-color: rgba(6, 28, 49, 0.92);
 }
 
 /* Desktop icon labels are text overlays, never independent surfaces. */
