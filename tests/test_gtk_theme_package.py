@@ -15,7 +15,7 @@ class GtkThemePackageTests(unittest.TestCase):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
         self.assertIn("pkgver=0.4.6", pkgb)
-        self.assertIn("pkgrel=1", pkgb)
+        self.assertIn("pkgrel=10", pkgb)
         self.assertIn("license=('GPL-3.0-only')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -48,10 +48,11 @@ class GtkThemePackageTests(unittest.TestCase):
                 self.assertIn("#70E7E6", css)
                 self.assertNotIn("#AEFA50", css)
                 self.assertNotIn("#006B73", css)
+                self.assertNotIn("budgie_tasklist_indicator", css)
         gtk4 = (THEME / "gtk-4.0/gtk.css").read_text(encoding="utf-8")
         self.assertIn("@define-color accent_color #70E7E6;", gtk4)
         self.assertIn("@define-color accent_bg_color #019FA7;", gtk4)
-        self.assertIn("@define-color accent_fg_color #061C31;", gtk4)
+        self.assertIn("@define-color accent_fg_color #F7F5EC;", gtk4)
         self.assertIn("@define-color success_color #149246;", gtk4)
 
     def test_no_unresolved_scss_variables(self):
@@ -78,9 +79,13 @@ class GtkThemePackageTests(unittest.TestCase):
         gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
         gtk4 = (THEME / "gtk-4.0/gtk.css").read_text(encoding="utf-8")
         self.assertIn("@define-color theme_bg_color rgba(6, 28, 49, 0.88);", gtk3)
+        self.assertIn("@define-color theme_unfocused_base_color rgba(6, 28, 49, 0.12);", gtk3)
         self.assertIn("@define-color window_bg_color rgba(6, 28, 49, 0.88);", gtk4)
+        self.assertIn("@define-color theme_unfocused_base_color rgba(6, 28, 49, 0.12);", gtk4)
+        self.assertNotRegex(gtk3, re.compile(r"(?m)^\.background\s*\{\s*background-color: rgba\(6, 28, 49, 0\.88\)"))
+        self.assertNotRegex(gtk4, re.compile(r"(?m)^\.background\s*\{\s*background-color: rgba\(6, 28, 49, 0\.88\)"))
         self.assertRegex(gtk3, re.compile(r"window,\s*window\.background,.*?background-color: rgba\(6, 28, 49, 0\.88\)", re.S))
-        self.assertRegex(gtk3, r"\.xfce4-panel\.background\s*\{[^}]*background-color: rgba\(6, 28, 49, 0\.86\)", re.S)
+        self.assertRegex(gtk3, re.compile(r"\.xfce4-panel\.background\s*\{[^}]*background-color: rgba\(6, 28, 49, 0\.88\)", re.S))
         self.assertIn("background-color: rgba(6, 28, 49, 0.88);", gtk4)
         self.assertIn("button:not(.suggested-action):not(.destructive-action)", gtk3)
         self.assertIn("XfdesktopIconView.view label", gtk3)
@@ -99,7 +104,7 @@ class GtkThemePackageTests(unittest.TestCase):
         self.assertNotIn(".config/gtk-4.0", pkgb)
         self.assertNotIn("gtk-theme-name", pkgb)
         self.assertNotIn("/etc/gtk-3.0", pkgb)
-        self.assertIn("no\nmodifica preferencias", readme)
+        self.assertIn("No cambia preferencias del usuario", readme)
         self.assertFalse((FILES / "etc").exists())
 
     def test_payload_has_no_extra_theme_variants(self):
@@ -116,7 +121,8 @@ class GtkThemePackageTests(unittest.TestCase):
             "nautilus", "nemo", "caja", "budgie", "raven", "mate", "geary",
             "gedit", "pluma", "atril", "lightdm", "greeter", "firefox",
             "chromium", "inkscape", "eclipse", "meld", "tilix",
-            "terminator", "pamac", "gnome", "adw", "stopwatch",
+            "terminator", "pamac", "gnome", "adw", "stopwatch", "mozilla",
+            "#panel_window", "#login_window", "weatherthermometer", "forecast-card",
         )
         for toolkit in ("gtk-3.0", "gtk-4.0"):
             css = (THEME / toolkit / "gtk.css").read_text(encoding="utf-8")
@@ -143,24 +149,23 @@ class GtkThemePackageTests(unittest.TestCase):
                     continue
                 self.assertTrue((directory / ref).resolve().exists(), f"{toolkit}: {ref}")
 
-    def test_gtk3_surface_policy_and_xfce_terminal_root_box(self):
+    def test_gtk3_surface_policy(self):
         gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
         self.assertIn("window.background frame,", gtk3)
         self.assertIn("notebook.frame,", gtk3)
         self.assertIn("window.background notebook", gtk3)
-        self.assertIn("background-color: rgba(6, 28, 49, 0.50);", gtk3)
+        self.assertIn("background-color: rgba(6, 28, 49, 0.08);", gtk3)
         self.assertIn("statusbar,", gtk3)
         self.assertIn(".thunar statusbar", gtk3)
         self.assertIn("menubar,", gtk3)
         self.assertIn(".menubar,", gtk3)
-        self.assertIn("background-color: rgba(6, 28, 49, 0.84);", gtk3)
-        self.assertIn("window.background > box.background", gtk3)
-        self.assertIn("window.background > box.background notebook", gtk3)
-        self.assertIn("window.background > box.background menubar", gtk3)
-        self.assertNotIn("window.xfce4-terminal box", gtk3)
+        self.assertIn("background-color: rgba(6, 28, 49, 0.88);", gtk3)
+        self.assertNotIn("terminal-window.background.csd", gtk3)
+        self.assertNotIn("#MozillaGtkWidget", gtk3)
 
     def test_gtk3_selection_indicators_and_rubberband(self):
         gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
+        gtk4 = (THEME / "gtk-4.0/gtk.css").read_text(encoding="utf-8")
         for selector in ("check:checked", "check:indeterminate", "radio:checked",
                          "radio:indeterminate", "rubberband",
                          "XfdesktopIconView.view rubberband",
@@ -169,13 +174,78 @@ class GtkThemePackageTests(unittest.TestCase):
         for asset in ("unchecked-symbolic.svg", "checkbox-checked-symbolic.svg",
                       "radio-checked-symbolic.svg", "mixed-symbolic.svg"):
             self.assertIn(f'url("assets/scalable/{asset}")', gtk3)
-        self.assertIn("background-color: rgba(1, 159, 167, 0.24);", gtk3)
+        self.assertIn("background-color: rgba(1, 159, 167, 0.28);", gtk3)
+        self.assertIn("border: 1px solid rgba(112, 231, 230, 0.92);", gtk3)
         self.assertIn("XfdesktopIconView.view:selected", gtk3)
+        self.assertIn(".thunar .standard-view.frame iconview.view > .rubberband", gtk3)
+        self.assertNotIn("XfdesktopIconView.view .rubberband", gtk3[:gtk3.rfind("/* Mouse-drag selection")])
+        for css in (gtk3, gtk4):
+            self.assertIn("background-color: rgba(1, 159, 167, 0.28);", css)
+            self.assertIn("border: 1px solid rgba(112, 231, 230, 0.92);", css)
+            self.assertIn("border-radius: 3px;", css)
+
+
+    def test_selection_and_focus_follow_cambonos_palette(self):
+        gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
+        gtk4 = (THEME / "gtk-4.0/gtk.css").read_text(encoding="utf-8")
+        for css in (gtk3, gtk4):
+            self.assertIn("@define-color theme_selected_bg_color #019FA7;", css)
+            self.assertIn("@define-color theme_selected_fg_color #F7F5EC;", css)
+            self.assertIn("outline-color: #70E7E6;", css)
+        self.assertIn("window#whiskermenu-window box.categories > button.radio:checked", gtk3)
+        self.assertIn("window#whiskermenu-window scrolledwindow.frame treeview.view:selected", gtk3)
+        self.assertIn(".thunar .standard-view.frame .view:selected", gtk3)
+        self.assertIn("window.background treeview.view:selected", gtk3)
+        self.assertIn("window.background listview > row:selected", gtk4)
+        self.assertIn("window .view:not(:selected)", gtk3)
+        self.assertIn("window treeview.view:not(:selected)", gtk3)
+        self.assertIn("tabbar tab:selected", gtk4)
+        self.assertIn("tabbar tab:checked", gtk4)
+
+    def test_window_surface_alpha_is_unchanged_in_backdrop_state(self):
+        gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
+        gtk4 = (THEME / "gtk-4.0/gtk.css").read_text(encoding="utf-8")
+        for css, selectors, alpha in (
+            (gtk3, ".titlebar,", "0.12"),
+            (gtk3, "window.solid-csd,", "0.88"),
+            (gtk3, ".solid-csd decoration,", "0.88"),
+            (gtk3, "menubar,\n.menubar,\nmenubar:backdrop", "0.88"),
+            (gtk4, "menubar,\nmenubar:backdrop", "0.88"),
+            (gtk4, "headerbar,\nheaderbar:backdrop", "0.12"),
+            (gtk4, "window.solid-csd,", "0.88"),
+            (gtk4, "popover.background,\npopover.background:backdrop", "0.16"),
+        ):
+            start = css.rfind(selectors)
+            self.assertGreaterEqual(start, 0, selectors)
+            block_start = css.find("{", start)
+            block_end = css.find("}", block_start)
+            block = css[block_start:block_end]
+            self.assertIn(f"background-color: rgba(6, 28, 49, {alpha});", block)
 
     def test_xfwm4_symlinks_resolve(self):
         for path in (THEME / "xfwm4").rglob("*"):
             if path.is_symlink():
                 self.assertTrue(path.exists(), f"Broken symlink: {path}")
+
+    def test_xfwm4_uses_cambonos_surface_and_control_palette(self):
+        xfwm4 = THEME / "xfwm4"
+        for name in ("bottom-active.xpm", "bottom-left-active.xpm",
+                     "bottom-right-active.xpm", "left-active.xpm",
+                     "title-active.xpm", "top-left-active.xpm",
+                     "top-right-active.xpm"):
+            self.assertIn("#061C31", (xfwm4 / name).read_text(encoding="utf-8"), name)
+        for name in ("bottom-inactive.xpm", "bottom-left-inactive.xpm",
+                     "bottom-right-inactive.xpm", "left-inactive.xpm",
+                     "title-inactive.xpm", "top-left-inactive.xpm",
+                     "top-right-inactive.xpm"):
+            self.assertIn("#0A2942", (xfwm4 / name).read_text(encoding="utf-8"), name)
+        for name in ("button-active.xpm", "button-inactive.xpm",
+                     "button-mac-active.xpm", "button-mac-inactive.xpm"):
+            self.assertIn("#F7F5EC", (xfwm4 / name).read_text(encoding="utf-8"), name)
+        for path in xfwm4.glob("*-prelight.svg"):
+            svg = path.read_text(encoding="utf-8")
+            self.assertIn("fill:#019FA7", svg, path.name)
+            self.assertIn("fill:#F7F5EC", svg, path.name)
 
 
 if __name__ == "__main__":
