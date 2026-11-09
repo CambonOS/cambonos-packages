@@ -1,0 +1,93 @@
+reference_width = 1920;
+reference_height = 1080;
+logo_vertical_alignment = 0.66;
+progress_vertical_alignment = 0.7;
+progress_reference_width = 420;
+progress_reference_height = 8;
+
+Window.SetBackgroundTopColor(0.0235, 0.1098, 0.1922);
+Window.SetBackgroundBottomColor(0.0235, 0.1098, 0.1922);
+
+window_x = Window.GetX();
+window_y = Window.GetY();
+window_width = Window.GetWidth();
+window_height = Window.GetHeight();
+scale_x = window_width / reference_width;
+scale_y = window_height / reference_height;
+if (scale_x < scale_y)
+  screen_scale = scale_x;
+else
+  screen_scale = scale_y;
+
+background_original = Image("background.png");
+background_scale_x = window_width / background_original.GetWidth();
+background_scale_y = window_height / background_original.GetHeight();
+if (background_scale_x > background_scale_y)
+  background_scale = background_scale_x;
+else
+  background_scale = background_scale_y;
+background_width = Math.Int(background_original.GetWidth() * background_scale);
+background_height = Math.Int(background_original.GetHeight() * background_scale);
+background_scaled = background_original.Scale(background_width, background_height);
+background_image = background_scaled.Crop(
+  Math.Int((background_width - window_width) / 2),
+  Math.Int((background_height - window_height) / 2),
+  window_width,
+  window_height
+);
+background_sprite = Sprite(background_image);
+background_sprite.SetPosition(window_x, window_y, 0);
+
+logo_original = Image("header-image.png");
+logo_width = Math.Int(logo_original.GetWidth() * screen_scale);
+logo_height = Math.Int(logo_original.GetHeight() * screen_scale);
+logo_image = logo_original.Scale(logo_width, logo_height);
+logo_sprite = Sprite(logo_image);
+logo_x = window_x + Math.Int((window_width - logo_width) / 2);
+logo_y = window_y + Math.Int((window_height - logo_height) * logo_vertical_alignment);
+logo_sprite.SetPosition(logo_x, logo_y, 10);
+
+progress_width = Math.Int(progress_reference_width * screen_scale);
+progress_height = Math.Int(progress_reference_height * screen_scale);
+progress_x = window_x + Math.Int((window_width - progress_width) / 2);
+progress_y = window_y + Math.Int((window_height - progress_height) * progress_vertical_alignment);
+progress_background_original = Image("progress-background.png");
+progress_background_image = progress_background_original.Scale(progress_width, progress_height);
+progress_background_sprite = Sprite(progress_background_image);
+progress_background_sprite.SetPosition(progress_x, progress_y, 20);
+
+progress_foreground_original = Image("progress-foreground.png");
+progress_foreground_sprite = Sprite();
+progress_foreground_sprite.SetPosition(progress_x, progress_y, 21);
+progress_foreground_sprite.SetOpacity(0);
+
+fun set_progress(progress)
+  {
+    if (progress < 0)
+      progress = 0;
+    if (progress > 1)
+      progress = 1;
+
+    filled_width = Math.Int(progress_width * progress);
+    if (filled_width < 1)
+      progress_foreground_sprite.SetOpacity(0);
+    else
+      {
+        progress_foreground_image = progress_foreground_original.Scale(filled_width, progress_height);
+        progress_foreground_sprite.SetImage(progress_foreground_image);
+        progress_foreground_sprite.SetOpacity(1);
+      }
+  }
+
+fun boot_progress_callback(duration, progress)
+  {
+    set_progress(progress);
+  }
+
+fun system_update_callback(progress)
+  {
+    set_progress(progress);
+  }
+
+Plymouth.SetBootProgressFunction(boot_progress_callback);
+Plymouth.SetSystemUpdateFunction(system_update_callback);

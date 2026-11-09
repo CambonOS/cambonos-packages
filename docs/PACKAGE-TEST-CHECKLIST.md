@@ -74,8 +74,9 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 
 ## cambonos-plymouth
 
-- [x] Plymouth selecciona y muestra el tema CambonOS.
-- [x] La animación y la barra de progreso se muestran correctamente durante el arranque.
+- [ ] Plymouth selecciona y muestra el tema CambonOS con el plugin `script`.
+- [ ] El logo y la barra escalan proporcionalmente desde la resolución de referencia `1920x1080`.
+- [ ] El logo y la barra de progreso se muestran correctamente durante el arranque.
 - [x] La integración con mkinitcpio incorpora Plymouth a las imágenes initramfs.
 - [x] La selección de tema del administrador se conserva durante las actualizaciones.
 - [ ] La configuración de Plymouth funciona con el orden de hooks previsto, también en sistemas cifrados. (Excepción aceptada para esta versión: CambonOS todavía no soporta instalaciones cifradas; estas pruebas quedan fuera del alcance funcional actual y permanecen sin verificar.)

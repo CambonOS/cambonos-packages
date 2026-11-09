@@ -1,6 +1,8 @@
 import re
+import struct
 import subprocess
 import unittest
+import zlib
 from pathlib import Path
 
 
@@ -46,35 +48,68 @@ class PlymouthPackageTests(unittest.TestCase):
 
     def test_theme_uses_progress_bar_without_spinner(self):
         theme = (THEME / "cambonos.plymouth").read_text(encoding="utf-8")
+        script = (THEME / "cambonos.script").read_text(encoding="utf-8")
         boot = theme.split("[boot-up]", 1)[1].split("[shutdown]", 1)[0]
-        self.assertIn("ScaleBackgroundImage=true", theme)
+        self.assertIn("ModuleName=script", theme)
+        self.assertIn("ScriptFile=/usr/share/plymouth/themes/cambonos/cambonos.script", theme)
         self.assertIn("UseAnimation=false", boot)
         self.assertIn("UseProgressBar=true", boot)
         self.assertNotIn("UseAnimation=true", theme)
+        self.assertIn("Plymouth.SetBootProgressFunction(boot_progress_callback)", script)
+        self.assertIn("Plymouth.SetSystemUpdateFunction(system_update_callback)", script)
 
     def test_theme_centers_logo_and_places_progress_bar_below(self):
-        theme = (THEME / "cambonos.plymouth").read_text(encoding="utf-8")
-        self.assertIn("VerticalAlignment=0.66", theme)
-        self.assertIn("ProgressBarVerticalAlignment=0.7", theme)
+        script = (THEME / "cambonos.script").read_text(encoding="utf-8")
+        self.assertIn("logo_vertical_alignment = 0.66", script)
+        self.assertIn("progress_vertical_alignment = 0.7", script)
+        self.assertIn("(window_width - logo_width) / 2", script)
+        self.assertIn("(window_height - logo_height) * logo_vertical_alignment", script)
+        self.assertIn("(window_height - progress_height) * progress_vertical_alignment", script)
+
+    def test_logo_and_progress_scale_from_reference_resolution(self):
+        script = (THEME / "cambonos.script").read_text(encoding="utf-8")
+        self.assertIn("reference_width = 1920", script)
+        self.assertIn("reference_height = 1080", script)
+        self.assertIn("logo_original.Scale(logo_width, logo_height)", script)
+        self.assertIn("progress_background_original.Scale(progress_width, progress_height)", script)
+        self.assertIn("progress_foreground_original.Scale(filled_width, progress_height)", script)
 
     def test_background_and_palette_use_cambonos_brand(self):
         theme = (THEME / "cambonos.plymouth").read_text(encoding="utf-8")
+        script = (THEME / "cambonos.script").read_text(encoding="utf-8")
         for value in (
             "ImageDir=/usr/share/plymouth/themes/cambonos",
-            "BackgroundStartColor=0x061C31",
-            "BackgroundEndColor=0x061C31",
-            "ProgressBarForegroundColor=0x70E7E6",
+            "ConsoleLogBackgroundColor=0x061C31",
         ):
             self.assertIn(value, theme)
+        self.assertIn('Image("background.png")', script)
+        self.assertIn('Image("progress-background.png")', script)
+        self.assertIn('Image("progress-foreground.png")', script)
+        for filename, color in (
+            ("progress-background.png.base64", bytes.fromhex("29465A")),
+            ("progress-foreground.png.base64", bytes.fromhex("70E7E6")),
+        ):
+            decoded = subprocess.run(
+                ["base64", "--decode", str(THEME / filename)],
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(decoded.returncode, 0, decoded.stderr.decode())
+            self.assertTrue(decoded.stdout.startswith(b"\x89PNG\r\n\x1a\n"))
+            offset = 8
+            image_data = bytearray()
+            while offset < len(decoded.stdout):
+                chunk_size = struct.unpack_from(">I", decoded.stdout, offset)[0]
+                chunk_type = decoded.stdout[offset + 4 : offset + 8]
+                chunk_data = decoded.stdout[offset + 8 : offset + 8 + chunk_size]
+                if chunk_type == b"IDAT":
+                    image_data.extend(chunk_data)
+                offset += chunk_size + 12
+            self.assertEqual(zlib.decompress(image_data), b"\x00" + color + b"\xff")
 
     def test_theme_uses_immediate_transition_without_show_delay(self):
         theme = (THEME / "cambonos.plymouth").read_text(encoding="utf-8")
-        for value in (
-            "Transition=none",
-            "TransitionDuration=0.0",
-            "UseProgressBar=true",
-        ):
-            self.assertIn(value, theme)
+        self.assertIn("UseProgressBar=true", theme)
         self.assertNotIn("ShowDelay=", theme)
 
     def test_mkinitcpio_dropin_preserves_hooks_and_places_plymouth_safely(self):
