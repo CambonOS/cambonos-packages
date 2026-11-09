@@ -14,7 +14,7 @@ class GtkThemePackageTests(unittest.TestCase):
     def test_package_metadata_and_version(self):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
-        self.assertIn("pkgver=0.4.8", pkgb)
+        self.assertIn("pkgver=0.4.9", pkgb)
         self.assertIn("pkgrel=1", pkgb)
         self.assertIn("license=('GPL-3.0-only')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
@@ -69,11 +69,13 @@ class GtkThemePackageTests(unittest.TestCase):
                 errors = [rule for rule in rules if rule.type == "error"]
                 self.assertEqual(errors, [], f"{toolkit}/{filename}: {errors}")
 
-    def test_dark_stylesheets_are_synchronized(self):
+    def test_dark_stylesheets_link_to_canonical_stylesheet(self):
         for toolkit in ("gtk-3.0", "gtk-4.0"):
-            css = (THEME / toolkit / "gtk.css").read_bytes()
-            dark = (THEME / toolkit / "gtk-dark.css").read_bytes()
-            self.assertEqual(css, dark, toolkit)
+            css_path = THEME / toolkit / "gtk.css"
+            dark_path = THEME / toolkit / "gtk-dark.css"
+            self.assertTrue(dark_path.is_symlink(), toolkit)
+            self.assertEqual(dark_path.readlink().as_posix(), "gtk.css", toolkit)
+            self.assertEqual(css_path.read_bytes(), dark_path.read_bytes(), toolkit)
 
     def test_translucency_policy(self):
         gtk3 = (THEME / "gtk-3.0/gtk.css").read_text(encoding="utf-8")
@@ -280,6 +282,22 @@ class GtkThemePackageTests(unittest.TestCase):
 
     def test_xfwm4_uses_cambonos_surface_and_control_palette(self):
         xfwm4 = THEME / "xfwm4"
+        wm_colors = {
+            "wm_title": "#F7F5EC",
+            "wm_bg": "#061C31",
+            "wm_unfocused_bg": "#0A2942",
+            "wm_button_icon": "#F7F5EC",
+            "wm_button_max_hover_bg": "#70E7E6",
+            "wm_button_max_active_bg": "#019FA7",
+        }
+        for toolkit in ("gtk-3.0", "gtk-4.0"):
+            css = (THEME / toolkit / "gtk.css").read_text(encoding="utf-8")
+            for name, value in wm_colors.items():
+                self.assertRegex(
+                    css,
+                    rf"(?m)^@define-color {name} {re.escape(value)};",
+                    f"{toolkit} {name} diverges from XFWM4",
+                )
         for name in ("bottom-active.xpm", "bottom-left-active.xpm",
                      "bottom-right-active.xpm", "left-active.xpm",
                      "title-active.xpm", "top-left-active.xpm",
