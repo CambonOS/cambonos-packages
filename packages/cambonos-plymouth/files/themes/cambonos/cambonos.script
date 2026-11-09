@@ -1,9 +1,8 @@
-reference_width = 1920;
 reference_height = 1080;
-logo_vertical_alignment = 0.5;
 progress_reference_width = 420;
 progress_reference_height = 8;
 logo_reference_width = 512;
+group_gap_reference = 56;
 
 Window.SetBackgroundTopColor(0.0235, 0.1098, 0.1922);
 Window.SetBackgroundBottomColor(0.0235, 0.1098, 0.1922);
@@ -12,12 +11,7 @@ window_x = Window.GetX();
 window_y = Window.GetY();
 window_width = Window.GetWidth();
 window_height = Window.GetHeight();
-scale_x = window_width / reference_width;
-scale_y = window_height / reference_height;
-if (scale_x < scale_y)
-  screen_scale = scale_x;
-else
-  screen_scale = scale_y;
+screen_scale = window_height / reference_height;
 
 background_original = Image("plymouth-background.png");
 background_scale_x = window_width / background_original.GetWidth();
@@ -44,13 +38,15 @@ logo_height = Math.Int(logo_width * logo_original.GetHeight() / logo_original.Ge
 logo_image = logo_original.Scale(logo_width, logo_height);
 logo_sprite = Sprite(logo_image);
 logo_x = window_x + Math.Int((window_width - logo_width) / 2);
-logo_y = window_y + Math.Int((window_height - logo_height) * logo_vertical_alignment);
+progress_height = Math.Int(progress_reference_height * screen_scale);
+group_gap = Math.Int(group_gap_reference * screen_scale);
+group_height = logo_height + group_gap + progress_height;
+logo_y = window_y + Math.Int((window_height - group_height) / 2);
 logo_sprite.SetPosition(logo_x, logo_y, 10);
 
 progress_width = Math.Int(progress_reference_width * screen_scale);
-progress_height = Math.Int(progress_reference_height * screen_scale);
 progress_x = window_x + Math.Int((window_width - progress_width) / 2);
-progress_y = logo_y + logo_height + Math.Int(24 * screen_scale);
+progress_y = logo_y + logo_height + group_gap;
 progress_background_original = Image("progress-background.png");
 progress_background_image = progress_background_original.Scale(progress_width, progress_height);
 progress_background_sprite = Sprite(progress_background_image);

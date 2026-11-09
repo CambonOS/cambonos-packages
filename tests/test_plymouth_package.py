@@ -52,22 +52,32 @@ class PlymouthPackageTests(unittest.TestCase):
 
     def test_theme_centers_logo_and_places_progress_bar_below(self):
         script = (THEME / "cambonos.script").read_text(encoding="utf-8")
-        self.assertIn("logo_vertical_alignment = 0.5", script)
         self.assertIn("(window_width - logo_width) / 2", script)
-        self.assertIn("(window_height - logo_height) * logo_vertical_alignment", script)
-        self.assertIn("progress_y = logo_y + logo_height + Math.Int(24 * screen_scale)", script)
+        self.assertIn("group_gap_reference = 56", script)
+        self.assertIn("group_height = logo_height + group_gap + progress_height", script)
+        self.assertIn("logo_y = window_y + Math.Int((window_height - group_height) / 2)", script)
+        self.assertIn("progress_y = logo_y + logo_height + group_gap", script)
         self.assertNotIn("progress_vertical_alignment", script)
 
     def test_logo_and_progress_scale_from_reference_resolution(self):
         script = (THEME / "cambonos.script").read_text(encoding="utf-8")
-        self.assertIn("reference_width = 1920", script)
         self.assertIn("reference_height = 1080", script)
+        self.assertIn("screen_scale = window_height / reference_height", script)
+        self.assertNotIn("scale_x = window_width / reference_width", script)
+        self.assertNotIn("scale_y = window_height / reference_height", script)
         self.assertIn("logo_reference_width = 512", script)
         self.assertIn("logo_width = Math.Int(logo_reference_width * screen_scale)", script)
         self.assertIn("logo_height = Math.Int(logo_width * logo_original.GetHeight() / logo_original.GetWidth())", script)
         self.assertIn("logo_original.Scale(logo_width, logo_height)", script)
         self.assertIn("progress_background_original.Scale(progress_width, progress_height)", script)
         self.assertIn("progress_foreground_original.Scale(filled_width, progress_height)", script)
+
+    def test_ultrawide_background_uses_cover_scaling_and_center_crop(self):
+        script = (THEME / "cambonos.script").read_text(encoding="utf-8")
+        self.assertIn("if (background_scale_x > background_scale_y)", script)
+        self.assertIn("background_scaled.Crop(", script)
+        self.assertIn("(background_width - window_width) / 2", script)
+        self.assertIn("(background_height - window_height) / 2", script)
 
     def test_background_and_palette_use_cambonos_brand(self):
         theme = (THEME / "cambonos.plymouth").read_text(encoding="utf-8")
