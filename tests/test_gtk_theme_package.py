@@ -14,8 +14,8 @@ class GtkThemePackageTests(unittest.TestCase):
     def test_package_metadata_and_version(self):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
-        self.assertIn("pkgver=0.4.6", pkgb)
-        self.assertIn("pkgrel=15", pkgb)
+        self.assertIn("pkgver=0.4.8", pkgb)
+        self.assertIn("pkgrel=1", pkgb)
         self.assertIn("license=('GPL-3.0-only')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
@@ -212,7 +212,11 @@ class GtkThemePackageTests(unittest.TestCase):
         self.assertIn("background-color: rgba(112, 231, 230, 0.32);", gtk3)
         self.assertIn("border: 1px solid #70E7E6;", gtk3)
         mouse_selection = gtk3[gtk3.rfind("/* GTK 3 rubberband selection"):]
-        self.assertNotIn("XfdesktopIconView", mouse_selection)
+        desktop_rubberband = gtk3[gtk3.rfind("XfdesktopIconView.view.rubberband"):]
+        self.assertIn("XfdesktopIconView.view.rubberband", mouse_selection)
+        self.assertIn("background-color: rgba(112, 231, 230, 0.32);", desktop_rubberband)
+        self.assertIn("border: 1px solid #70E7E6;", desktop_rubberband)
+        self.assertIn("background-image: none;", desktop_rubberband)
         self.assertNotIn(".thunar", mouse_selection)
         self.assertIn("treeview.view rubberband", mouse_selection)
         for css in (gtk3, gtk4):
@@ -256,6 +260,18 @@ class GtkThemePackageTests(unittest.TestCase):
             block_end = css.find("}", block_start)
             block = css[block_start:block_end]
             self.assertIn(f"background-color: rgba(6, 28, 49, {alpha});", block)
+
+    def test_tooltips_use_midnight_surface(self):
+        for toolkit in ("gtk-3.0", "gtk-4.0"):
+            for filename in ("gtk.css", "gtk-dark.css"):
+                css = (THEME / toolkit / filename).read_text(encoding="utf-8")
+                start = css.rfind("tooltip.background,")
+                self.assertGreaterEqual(start, 0, f"{toolkit}/{filename}")
+                block_start = css.find("{", start)
+                block_end = css.find("}", block_start)
+                block = css[block_start:block_end]
+                self.assertIn("background-color: rgba(6, 28, 49, 0.88);", block)
+                self.assertIn("color: #F7F5EC;", block)
 
     def test_xfwm4_symlinks_resolve(self):
         for path in (THEME / "xfwm4").rglob("*"):

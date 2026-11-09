@@ -121,6 +121,7 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 - [x] La paleta oficial de CambonOS se aplica de forma consistente en ventanas, controles y paneles de una sesión XFCE real.
 - [x] La selección del tema requiere acción del usuario; el paquete no fuerza un tema ni sustituye la configuración local del escritorio.
 - [x] Las aplicaciones GTK y los componentes de escritorio muestran el modo oscuro con la identidad CambonOS sin forzar acentos o esquemas ajenos.
+- [ ] La banda de selección al arrastrar en el escritorio XFCE muestra el relleno translúcido y el borde turquesa del tema.
 - [x] La retirada del paquete elimina los recursos del tema sin alterar la configuración previa del sistema ni de los usuarios.
 
 ## Registro de verificación

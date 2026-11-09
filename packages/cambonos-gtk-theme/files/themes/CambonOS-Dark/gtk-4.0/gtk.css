@@ -5673,7 +5673,7 @@ columnview > rubberband {
 tooltip.background,
 tooltip.background.csd {
   color: #F7F5EC;
-  background-color: rgba(6, 28, 49, 0.16);
+  background-color: rgba(6, 28, 49, 0.88);
   background-image: none;
 }
 

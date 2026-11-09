@@ -4717,6 +4717,15 @@ flowbox rubberband {
   background-color: rgba(112, 231, 230, 0.32);
 }
 
+/* Xfdesktop paints the rubberband on the icon view node itself. */
+XfdesktopIconView.view.rubberband {
+  border: 1px solid #70E7E6;
+  background-color: rgba(112, 231, 230, 0.32);
+  background-image: none;
+  box-shadow: none;
+  transition: none;
+}
+
 /* Selected items remain distinct from the drag-selection overlay. */
 .view:selected,
 treeview.view:selected,
@@ -4794,7 +4803,7 @@ window.background .menuitem:selected label {
 tooltip.background,
 tooltip.background.csd {
   color: #F7F5EC;
-  background-color: rgba(6, 28, 49, 0.16);
+  background-color: rgba(6, 28, 49, 0.88);
   background-image: none;
 }
 
