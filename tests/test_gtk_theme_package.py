@@ -14,8 +14,8 @@ class GtkThemePackageTests(unittest.TestCase):
     def test_package_metadata_and_version(self):
         pkgb = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-gtk-theme", pkgb)
-        self.assertIn("pkgver=0.4.7", pkgb)
-        self.assertIn("pkgrel=1", pkgb)
+        self.assertIn("pkgver=0.4.6", pkgb)
+        self.assertIn("pkgrel=15", pkgb)
         self.assertIn("license=('GPL-3.0-only')", pkgb)
         self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', pkgb)
         self.assertIn('"$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"', pkgb)
