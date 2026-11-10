@@ -1,0 +1,206 @@
+#
+# CambonOS - Tema oficial para dialog(1)
+# Perfil: TUI Classic / TTY
+#
+# Instalacion:
+#   install -Dm644 CambonOS.dialogrc /etc/dialogrc
+#
+# O para un usuario:
+#   install -Dm644 CambonOS.dialogrc "$HOME/.dialogrc"
+#
+# Tambien puede seleccionarse explicitamente:
+#   DIALOGRC=/etc/dialogrc dialog --msgbox "Hola" 8 40
+#
+# IMPORTANTE SOBRE COLORES:
+# dialogrc usa los 8 nombres ANSI de curses, no valores HEX ni indices
+# ANSI 0-15 directamente. El tema usa BLACK/RED/GREEN/YELLOW/BLUE/
+# MAGENTA/BLUE/WHITE y el atributo ON (negrita) para solicitar las
+# variantes brillantes cuando la consola/terminfo lo representa asi.
+#
+# Correspondencia con la paleta TTY oficial de CambonOS:
+#   BLACK   -> ANSI 0  #061C31  azul noche (fondo)
+#   RED     -> ANSI 1  #A63E4B  rojo (errores/acciones destructivas)
+#   GREEN   -> ANSI 2  #149246  + bold -> ANSI 10 #AEFA50 (lima)
+#   YELLOW  -> ANSI 3  #B3973D
+#   BLUE    -> ANSI 4  #019FA7  + bold -> ANSI 12 #70E7E6
+#   MAGENTA -> ANSI 5  #994B78
+#   CYAN    -> ANSI 6  #258A96
+#   WHITE   -> ANSI 7  #F7F5EC
+#
+# dialog/curses no puede solicitar de forma portable un HEX concreto ni
+# seleccionar directamente ANSI 8-15 desde este archivo. El uso de GREEN
+# o BLUE con ON depende de que la terminal trate el atributo bold como
+# color brillante. La paleta setvtrgb de CambonOS debe estar activa en TTY.
+#
+# Este archivo cubre los ajustes globales y roles de color que dialog
+# expone mediante dialogrc. No sustituye las opciones de cada widget
+# (--yesno, --menu, --checklist, --form, --gauge, etc.), que siguen
+# definiendose en la linea de comandos o en el script que invoca dialog.
+#
+
+# ----------------------------------------------------------------------
+# Opciones generales
+# ----------------------------------------------------------------------
+
+# Relacion de aspecto usada al calcular el tamano de las ventanas.
+aspect = 0
+
+# Separador entre resultados de widgets encadenados.
+separate_widget = ""
+
+# Longitud de tabulacion al mostrar archivos de texto.
+tab_len = 8
+
+# Permite incluir los elementos de listas en la navegacion con Tab.
+visit_items = OFF
+
+# Las sombras se desactivan para conservar legibilidad y compatibilidad
+# en consolas TTY; use_shadow tambien activa el soporte de color.
+use_shadow = OFF
+
+# Activar colores.
+use_colors = ON
+
+
+# ----------------------------------------------------------------------
+# Fondo de pantalla y sombra
+# ----------------------------------------------------------------------
+
+# Fondo completo de la terminal: texto blanco calido sobre azul noche.
+screen_color = (WHITE,BLACK,OFF)
+
+# No se usa sombra, pero se define el atributo para completar el tema.
+shadow_color = (BLACK,BLACK,OFF)
+
+
+# ----------------------------------------------------------------------
+# Ventana principal, titulos y bordes
+# ----------------------------------------------------------------------
+
+# Superficie de todos los dialogos.
+dialog_color = (WHITE,BLACK,OFF)
+
+# Titulos: verde lima (GREEN + bold -> ANSI bright green en TTY compatible).
+title_color = (GREEN,BLACK,ON)
+
+# Bordes: turquesa/cian brillante.
+border_color = (BLUE,BLACK,ON)
+border2_color = border_color
+
+
+# ----------------------------------------------------------------------
+# Botones
+# ----------------------------------------------------------------------
+
+# Boton enfocado: fondo lima, texto azul noche.
+button_active_color = (BLACK,GREEN,ON)
+
+# Botones no enfocados: texto blanco sobre azul noche.
+button_inactive_color = (WHITE,BLACK,OFF)
+
+# Tecla de acceso del boton enfocado.
+button_key_active_color = (BLACK,GREEN,ON)
+
+# Tecla de acceso de botones inactivos: turquesa.
+button_key_inactive_color = (BLUE,BLACK,ON)
+
+# Etiqueta del boton enfocado.
+button_label_active_color = (BLACK,GREEN,ON)
+
+# Etiqueta de botones inactivos.
+button_label_inactive_color = (WHITE,BLACK,OFF)
+
+
+# ----------------------------------------------------------------------
+# Cajas de entrada y busqueda
+# ----------------------------------------------------------------------
+
+# Texto y campo de entrada.
+inputbox_color = (WHITE,BLACK,OFF)
+
+# Bordes del campo de entrada.
+inputbox_border_color = (BLUE,BLACK,ON)
+inputbox_border2_color = inputbox_border_color
+
+# Texto y campo de busqueda.
+searchbox_color = (WHITE,BLACK,OFF)
+
+# Titulo del cuadro de busqueda.
+searchbox_title_color = (GREEN,BLACK,ON)
+
+# Bordes del cuadro de busqueda.
+searchbox_border_color = (BLUE,BLACK,ON)
+searchbox_border2_color = searchbox_border_color
+
+
+# ----------------------------------------------------------------------
+# Menus, listas, checklist, radiolist y buildlist
+# ----------------------------------------------------------------------
+
+# Indicador de posicion/scroll.
+position_indicator_color = (BLUE,BLACK,ON)
+
+# Superficie del menu.
+menubox_color = (WHITE,BLACK,OFF)
+
+# Bordes del menu.
+menubox_border_color = (BLUE,BLACK,ON)
+menubox_border2_color = menubox_border_color
+
+# Elementos normales.
+item_color = (WHITE,BLACK,OFF)
+
+# Elemento seleccionado: lima brillante con texto azul noche.
+item_selected_color = (BLACK,GREEN,ON)
+
+# Etiquetas/tag normales.
+tag_color = (BLUE,BLACK,ON)
+
+# Etiqueta/tag seleccionada.
+tag_selected_color = (BLACK,GREEN,ON)
+
+# Tecla de acceso de una etiqueta normal.
+tag_key_color = (GREEN,BLACK,ON)
+
+# Tecla de acceso de la etiqueta seleccionada.
+tag_key_selected_color = (BLACK,GREEN,ON)
+
+# Casillas sin seleccionar.
+check_color = (WHITE,BLACK,OFF)
+
+# Casillas seleccionadas.
+check_selected_color = (BLACK,GREEN,ON)
+
+# Flechas de desplazamiento.
+uarrow_color = (BLUE,BLACK,ON)
+darrow_color = (BLUE,BLACK,ON)
+
+# Texto de ayuda contextual de los elementos.
+itemhelp_color = (WHITE,BLACK,OFF)
+
+
+# ----------------------------------------------------------------------
+# Formularios (form, mixedform, passwordform)
+# ----------------------------------------------------------------------
+
+# Campo o texto activo del formulario.
+form_active_text_color = (BLACK,GREEN,ON)
+
+# Texto de los campos no activos.
+form_text_color = (WHITE,BLACK,OFF)
+
+# Campos de solo lectura.
+form_item_readonly_color = (BLUE,BLACK,ON)
+
+
+# ----------------------------------------------------------------------
+# Barras de progreso y gauge
+# ----------------------------------------------------------------------
+
+# Progreso: lima brillante sobre azul noche.
+gauge_color = (GREEN,BLACK,ON)
+
+
+# ----------------------------------------------------------------------
+# Fin del tema CambonOS
+# ----------------------------------------------------------------------

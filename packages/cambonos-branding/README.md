@@ -8,6 +8,7 @@ Recursos visuales oficiales de CambonOS para aplicaciones, instaladores y compon
 - Fondo 4K y recursos gráficos de la barra de progreso de Plymouth.
 - Tipografía CambonOS Symbols y configuración de Fontconfig.
 - Paleta ANSI de CambonOS aplicada a las consolas virtuales.
+- Tema global de CambonOS para `dialog` en `/etc/dialogrc`.
 - Predeterminado global de colores para Xfce Terminal cuando está instalado.
 
 La integración de Xfce Terminal modifica solo los valores globales de paleta,

@@ -17,6 +17,7 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 - [x] Fontconfig encuentra y aplica la configuración de la fuente.
 - [ ] La paleta ANSI de CambonOS se aplica a cada TTY virtual al inicializarse.
 - [ ] Los 16 colores de consola corresponden a la paleta publicada.
+- [ ] `dialog` aplica el tema CambonOS de `/etc/dialogrc`.
 - [ ] Xfce Terminal aplica la paleta CambonOS como predeterminado global cuando está instalado.
 - [ ] La configuración global previa se restaura al retirar `xfce4-terminal` o `cambonos-branding`.
 - [ ] Las preferencias de usuario y las opciones globales ajenas a la paleta se conservan.

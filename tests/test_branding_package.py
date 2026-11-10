@@ -45,7 +45,7 @@ class BrandingPackageTests(unittest.TestCase):
             | PLYMOUTH_ASSETS
             | CONSOLE_ASSETS
             | XFCE_TERMINAL_ASSETS
-            | {"LICENSE", "ttf"},
+            | {"LICENSE", "dialogrc", "ttf"},
         )
         self.assertTrue((TTF_DIR / "CambonOS-Symbols.ttf").is_file())
         self.assertTrue((TTF_DIR / "65-cambonos-symbols.conf").is_file())
@@ -68,7 +68,11 @@ class BrandingPackageTests(unittest.TestCase):
         self.assertIn(
             "depends=('bash' 'coreutils' 'fontconfig' 'gawk' 'kbd')", content
         )
-        self.assertIn("pkgrel=10", content)
+        self.assertIn("pkgver=0.1.2", content)
+        self.assertIn("pkgrel=1", content)
+        self.assertIn("backup=('etc/dialogrc')", content)
+        self.assertIn('"$startdir/files/dialogrc"', content)
+        self.assertIn('"$pkgdir/etc/dialogrc"', content)
         self.assertIn("install=cambonos-branding.install", content)
         self.assertIn('"$branding_dir/console-colors"', content)
         self.assertIn(

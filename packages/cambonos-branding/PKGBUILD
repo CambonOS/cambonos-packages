@@ -1,6 +1,6 @@
 pkgname=cambonos-branding
-pkgver=0.1.1
-pkgrel=10
+pkgver=0.1.2
+pkgrel=1
 pkgdesc="CambonOS visual identity assets"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
@@ -8,6 +8,7 @@ license=('GPL-3.0-only')
 groups=('cambonos-base')
 depends=('bash' 'coreutils' 'fontconfig' 'gawk' 'kbd')
 install=cambonos-branding.install
+backup=('etc/dialogrc')
 
 package() {
   local branding_dir="$pkgdir/usr/share/cambonos/branding"
@@ -16,6 +17,9 @@ package() {
   local fontconfig_default="$pkgdir/usr/share/fontconfig/conf.default"
   local udev_rules_dir="$pkgdir/usr/lib/udev/rules.d"
   local libalpm_hooks_dir="$pkgdir/usr/share/libalpm/hooks"
+
+  install -Dm644 "$startdir/files/dialogrc" \
+    "$pkgdir/etc/dialogrc"
 
   # Canonical location: all original branding assets live here.
   install -Dm644 "$startdir/files/cambonos-icon.svg" \
