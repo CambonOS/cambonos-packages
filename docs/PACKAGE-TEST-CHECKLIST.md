@@ -135,6 +135,14 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 - [ ] La banda de selección al arrastrar en el escritorio XFCE muestra el relleno translúcido y el borde turquesa del tema.
 - [x] La retirada del paquete elimina los recursos del tema sin alterar la configuración previa del sistema ni de los usuarios.
 
+## cambonos-mkiso
+
+- [ ] La comprobación de red live accede al mirror geo de Arch configurado para `[core]` y `[extra]`.
+- [ ] La actualización de `cambonos-installer` muestra la salida de Pacman y maneja correctamente errores.
+- [ ] El menú gráfico Syslinux BIOS muestra el fondo y los colores CambonOS legibles en hardware real.
+- [ ] Las entradas BIOS, UEFI y UEFI loopback arrancan sin copiar la imagen raíz a RAM y permiten instalar con el medio conectado.
+- [ ] La ISO arranca e instala correctamente en una máquina virtual o equipo de prueba, en BIOS y UEFI.
+
 ## Registro de verificación
 
 Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última comprobación funcional. No es necesario repetir las pruebas de funciones que no hayan podido verse afectadas por un cambio.
@@ -153,3 +161,4 @@ Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última
 | `cambonos-keyring` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-lightdm` | VM (iso-install) | 08/11/2026 | - |
 | `cambonos-gtk-theme` | VM (iso-install) | 08/11/2026 | - |
+| `cambonos-mkiso` | Pendiente de prueba real | — | Verificaciones funcionales pendientes |
