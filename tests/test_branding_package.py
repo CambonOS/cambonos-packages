@@ -69,7 +69,7 @@ class BrandingPackageTests(unittest.TestCase):
             "depends=('bash' 'coreutils' 'fontconfig' 'gawk' 'kbd')", content
         )
         self.assertIn("pkgver=0.1.2", content)
-        self.assertIn("pkgrel=1", content)
+        self.assertIn("pkgrel=2", content)
         self.assertIn("backup=('etc/dialogrc')", content)
         self.assertIn('"$startdir/files/dialogrc"', content)
         self.assertIn('"$pkgdir/etc/dialogrc"', content)

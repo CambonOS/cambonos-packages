@@ -93,19 +93,19 @@ border2_color = border_color
 # ----------------------------------------------------------------------
 
 # Boton enfocado: fondo lima, texto azul noche.
-button_active_color = (BLACK,GREEN,ON)
+button_active_color = (WHITE,GREEN,ON)
 
 # Botones no enfocados: texto blanco sobre azul noche.
 button_inactive_color = (WHITE,BLACK,OFF)
 
 # Tecla de acceso del boton enfocado.
-button_key_active_color = (BLACK,GREEN,ON)
+button_key_active_color = (WHITE,GREEN,ON)
 
 # Tecla de acceso de botones inactivos: turquesa.
 button_key_inactive_color = (BLUE,BLACK,ON)
 
 # Etiqueta del boton enfocado.
-button_label_active_color = (BLACK,GREEN,ON)
+button_label_active_color = (WHITE,GREEN,ON)
 
 # Etiqueta de botones inactivos.
 button_label_inactive_color = (WHITE,BLACK,OFF)
@@ -151,25 +151,25 @@ menubox_border2_color = menubox_border_color
 item_color = (WHITE,BLACK,OFF)
 
 # Elemento seleccionado: lima brillante con texto azul noche.
-item_selected_color = (BLACK,GREEN,ON)
+item_selected_color = (WHITE,GREEN,ON)
 
 # Etiquetas/tag normales.
 tag_color = (BLUE,BLACK,ON)
 
 # Etiqueta/tag seleccionada.
-tag_selected_color = (BLACK,GREEN,ON)
+tag_selected_color = (WHITE,GREEN,ON)
 
 # Tecla de acceso de una etiqueta normal.
 tag_key_color = (GREEN,BLACK,ON)
 
 # Tecla de acceso de la etiqueta seleccionada.
-tag_key_selected_color = (BLACK,GREEN,ON)
+tag_key_selected_color = (WHITE,GREEN,ON)
 
 # Casillas sin seleccionar.
 check_color = (WHITE,BLACK,OFF)
 
 # Casillas seleccionadas.
-check_selected_color = (BLACK,GREEN,ON)
+check_selected_color = (WHITE,GREEN,ON)
 
 # Flechas de desplazamiento.
 uarrow_color = (BLUE,BLACK,ON)
@@ -184,7 +184,7 @@ itemhelp_color = (WHITE,BLACK,OFF)
 # ----------------------------------------------------------------------
 
 # Campo o texto activo del formulario.
-form_active_text_color = (BLACK,GREEN,ON)
+form_active_text_color = (WHITE,GREEN,ON)
 
 # Texto de los campos no activos.
 form_text_color = (WHITE,BLACK,OFF)
