@@ -1,0 +1,5 @@
+CambonOS Xfwm4 theme — initial compatibility profile.
+Install by selecting the matching GTK theme in Appearance and this
+theme in Settings > Window Manager > Style.
+The XPM assets are deliberately simple and use the CambonOS palette.
+This first pass requires visual validation on the target XFCE/Xfwm4 version.

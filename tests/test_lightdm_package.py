@@ -16,7 +16,7 @@ class LightDMPackageTests(unittest.TestCase):
         content = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-lightdm", content)
         self.assertIn("pkgver=0.1.0", content)
-        self.assertIn("pkgrel=3", content)
+        self.assertIn("pkgrel=4", content)
         self.assertIn("license=('GPL-3.0-only')", content)
         self.assertIn(
             "depends=('lightdm' 'lightdm-slick-greeter' 'numlockx' 'cambonos-gtk-theme')", content
@@ -53,7 +53,7 @@ class LightDMPackageTests(unittest.TestCase):
         self.assertEqual(parser.getboolean("Greeter", "draw-user-backgrounds"), False)
         self.assertEqual(parser.getboolean("Greeter", "activate-numlock"), True)
         self.assertEqual(parser.get("Greeter", "enable-hidpi"), "auto")
-        self.assertEqual(parser.get("Greeter", "theme-name"), "CambonOS-Dark")
+        self.assertEqual(parser.get("Greeter", "theme-name"), "CambonOS-dark")
         self.assertFalse(parser.has_option("Greeter", "icon-theme-name"))
 
     def test_graphic_assets_have_expected_signatures_and_dimensions(self):

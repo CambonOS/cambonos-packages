@@ -22,6 +22,16 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 - [ ] La configuración global previa se restaura al retirar `xfce4-terminal` o `cambonos-branding`.
 - [ ] Las preferencias de usuario y las opciones globales ajenas a la paleta se conservan.
 
+## cambonos-gtk-theme
+
+- [ ] El paquete instala las variantes `CambonOS` y `CambonOS-dark` en `/usr/share/themes/`.
+- [ ] GTK3 aplica correctamente los estilos de ambas variantes.
+- [ ] GTK4 aplica correctamente los estilos de ambas variantes en aplicaciones GTK4 compatibles.
+- [ ] Xfwm4 aplica las decoraciones de ambas variantes y muestra correctamente el icono de aplicación.
+- [ ] Las superficies translúcidas se representan correctamente con el compositor XFCE activado.
+- [ ] La legibilidad de texto, menús, tooltips, entradas y controles se mantiene con alpha 0.88.
+- [ ] La selección del tema en Apariencia y Gestor de ventanas persiste tras cerrar sesión e iniciar de nuevo.
+
 ## cambonos-fastfetch
 
 - [x] Fastfetch muestra la identidad y el logotipo de CambonOS.
@@ -117,7 +127,7 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 
 ## cambonos-gtk-theme
 
-- [x] La instalación deja el tema `CambonOS-Dark` en `/usr/share/themes/` sin tocar preferencias del usuario ni archivos de configuración global de GTK.
+- [x] La instalación deja el tema `CambonOS-dark` en `/usr/share/themes/` sin tocar preferencias del usuario ni archivos de configuración global de GTK.
 - [x] GTK 2, GTK 3, GTK 4 y XFWM4 reconocen el tema y cargan sus recursos sin errores de lectura ni rutas rotas.
 - [x] La paleta oficial de CambonOS se aplica de forma consistente en ventanas, controles y paneles de una sesión XFCE real.
 - [x] La selección del tema requiere acción del usuario; el paquete no fuerza un tema ni sustituye la configuración local del escritorio.

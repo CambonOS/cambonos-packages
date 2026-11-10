@@ -1,19 +1,48 @@
+# Maintainer: CambonOS contributors
 pkgname=cambonos-gtk-theme
-pkgver=0.4.9
+pkgver=0.5.0
 pkgrel=1
-pkgdesc="CambonOS dark GTK 3, GTK 4 and XFWM4 theme"
+pkgdesc="CambonOS GTK 3/4 and Xfwm4 themes (theme release 0.4.0)"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
-license=('GPL-3.0-only')
+license=('MIT')
+groups=('cambonos-base')
+makedepends=('python')
+optdepends=(
+  'gtk3: GTK 3 application styling'
+  'gtk4: GTK 4 application styling'
+  'xfwm4: Xfwm4 window decoration theme'
+)
+
+build() {
+  local builddir="$srcdir/$pkgname-$pkgver"
+
+  rm -rf "$builddir"
+  install -d "$builddir"
+  cp -a "$startdir/files/source/." "$builddir/"
+
+  # Generate GTK color definitions from the canonical palette, then validate
+  # the complete GTK3/GTK4 and Xfwm4 theme tree before packaging it.
+  python "$builddir/tools/build-theme.py"
+  python "$builddir/tools/validate-theme.py"
+}
 
 package() {
-  local theme_dir="$pkgdir/usr/share/themes/CambonOS-Dark"
+  local builddir="$srcdir/$pkgname-$pkgver"
 
-  install -Dm644 "$startdir/files/LICENSE" \
+  # Keep the complete local source payload accounted for by repository checks.
+  [[ -d "$startdir/files/source" ]] || return 1
+
+  install -d "$pkgdir/usr/share/themes"
+  cp -a "$builddir/themes/CambonOS" "$pkgdir/usr/share/themes/"
+  cp -a "$builddir/themes/CambonOS-dark" "$pkgdir/usr/share/themes/"
+
+  install -Dm644 "$builddir/LICENSE" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-  install -Dm644 "$startdir/files/upstream/ORCHIS-NOTICE" \
-    "$pkgdir/usr/share/doc/$pkgname/ORCHIS-NOTICE"
-
-  install -d "$theme_dir"
-  cp -a "$startdir/files/themes/CambonOS-Dark/." "$theme_dir/"
+  install -Dm644 "$builddir/README.md" \
+    "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 "$builddir/CHANGELOG.md" \
+    "$pkgdir/usr/share/doc/$pkgname/CHANGELOG.md"
+  install -Dm644 "$builddir/docs/COMPATIBILITY.md" \
+    "$pkgdir/usr/share/doc/$pkgname/COMPATIBILITY.md"
 }

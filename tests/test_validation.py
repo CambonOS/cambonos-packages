@@ -190,6 +190,30 @@ class ValidationTests(unittest.TestCase):
             errors = validate_package(package)
             self.assertTrue(any("no declarar source=()" in error for error in errors))
 
+    def test_validate_package_allows_build_sources_staged_to_srcdir(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            package = self._package(temporary)
+            path = package.directory / "PKGBUILD"
+            text = path.read_text()
+            text = text.replace(
+                'package() { install -Dm644 "$startdir/files/payload" "$pkgdir/usr/share/sample/payload"; }',
+                'build() { cp -a "$startdir/files/." "$srcdir/build/"; }\n'
+                'package() { install -Dm644 "$srcdir/build/payload" "$pkgdir/usr/share/sample/payload"; }',
+            )
+            path.write_text(text)
+            errors = validate_package(package)
+            self.assertEqual(errors, [])
+
+    def test_validate_package_rejects_srcdir_without_local_build_sources(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            package = self._package(temporary)
+            path = package.directory / "PKGBUILD"
+            path.write_text(path.read_text().replace(
+                '"$startdir/files/payload"', '"$srcdir/build/payload"'
+            ))
+            errors = validate_package(package)
+            self.assertTrue(any("build() consume payloads locales" in error for error in errors))
+
     def test_validate_package_rejects_missing_payload(self):
         with tempfile.TemporaryDirectory() as temporary:
             package = self._package(temporary)

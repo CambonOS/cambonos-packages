@@ -1,0 +1,6 @@
+/* XPM */
+static char * bottom_active_xpm[] = {
+"8 1 1 1",
+"  c #D5DED9",
+"        "
+};

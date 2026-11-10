@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=CambonOS-dark
+Comment=CambonOS original GTK theme (dark)
+Type=X-GNOME-Metatheme
+
+[X-GNOME-Metatheme]
+GtkTheme=CambonOS-dark
+MetacityTheme=CambonOS-dark

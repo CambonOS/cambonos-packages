@@ -1,0 +1,8 @@
+pkgbase = cambonos-gtk-theme
+    pkgdesc = GTK 3/4 and Xfwm4 themes for CambonOS (light and dark)
+    pkgver = 0.4.0
+    pkgrel = 1
+    arch = any
+    license = MIT
+
+pkgname = cambonos-gtk-theme

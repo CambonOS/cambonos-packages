@@ -8,6 +8,7 @@ Repositorio de los paquetes propios de **CambonOS**, una distribución basada en
 |---|---|
 | [cambonos-base](packages/cambonos-base/README.md) | Metapaquete que agrupa los componentes generales de CambonOS y permite instalarlos conjuntamente. |
 | [cambonos-branding](packages/cambonos-branding/README.md) | Recursos gráficos y tipografía de CambonOS. |
+| [cambonos-gtk-theme](packages/cambonos-gtk-theme/README.md) | Temas GTK3/GTK4 y decoraciones Xfwm4 de CambonOS. |
 | [cambonos-gtk-theme](packages/cambonos-gtk-theme/README.md) | Temas GTK 3 claro y oscuro basados en la paleta de CambonOS Web. |
 | [cambonos-fastfetch](packages/cambonos-fastfetch/README.md) | Identidad CambonOS e información del sistema en Fastfetch. |
 | [cambonos-shell-prompt](packages/cambonos-shell-prompt/README.md) | Prompt Starship de CambonOS para Bash, Zsh y Fish. |
