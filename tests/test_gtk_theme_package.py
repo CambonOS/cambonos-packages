@@ -21,7 +21,7 @@ class GtkThemePackageTests(unittest.TestCase):
         packages = discover_packages(ROOT)
         package = packages["cambonos-gtk-theme"]
         self.assertEqual(package.pkgver, "0.6.0")
-        self.assertEqual(package.pkgrel, "1")
+        self.assertEqual(package.pkgrel, "2")
         self.assertEqual(package.architecture, ("any",))
         self.assertEqual(package.makedepends, ("python",))
         self.assertEqual(validate_package(package), [])
