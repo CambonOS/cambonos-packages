@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.0
+
+- Removed the embedded PKGBUILD and .SRCINFO so the repository package has one authoritative PKGBUILD.
+- Unified the Arch package and theme source release at version 0.6.0.
+- Kept package construction, source generation and validation under the repository-level PKGBUILD.
+
+## 0.5.0
+
+- Consolidated the project to one selectable theme: `CambonOS-dark`.
+- Removed the light theme directory and light palette from the build source.
+- Made both GTK 3 and GTK 4 entry points use the dark palette.
+- Kept the existing `CambonOS-dark` name for XFCE and LightDM compatibility.
+- Updated build validation and package metadata for the single-theme layout.
+
+
 ## 0.4.0 (experimental)
 
 - Applied alpha 0.88 to the main background surfaces in both light and dark palettes: base, surface, surface_alt, surface_raised, header, input and disabled_bg.

@@ -1,12 +1,12 @@
 # Maintainer: CambonOS contributors
 pkgname=cambonos-gtk-theme
-pkgver=0.5.0
+pkgver=0.6.0
 pkgrel=1
-pkgdesc="CambonOS GTK 3/4 and Xfwm4 themes (theme release 0.4.0)"
+pkgdesc="CambonOS GTK 3/4 and Xfwm4 dark theme"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
-license=('MIT')
-groups=('cambonos-base')
+license=('GPL-3.0-only')
+groups=('')
 makedepends=('python')
 optdepends=(
   'gtk3: GTK 3 application styling'
@@ -19,7 +19,7 @@ build() {
 
   rm -rf "$builddir"
   install -d "$builddir"
-  cp -a "$startdir/files/source/." "$builddir/"
+  cp -a "$startdir/files/." "$builddir/"
 
   # Generate GTK color definitions from the canonical palette, then validate
   # the complete GTK3/GTK4 and Xfwm4 theme tree before packaging it.
@@ -31,18 +31,11 @@ package() {
   local builddir="$srcdir/$pkgname-$pkgver"
 
   # Keep the complete local source payload accounted for by repository checks.
-  [[ -d "$startdir/files/source" ]] || return 1
+  [[ -d "$startdir/files" ]] || return 1
 
   install -d "$pkgdir/usr/share/themes"
-  cp -a "$builddir/themes/CambonOS" "$pkgdir/usr/share/themes/"
   cp -a "$builddir/themes/CambonOS-dark" "$pkgdir/usr/share/themes/"
 
   install -Dm644 "$builddir/LICENSE" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-  install -Dm644 "$builddir/README.md" \
-    "$pkgdir/usr/share/doc/$pkgname/README.md"
-  install -Dm644 "$builddir/CHANGELOG.md" \
-    "$pkgdir/usr/share/doc/$pkgname/CHANGELOG.md"
-  install -Dm644 "$builddir/docs/COMPATIBILITY.md" \
-    "$pkgdir/usr/share/doc/$pkgname/COMPATIBILITY.md"
 }

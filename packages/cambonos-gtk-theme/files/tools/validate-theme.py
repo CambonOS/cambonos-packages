@@ -5,7 +5,7 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-THEMES = ("CambonOS", "CambonOS-dark")
+THEMES = ("CambonOS-dark",)
 APIS = ("gtk-3.0", "gtk-4.0")
 errors = []
 

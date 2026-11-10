@@ -1,9 +1,0 @@
-[Desktop Entry]
-Encoding=UTF-8
-Name=CambonOS
-Comment=CambonOS original GTK theme (light)
-Type=X-GNOME-Metatheme
-
-[X-GNOME-Metatheme]
-GtkTheme=CambonOS
-MetacityTheme=CambonOS

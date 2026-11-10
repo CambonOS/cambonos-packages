@@ -99,9 +99,6 @@ for mode, tokens in PALETTE.items():
     for token, value in tokens.items():
         css_color(value, f"{mode}.{token}")
 
-for theme, default_mode in (("CambonOS", "light"), ("CambonOS-dark", "dark")):
-    for api in ("gtk-3.0", "gtk-4.0"):
-        for filename, mode in (("gtk.css", default_mode), ("gtk-dark.css", "dark")):
-            if theme == "CambonOS-dark":
-                mode = "dark"
-            (ROOT / "themes" / theme / api / f"colors-{mode}.css").write_text(token_css(mode, api))
+for api in ("gtk-3.0", "gtk-4.0"):
+    for filename in ("gtk.css", "gtk-dark.css"):
+        (ROOT / "themes" / "CambonOS-dark" / api / f"colors-dark.css").write_text(token_css("dark", api))

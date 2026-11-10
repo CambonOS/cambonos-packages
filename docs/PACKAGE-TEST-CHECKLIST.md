@@ -24,7 +24,7 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 
 ## cambonos-gtk-theme
 
-- [ ] El paquete instala las variantes `CambonOS` y `CambonOS-dark` en `/usr/share/themes/`.
+- [ ] El paquete instala únicamente `CambonOS-dark` en `/usr/share/themes/`.
 - [ ] GTK3 aplica correctamente los estilos de ambas variantes.
 - [ ] GTK4 aplica correctamente los estilos de ambas variantes en aplicaciones GTK4 compatibles.
 - [ ] Xfwm4 aplica las decoraciones de ambas variantes y muestra correctamente el icono de aplicación.
