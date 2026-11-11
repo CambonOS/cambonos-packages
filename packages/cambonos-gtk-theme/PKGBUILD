@@ -1,7 +1,7 @@
 # Maintainer: CambonOS contributors
 pkgname=cambonos-gtk-theme
-pkgver=0.6.0
-pkgrel=2
+pkgver=0.6.2
+pkgrel=5
 pkgdesc="CambonOS GTK 3/4 and Xfwm4 dark theme"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"

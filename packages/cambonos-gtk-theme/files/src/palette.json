@@ -39,8 +39,8 @@
     "warning": "#E7B75B",
     "error": "#FF777F",
     "focus": "#70E7E6",
-    "selected_fg": "#061C31",
-    "accent_fg": "#061C31",
+    "selected_fg": "#FFFFFF",
+    "accent_fg": "#FFFFFF",
     "tooltip_bg": {
       "color": "#102F46",
       "alpha": 0.8272

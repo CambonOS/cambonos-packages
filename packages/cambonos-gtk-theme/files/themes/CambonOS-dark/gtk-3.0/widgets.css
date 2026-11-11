@@ -103,19 +103,38 @@ entry selection, textview text selection {
 }
 entry progress { background-color: @accent_soft_color; }
 
-/* Combo boxes and spin button subcontrols */
-combobox button, combobox .button, spinbutton button {
+/* Combo boxes */
+combobox button, combobox .button {
   color: @theme_fg_color;
   background-color: @button_bg_color;
   border-color: @borders;
 }
-combobox button:hover, spinbutton button:hover { background-color: @button_hover_bg_color; }
+combobox button:hover { background-color: @button_hover_bg_color; }
+
+/* Persistent, minimal dropdown indicator */
+combobox arrow {
+  -gtk-icon-source: -gtk-icontheme('pan-down-symbolic');
+  -gtk-icon-size: 12px;
+  min-width: 12px;
+  min-height: 12px;
+  margin-left: 8px;
+  margin-right: 8px;
+  color: @theme_unfocused_fg_color;
+}
+combobox:hover arrow,
+combobox:focus arrow {
+  color: @accent_emphasis;
+}
+combobox:disabled arrow {
+  color: @disabled_fg_color;
+}
+
 
 /* Check/radio controls */
 check, radio {
   color: @theme_fg_color;
   background-color: @theme_base_color;
-  border: 1px solid @borders;
+  border: 1px solid @theme_unfocused_fg_color;
   border-radius: 4px;
   min-width: 14px;
   min-height: 14px;
@@ -127,7 +146,47 @@ check:checked, radio:checked {
   background-color: @accent;
   border-color: @accent;
 }
-check:disabled, radio:disabled { color: @disabled_fg_color; }
+check:disabled, radio:disabled {
+  color: @disabled_fg_color;
+  background-color: @disabled_bg_color;
+  border-color: @borders;
+}
+
+/* TreeView cell toggles: keep their state legible over selected rows. */
+treeview.view check {
+  color: @theme_fg_color;
+  background-color: @theme_base_color;
+  border: 1px solid @theme_unfocused_fg_color;
+}
+treeview.view check:checked {
+  color: @accent_fg_color;
+  background-color: @accent;
+  border-color: @accent;
+}
+treeview.view check:selected {
+  color: @theme_fg_color;
+  background-color: @theme_bg_color;
+  border-color: @theme_fg_color;
+}
+treeview.view check:checked:selected {
+  color: @theme_bg_color;
+  background-color: @theme_fg_color;
+  border-color: @theme_fg_color;
+}
+treeview.view check:disabled,
+treeview.view check:disabled:selected {
+  color: @disabled_fg_color;
+  background-color: @disabled_bg_color;
+  border-color: @borders;
+}
+treeview.view check:indeterminate {
+  color: @accent_fg_color;
+  background-color: @accent_soft_color;
+  border-color: @accent;
+}
+treeview.view check:focus {
+  border-color: @focus_color;
+}
 
 /* Switches */
 switch {
@@ -492,4 +551,46 @@ spinbutton entry,
 combobox entry,
 .searchentry entry {
   margin: 0;
+}
+
+/* Integrated numeric stepper */
+spinbutton {
+  padding: 2px 3px 2px 8px;
+  border: 1px solid @borders;
+  border-radius: 8px;
+  background-color: transparent;
+  box-shadow: none;
+}
+spinbutton entry {
+  padding: 3px 5px;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+spinbutton button,
+spinbutton button.up,
+spinbutton button.down {
+  min-width: 25px;
+  min-height: 25px;
+  padding: 0;
+  margin: 0 1px;
+  color: @theme_fg_color;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  box-shadow: none;
+}
+spinbutton button:hover {
+  color: #FFFFFF;
+  background-color: @button_hover_bg_color;
+  border-color: @button_hover_border_color;
+}
+spinbutton button:active {
+  color: #FFFFFF;
+  background-color: @accent_pressed_color;
+}
+spinbutton button:disabled {
+  color: @disabled_fg_color;
+  background-color: transparent;
 }

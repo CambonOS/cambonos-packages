@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.6.2
+
+- Improved GTK 3 TreeView checkbox contrast on selected rows and added clearer checked, unchecked, disabled and indeterminate states; strengthened GTK 3/4 checkbox borders and disabled styling.
+
+- Explicitly assign the pan-down symbolic icon to GTK 3/4 ComboBox and GTK 4 DropDown arrow nodes so the chevron is rendered instead of relying on the node's implicit built-in image.
+
+- Added persistent, muted chevron indicators to GTK 3 ComboBox and GTK 4 ComboBox/DropDown controls, with teal hover/focus feedback and subdued disabled states.
+
+- Added a subtle outer border around the complete numeric stepper while keeping the individual increment/decrement button borders hidden until hover.
+
+- Added an integrated, compact numeric stepper style for GTK 3 and GTK 4.
+- Unified the spin button field and increment/decrement controls with a shared surface, subtle borders and rounded interactive buttons.
+- Added restrained hover, pressed and disabled states using the CambonOS navy/teal palette.
+
+## 0.6.1
+
+- Fixed selected-text contrast in GTK 3 and GTK 4 by setting the canonical selected and accent foreground colors to white.
+- Kept the teal selection/accent backgrounds unchanged.
+
 ## 0.6.0
 
 - Removed the embedded PKGBUILD and .SRCINFO so the repository package has one authoritative PKGBUILD.

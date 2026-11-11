@@ -20,14 +20,14 @@ class GtkThemePackageTests(unittest.TestCase):
     def test_package_is_discovered_and_statically_valid(self):
         packages = discover_packages(ROOT)
         package = packages["cambonos-gtk-theme"]
-        self.assertEqual(package.pkgver, "0.6.0")
-        self.assertEqual(package.pkgrel, "2")
+        self.assertEqual(package.pkgver, "0.6.1")
+        self.assertEqual(package.pkgrel, "1")
         self.assertEqual(package.architecture, ("any",))
         self.assertEqual(package.makedepends, ("python",))
         self.assertEqual(validate_package(package), [])
         readme = (self.package_dir / "README.md").read_text(encoding="utf-8")
         self.assertIn("Versión unificada:", readme)
-        self.assertIn("`0.6.0`", readme)
+        self.assertIn("`0.6.1`", readme)
 
     def test_complete_upstream_source_and_builder_are_preserved(self):
         required = (
@@ -62,6 +62,10 @@ class GtkThemePackageTests(unittest.TestCase):
                 check=True, capture_output=True, text=True,
             )
             self.assertIn("PASSED", result.stdout)
+            generated_gtk3 = (builddir / "themes/CambonOS-dark/gtk-3.0/colors-dark.css").read_text()
+            generated_gtk4 = (builddir / "themes/CambonOS-dark/gtk-4.0/colors-dark.css").read_text()
+            self.assertIn("@define-color theme_selected_fg_color #FFFFFF;", generated_gtk3)
+            self.assertIn("@define-color accent_fg_color #FFFFFF;", generated_gtk4)
             theme = builddir / "themes" / "CambonOS-dark"
             self.assertTrue((theme / "gtk-3.0/gtk.css").is_file())
             self.assertTrue((theme / "gtk-4.0/gtk.css").is_file())
