@@ -38,11 +38,6 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - name: Install shell syntax checkers
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes zsh fish
-
       - name: Set up Python for unit tests
         uses: actions/setup-python@v6
         with:
@@ -121,6 +116,37 @@ jobs:
               --mkiso-source "${RUNNER_TEMP}/external-mkiso-${channel}" \
               --mkiso-commit "${mkiso_commit}"
           done
+
+      - name: Validate Zsh and Fish syntax in Arch container
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          docker run --rm --platform linux/amd64 \
+            -v "${RUNNER_TEMP}/source-dev:/source-dev:ro" \
+            -v "${RUNNER_TEMP}/source-main:/source-main:ro" \
+            "${ARCH_IMAGE}" bash -euc '
+              set -Eeuo pipefail
+              pacman -Syu --noconfirm
+              pacman -S --needed --noconfirm zsh fish
+
+              for source_root in /source-dev /source-main; do
+                echo "Validando scripts Zsh y Fish en ${source_root}"
+                while IFS= read -r -d "" source; do
+                  first_line="$(head -n 1 "${source}" || true)"
+                  if [[ "${source}" == *.zsh || "${first_line}" == *zsh* ]]; then
+                    zsh -n "${source}" || {
+                      echo "Error de sintaxis Zsh: ${source}" >&2
+                      exit 1
+                    }
+                  elif [[ "${source}" == *.fish || "${first_line}" == *fish* ]]; then
+                    fish --no-execute "${source}" || {
+                      echo "Error de sintaxis Fish: ${source}" >&2
+                      exit 1
+                    }
+                  fi
+                done < <(find "${source_root}/packages" -type f -print0)
+              done
+            '
 
       - name: Verify identical package signing keyrings
         shell: bash

@@ -28,6 +28,32 @@ class PipelineContractTests(unittest.TestCase):
     def test_workflow_runs_the_repository_test_suite(self):
         self.assertIn("unittest discover -s tests", self.source)
 
+    def test_zsh_and_fish_syntax_are_checked_in_the_pinned_arch_container(self):
+        steps = self.workflow["jobs"]["validate"].get("steps", [])
+        by_name = {step.get("name"): step for step in steps}
+        self.assertNotIn("Install shell syntax checkers", by_name)
+        step = by_name.get("Validate Zsh and Fish syntax in Arch container")
+        self.assertIsNotNone(step)
+        script = step.get("run", "")
+        for required in (
+            'docker run --rm --platform linux/amd64',
+            '${ARCH_IMAGE}',
+            'source-dev:/source-dev:ro',
+            'source-main:/source-main:ro',
+            'pacman -Syu --noconfirm',
+            'pacman -S --needed --noconfirm zsh fish',
+            'zsh -n',
+            'fish --no-execute',
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, script)
+        names = [step.get("name", "") for step in steps]
+        self.assertLess(
+            names.index("Resolve immutable branch snapshots"),
+            names.index("Validate Zsh and Fish syntax in Arch container"),
+        )
+        self.assertNotIn("continue-on-error", step)
+
     def test_build_and_publication_jobs_depend_on_validation(self):
         jobs = self.workflow["jobs"]
         self.assertIn("validate", jobs["build"].get("needs", ""))
