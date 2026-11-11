@@ -280,6 +280,8 @@ def build_channel(
     package_output = output / "packages"
     package_output.mkdir(exist_ok=True)
     ordered = build_order(packages)
+    from .planner import create_build_plan, package_input_hash
+    shadow_plan = create_build_plan(packages, channel, image)
     built_by_name: dict[str, Path] = {}
     records: dict[str, dict] = {}
     environment_record = {}
@@ -309,6 +311,14 @@ def build_channel(
         shutil.copy2(archive, destination)
         record["package_file"] = destination.name
         record["package_hash"] = sha256_file(destination)
+        planned = shadow_plan["packages"][name]
+        record.update({
+            "build_fingerprint": planned["build_fingerprint"],
+            "build_input_hash": package_input_hash(package),
+            "build_recipe_hash": planned["build_recipe_hash"],
+            "channel_profile_hash": planned["channel_profile_hash"],
+            "dependency_fingerprints": planned["dependency_fingerprints"],
+        })
         records[name] = record
         built_by_name[name] = destination
         env_file = per_package_output / "build-environment.txt"

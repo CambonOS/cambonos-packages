@@ -136,5 +136,53 @@ class CPVPublicationPolicyTests(unittest.TestCase):
                 validate_version_policy(self.current, self.previous, "testing", "unused")
 
 
+    def test_documentation_change_is_not_a_build_input_change(self):
+        previous = {
+            "channels": {"testing": {"packages": {
+                "cambonos-example": {
+                    "version": "1.2.3-1",
+                    "source_hash": "a" * 64,
+                    "build_input_hash": "b" * 64,
+                    "package_hash": "c" * 64,
+                }
+            }}}
+        }
+        current = {
+            "cambonos-example": {
+                "version": "1.2.3-1", "pkgver": "1.2.3",
+                "pkgrel": "1", "epoch": "0",
+                "source_hash": "d" * 64,
+                "build_input_hash": "b" * 64,
+                "package_hash": "c" * 64,
+            }
+        }
+        with patch("scripts.cambonos_lib.manifest.compare_arch_versions", return_value=0):
+            validate_version_policy(current, previous, "testing", "unused")
+
+    def test_changed_build_input_is_rejected_without_version_bump(self):
+        previous = {
+            "channels": {"testing": {"packages": {
+                "cambonos-example": {
+                    "version": "1.2.3-1",
+                    "source_hash": "a" * 64,
+                    "build_input_hash": "b" * 64,
+                    "package_hash": "c" * 64,
+                }
+            }}}
+        }
+        current = {
+            "cambonos-example": {
+                "version": "1.2.3-1", "pkgver": "1.2.3",
+                "pkgrel": "1", "epoch": "0",
+                "source_hash": "a" * 64,
+                "build_input_hash": "d" * 64,
+                "package_hash": "c" * 64,
+            }
+        }
+        with patch("scripts.cambonos_lib.manifest.compare_arch_versions", return_value=0):
+            with self.assertRaisesRegex(CambonosError, "cambió el contenido fuente"):
+                validate_version_policy(current, previous, "testing", "unused")
+
+
 if __name__ == "__main__":
     unittest.main()

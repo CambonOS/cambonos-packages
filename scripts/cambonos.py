@@ -7,6 +7,7 @@ one disposable Arch Linux Docker container per package during an explicit build.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 from pathlib import Path
@@ -24,6 +25,7 @@ from cambonos_lib.manifest import (
     verify_previous_manifest_signature,
 )
 from cambonos_lib.signing import sign_and_create_site
+from cambonos_lib.planner import create_build_plan
 from cambonos_lib.validation import discover_packages, validate_all
 
 
@@ -109,6 +111,32 @@ def build_command(args: argparse.Namespace) -> None:
     print(f"Construcción terminada: {output}")
 
 
+
+def plan_command(args: argparse.Namespace) -> None:
+    """Emit a read-only build plan; publication remains on the legacy pipeline."""
+    source_root = args.source_root.resolve()
+    packages = discover_packages(source_root)
+    validate_all(packages)
+    previous = None
+    if args.previous_manifest:
+        try:
+            previous = json.loads(args.previous_manifest.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise CambonosError(f"no se pudo leer el manifiesto anterior: {exc}") from exc
+    plan = create_build_plan(packages, args.channel, args.image, previous)
+    rendered = json.dumps(plan, indent=2, sort_keys=True) + "\n"
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(rendered, encoding="utf-8")
+    else:
+        print(rendered)
+    print(
+        f"Plan sombra ({args.channel}): {plan['summary']['build']} construir, "
+        f"{plan['summary']['reuse_candidates']} candidatos a reutilización. No se ha compilado ni publicado nada.",
+        file=sys.stderr,
+    )
+
+
 def sign_command(args: argparse.Namespace) -> None:
     private_key = os.environ.get("CAMBONOS_SIGNING_KEY", "")
     passphrase = os.environ.get("CAMBONOS_SIGNING_PASSPHRASE", "")
@@ -163,6 +191,16 @@ def make_parser() -> argparse.ArgumentParser:
     build.add_argument("--output", type=Path, required=True)
     build.add_argument("--image", default=DEFAULT_ARCH_IMAGE)
     build.set_defaults(func=build_command)
+
+    plan = subparsers.add_parser(
+        "plan", help="calcular un plan de build selectivo sin compilar ni publicar"
+    )
+    plan.add_argument("--source-root", type=Path, default=Path.cwd())
+    plan.add_argument("--channel", required=True, choices=("stable", "testing"))
+    plan.add_argument("--image", default=DEFAULT_ARCH_IMAGE)
+    plan.add_argument("--previous-manifest", type=Path)
+    plan.add_argument("--output", type=Path)
+    plan.set_defaults(func=plan_command)
 
     sign = subparsers.add_parser("sign", help="firmar ambos canales y preparar el sitio")
     sign.add_argument("--testing-dir", type=Path, required=True)

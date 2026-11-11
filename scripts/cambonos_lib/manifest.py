@@ -13,6 +13,8 @@ from .versioning import validate_version_transition
 
 
 def package_source_records(packages: dict[str, Package]) -> dict[str, dict]:
+    from .planner import package_input_hash
+
     records = {}
     for name, package in sorted(packages.items()):
         version = f"{package.epoch}:{package.pkgver}-{package.pkgrel}" if package.epoch != "0" else f"{package.pkgver}-{package.pkgrel}"
@@ -23,6 +25,7 @@ def package_source_records(packages: dict[str, Package]) -> dict[str, dict]:
             "pkgrel": package.pkgrel,
             "architecture": list(package.architecture),
             "source_hash": sha256_directory(package.directory),
+            "build_input_hash": package_input_hash(package),
         }
     return records
 
@@ -84,7 +87,12 @@ def validate_version_policy(
             print(f"Paquete nuevo en {channel}: {name}")
             continue
         old_version = old.get("version", "0")
-        changed = old.get("source_hash") != new["source_hash"]
+        if old.get("build_input_hash") and new.get("build_input_hash"):
+            changed = old["build_input_hash"] != new["build_input_hash"]
+        else:
+            # Legacy manifests cannot distinguish build inputs from documentation.
+            # Keep the old conservative source-tree comparison for this transition.
+            changed = old.get("source_hash") != new["source_hash"]
         try:
             comparison = validate_version_transition(
                 old_version,
