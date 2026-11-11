@@ -38,7 +38,7 @@ class BuildPlannerTests(unittest.TestCase):
 
     def test_first_plan_builds_everything(self):
         plan = create_build_plan(self.packages, "testing", "arch-image")
-        self.assertEqual(plan["summary"], {"build": 2, "reuse_candidates": 0})
+        self.assertEqual(plan["summary"], {"build": 2, "reuse_candidates": 0, "removed": 0})
         self.assertEqual(plan["mode"], "plan-only")
 
     def test_identical_fingerprints_are_reused(self):
@@ -49,10 +49,13 @@ class BuildPlannerTests(unittest.TestCase):
                 "package_hash": "a" * 64,
                 "package_file": f"{name}-1.0.0-1-any.pkg.tar.zst",
                 "version": "1.0.0-1",
+                "architecture": "any",
+                "signature_file": f"{name}-1.0.0-1-any.pkg.tar.zst.sig",
+                "signature_hash": "b" * 64,
             } for name, item in initial["packages"].items()
         }}
         plan = create_build_plan(self.packages, "testing", "arch-image", previous)
-        self.assertEqual(plan["summary"], {"build": 0, "reuse_candidates": 2})
+        self.assertEqual(plan["summary"], {"build": 0, "reuse_candidates": 2, "removed": 0})
 
     def test_package_readme_does_not_change_fingerprint(self):
         first = create_build_plan(self.packages, "testing", "arch-image")
@@ -68,8 +71,12 @@ class BuildPlannerTests(unittest.TestCase):
         previous = {"packages": {
             name: {
                 "build_fingerprint": item["build_fingerprint"],
-                "package_hash": "a" * 64, "package_file": f"{name}.pkg.tar.zst",
+                "package_hash": "a" * 64,
+                "package_file": f"{name}-1.0.0-1-any.pkg.tar.zst",
                 "version": "1.0.0-1",
+                "architecture": "any",
+                "signature_file": f"{name}-1.0.0-1-any.pkg.tar.zst.sig",
+                "signature_hash": "b" * 64,
             } for name, item in first["packages"].items()
         }}
         (self.dep.directory / "files/payload").write_text("changed")

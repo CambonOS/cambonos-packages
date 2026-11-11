@@ -49,21 +49,22 @@ class PipelineContractTests(unittest.TestCase):
                 if "shell" in step and step["shell"] == "bash":
                     self.assertIn("set -Eeuo pipefail", script)
 
-    def test_shadow_comparison_runs_after_full_build_without_gating_publication(self):
+    def test_selective_recovery_precedes_build_and_falls_back_safely(self):
         build_steps = self.workflow["jobs"]["build"].get("steps", [])
         by_name = {step.get("name"): step for step in build_steps}
-        recovery = by_name.get("Recover previous artifacts for shadow comparison")
-        comparison = by_name.get("Compare full build with previous artifacts (shadow only)")
+        recovery = by_name.get("Recover previous artifacts for selective build")
+        build = by_name.get("Build packages selectively from verified publication")
         self.assertIsNotNone(recovery)
-        self.assertIsNotNone(comparison)
+        self.assertIsNotNone(build)
         self.assertEqual(recovery.get("continue-on-error"), "true")
-        self.assertEqual(comparison.get("continue-on-error"), "true")
         names = [step.get("name", "") for step in build_steps]
-        self.assertLess(names.index("Build all packages in disposable Arch containers"),
-                        names.index("Compare full build with previous artifacts (shadow only)"))
-        self.assertLess(names.index("Compare full build with previous artifacts (shadow only)"),
+        self.assertLess(names.index("Recover previous artifacts for selective build"),
+                        names.index("Build packages selectively from verified publication"))
+        self.assertLess(names.index("Build packages selectively from verified publication"),
                         names.index("Upload unsigned build artifacts"))
-        self.assertNotIn("CAMBONOS_SIGNING_KEY", "\n".join(
+        self.assertIn("--recovered-dir", build.get("run", ""))
+        self.assertIn("compilación completa segura", build.get("run", ""))
+        self.assertNotIn("CAMBONOS_SIGNING_KEY", "\\n".join(
             str(step.get("env", {})) + str(step.get("run", "")) for step in build_steps
         ))
 

@@ -262,3 +262,99 @@ def recover_previous_artifacts(
         )
         shutil.rmtree(staging, ignore_errors=True)
         raise
+
+
+def validate_recovered_artifacts_for_build(
+    manifest_path: Path,
+    signature_path: Path,
+    public_key_path: Path,
+    trusted_path: Path,
+    channel: str,
+    recovered_dir: Path,
+    image: str,
+) -> tuple[dict, dict[str, tuple[Path, Path]]]:
+    """Revalidate recovered artifacts before they are admitted into a selective build."""
+    from .common import sha256_file
+
+    verify_previous_manifest_signature(manifest_path, signature_path, public_key_path, trusted_path)
+    previous = load_previous_manifest(manifest_path)
+    if channel not in {"testing", "stable"}:
+        raise CambonosError(f"canal no válido: {channel}")
+    signed_packages = previous["channels"][channel]["packages"]
+
+    recovered_dir = recovered_dir.resolve()
+    report_path = recovered_dir / "recovery-report.json"
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise CambonosError(f"informe de recuperación inválido: {exc}") from exc
+    if (
+        report.get("schema_version") != 1
+        or report.get("channel") != channel
+        or report.get("architecture") != ARCHITECTURE
+        or report.get("manifest_signature_verified") is not True
+        or report.get("manifest_sha256") != sha256_file(manifest_path)
+        or report.get("summary") != {"recovered": len(signed_packages), "failed": 0}
+    ):
+        raise CambonosError("el informe de recuperación no está vinculado al manifiesto firmado")
+    records = report.get("packages")
+    if not isinstance(records, list) or len(records) != len(signed_packages):
+        raise CambonosError("el conjunto recuperado no coincide con el manifiesto firmado")
+
+    allowed_signers, signer_primaries = _signing_subkeys(public_key_path)
+    recovered: dict[str, tuple[Path, Path]] = {}
+    with tempfile.TemporaryDirectory(prefix="cambonos-selective-verify-") as temp:
+        gnupghome = Path(temp) / "gnupg"
+        gnupghome.mkdir(mode=0o700)
+        env = {**os.environ, "GNUPGHOME": str(gnupghome)}
+        imported = subprocess.run(
+            ["gpg", "--batch", "--homedir", str(gnupghome), "--import", str(public_key_path)],
+            text=True, capture_output=True, env=env, check=False,
+        )
+        if imported.returncode:
+            raise CambonosError("no se pudo importar el keyring para validar reutilización")
+        for record in records:
+            if not isinstance(record, dict):
+                raise CambonosError("registro inválido en recovery-report.json")
+            name = record.get("name")
+            if not isinstance(name, str) or name not in signed_packages or name in recovered:
+                raise CambonosError(f"paquete recuperado inesperado o duplicado: {name!r}")
+            signed = signed_packages[name]
+            for field in (
+                "version", "architecture", "package_file", "package_hash",
+                "signature_file", "signature_hash", "build_fingerprint",
+                "build_input_hash", "build_recipe_hash", "channel_profile_hash",
+                "dependency_fingerprints",
+            ):
+                if record.get(field) != signed.get(field):
+                    raise CambonosError(
+                        f"{name}: recuperación no vinculada al manifiesto firmado ({field})"
+                    )
+            if record.get("signature_verified") is not True or record.get("metadata_verified") is not True:
+                raise CambonosError(f"{name}: recuperación sin verificaciones completas")
+            filename = _package_filename(name, signed)
+            archive = recovered_dir / filename
+            signature = recovered_dir / (filename + ".sig")
+            if (
+                not archive.is_file() or archive.is_symlink()
+                or not signature.is_file() or signature.is_symlink()
+            ):
+                raise CambonosError(
+                    f"{name}: falta el paquete recuperado o su firma, o no son archivos regulares"
+                )
+            if sha256_file(archive) != signed["package_hash"]:
+                raise CambonosError(f"{name}: SHA-256 del paquete recuperado incorrecto")
+            if sha256_file(signature) != signed["signature_hash"]:
+                raise CambonosError(f"{name}: SHA-256 de la firma recuperada incorrecto")
+            _verify_detached_signature(
+                signature, archive, gnupghome, allowed_signers, signer_primaries, trusted_path
+            )
+            _verify_package_metadata(name, archive, signed, image)
+            recovered[name] = (archive, signature)
+        if set(recovered) != set(signed_packages):
+            raise CambonosError("faltan paquetes recuperados respecto al manifiesto firmado")
+        subprocess.run(
+            ["gpgconf", "--homedir", str(gnupghome), "--kill", "gpg-agent"],
+            text=True, capture_output=True, env=env, check=False,
+        )
+    return previous, recovered

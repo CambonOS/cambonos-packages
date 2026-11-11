@@ -273,8 +273,24 @@ def verify_build_manifest(path: Path, package_dir: Path) -> dict:
         ):
             raise CambonosError(f"nombre de artefacto no válido para {name}: {filename!r}")
         archive = package_dir / filename
-        if not archive.is_file():
-            raise CambonosError(f"falta el artefacto de {name}: {archive.name}")
+        if not archive.is_file() or archive.is_symlink():
+            raise CambonosError(f"falta el artefacto regular de {name}: {archive.name}")
         if sha256_file(archive) != record.get("package_hash"):
             raise CambonosError(f"SHA256 incorrecto para {archive.name}")
+        if record.get("reused_from_publication") is True:
+            signature_name = record.get("signature_file")
+            signature_hash = record.get("signature_hash")
+            if (
+                not isinstance(signature_name, str)
+                or signature_name != filename + ".sig"
+                or not isinstance(signature_hash, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", signature_hash)
+            ):
+                raise CambonosError(f"metadata de firma preservada inválida para {name}")
+            signature_path = package_dir / signature_name
+            if (
+                not signature_path.is_file() or signature_path.is_symlink()
+                or sha256_file(signature_path) != signature_hash
+            ):
+                raise CambonosError(f"firma preservada ausente o SHA256 incorrecto para {name}")
     return data

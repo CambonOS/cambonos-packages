@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 
 from .build import build_order
@@ -11,6 +12,8 @@ from .common import CambonosError
 from .config import ARCHITECTURE
 from .models import Package
 from .validation import dependency_name, extract_function
+
+_HASH_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 def _digest(value: bytes) -> str:
@@ -191,13 +194,40 @@ def create_build_plan(
         })
         fingerprints[name] = fingerprint
         old = old_packages.get(name, {})
+        expected_version = (
+            f"{package.epoch}:{package.pkgver}-{package.pkgrel}"
+            if package.epoch != "0" else f"{package.pkgver}-{package.pkgrel}"
+        )
+        expected_arch = "any" if "any" in package.architecture else ARCHITECTURE
+        expected_file = (
+            f"{name}-{package.pkgver}-{package.pkgrel}-{expected_arch}.pkg.tar.zst"
+        )
         reusable = (
             isinstance(old, dict)
             and old.get("build_fingerprint") == fingerprint
+            and old.get("version") == expected_version
+            and old.get("architecture") == expected_arch
+            and old.get("package_file") == expected_file
             and isinstance(old.get("package_hash"), str)
-            and isinstance(old.get("package_file"), str)
-            and isinstance(old.get("version"), str)
+            and bool(_HASH_RE.fullmatch(old["package_hash"]))
+            and old.get("signature_file") == expected_file + ".sig"
+            and isinstance(old.get("signature_hash"), str)
+            and bool(_HASH_RE.fullmatch(old["signature_hash"]))
         )
+        if reusable:
+            reason = "fingerprint and package identity match; artifact requires cryptographic recovery verification"
+        elif not isinstance(old, dict):
+            reason = "new package: no previous publication record"
+        elif not old.get("build_fingerprint"):
+            reason = "previous publication has no build fingerprint"
+        elif old.get("build_fingerprint") != fingerprint:
+            reason = (
+                "build inputs changed"
+                if old.get("build_input_hash") != inputs_hash
+                else "build recipe, environment, channel profile or dependency fingerprint changed"
+            )
+        else:
+            reason = "package version, architecture or filename changed"
         records[name] = {
             "action": "reuse-candidate" if reusable else "build",
             "build_fingerprint": fingerprint,
@@ -209,9 +239,7 @@ def create_build_plan(
             "previous_package_file": old.get("package_file") if isinstance(old, dict) else None,
             "previous_package_hash": old.get("package_hash") if isinstance(old, dict) else None,
             "artifact_verification_required": reusable,
-            "reason": "fingerprint unchanged; artifact still requires retrieval and hash/signature verification" if reusable else (
-                "no compatible fingerprint in previous manifest"
-            ),
+            "reason": reason,
         }
     return {
         "schema_version": 1,
@@ -220,8 +248,10 @@ def create_build_plan(
         "architecture": ARCHITECTURE,
         "image": image,
         "packages": records,
+        "removed_packages": sorted(set(old_packages) - set(records)),
         "summary": {
             "build": sum(r["action"] == "build" for r in records.values()),
             "reuse_candidates": sum(r["action"] == "reuse-candidate" for r in records.values()),
+            "removed": len(set(old_packages) - set(records)),
         },
     }

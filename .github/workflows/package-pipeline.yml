@@ -268,28 +268,17 @@ jobs:
             --mkiso-source "${RUNNER_TEMP}/external-mkiso" \
             --mkiso-commit "${MKISO_COMMIT}"
 
-      - name: Build all packages in disposable Arch containers
-        run: |
-          python3 scripts/cambonos.py build \
-            --source-root "${RUNNER_TEMP}/package-source" \
-            --channel "${{ matrix.channel }}" \
-            --branch "${{ matrix.branch }}" \
-            --commit "${{ matrix.commit }}" \
-            --image "${ARCH_IMAGE}" \
-            --output "${RUNNER_TEMP}/build-output"
-
-      - name: Download previous publication manifest for shadow comparison
-        id: shadow-manifest
+      - name: Download previous publication manifest for selective build
+        id: selective-manifest
         if: needs.validate.outputs.bootstrap == 'false'
-        continue-on-error: true
         uses: actions/download-artifact@v8.0.2
         with:
           name: previous-publication-manifest
           path: ${{ runner.temp }}/previous-manifest
 
-      - name: Recover previous artifacts for shadow comparison
-        id: shadow-recovery
-        if: needs.validate.outputs.bootstrap == 'false' && steps.shadow-manifest.outcome == 'success'
+      - name: Recover previous artifacts for selective build
+        id: selective-recovery
+        if: needs.validate.outputs.bootstrap == 'false'
         continue-on-error: true
         shell: bash
         run: |
@@ -304,21 +293,29 @@ jobs:
             --image "${ARCH_IMAGE}" \
             --output "${RUNNER_TEMP}/recovered-${{ matrix.channel }}"
 
-      - name: Compare full build with previous artifacts (shadow only)
-        id: shadow-comparison
-        if: needs.validate.outputs.bootstrap == 'false' && steps.shadow-recovery.outcome == 'success'
-        continue-on-error: true
+      - name: Build packages selectively from verified publication
+        id: selective-build
         shell: bash
         run: |
           set -Eeuo pipefail
-          python3 scripts/cambonos.py compare-shadow \
-            --build-dir "${RUNNER_TEMP}/build-output" \
-            --recovered-dir "${RUNNER_TEMP}/recovered-${{ matrix.channel }}" \
-            --previous-manifest "${RUNNER_TEMP}/previous-manifest/previous-manifest.json" \
-            --previous-manifest-signature "${RUNNER_TEMP}/previous-manifest/previous-manifest.json.sig" \
-            --keyring-public-key "${RUNNER_TEMP}/package-source/packages/cambonos-keyring/files/cambonos.gpg" \
-            --keyring-trusted "${RUNNER_TEMP}/package-source/packages/cambonos-keyring/files/cambonos-trusted" \
-            --output "${RUNNER_TEMP}/build-output/shadow-report.json"
+          args=(build \
+            --source-root "${RUNNER_TEMP}/package-source" \
+            --channel "${{ matrix.channel }}" \
+            --branch "${{ matrix.branch }}" \
+            --commit "${{ matrix.commit }}" \
+            --image "${ARCH_IMAGE}" \
+            --output "${RUNNER_TEMP}/build-output")
+          if [[ "${{ needs.validate.outputs.bootstrap }}" == "false" && \
+                "${{ steps.selective-recovery.outcome }}" == "success" ]]; then
+            args+=(--previous-manifest "${RUNNER_TEMP}/previous-manifest/previous-manifest.json" \
+              --previous-manifest-signature "${RUNNER_TEMP}/previous-manifest/previous-manifest.json.sig" \
+              --keyring-public-key "${RUNNER_TEMP}/package-source/packages/cambonos-keyring/files/cambonos.gpg" \
+              --keyring-trusted "${RUNNER_TEMP}/package-source/packages/cambonos-keyring/files/cambonos-trusted" \
+              --recovered-dir "${RUNNER_TEMP}/recovered-${{ matrix.channel }}")
+          elif [[ "${{ needs.validate.outputs.bootstrap }}" == "false" ]]; then
+            echo "::warning::No se pudo recuperar la publicación anterior; se ejecutará una compilación completa segura."
+          fi
+          python3 scripts/cambonos.py "${args[@]}"
 
       - name: Upload unsigned build artifacts
         uses: actions/upload-artifact@v7.0.2

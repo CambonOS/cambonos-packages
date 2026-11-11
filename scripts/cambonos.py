@@ -102,6 +102,15 @@ def build_command(args: argparse.Namespace) -> None:
         import shutil
         shutil.rmtree(output)
     output.mkdir(parents=True)
+    recovery_options = (
+        args.previous_manifest, args.previous_manifest_signature,
+        args.keyring_public_key, args.keyring_trusted, args.recovered_dir,
+    )
+    if any(recovery_options) and not all(recovery_options):
+        raise CambonosError(
+            "para activar reutilización deben proporcionarse manifiesto, firma, keyring, "
+            "ownertrust y directorio recuperado"
+        )
     build_channel(
         packages=packages,
         channel=args.channel,
@@ -109,6 +118,14 @@ def build_command(args: argparse.Namespace) -> None:
         commit=args.commit,
         image=args.image,
         output=output,
+        previous_manifest_path=args.previous_manifest.resolve() if args.previous_manifest else None,
+        previous_manifest_signature_path=(
+            args.previous_manifest_signature.resolve()
+            if args.previous_manifest_signature else None
+        ),
+        keyring_public_key_path=args.keyring_public_key.resolve() if args.keyring_public_key else None,
+        keyring_trusted_path=args.keyring_trusted.resolve() if args.keyring_trusted else None,
+        recovered_dir=args.recovered_dir.resolve() if args.recovered_dir else None,
     )
     print(f"Construcción terminada: {output}")
 
@@ -236,6 +253,16 @@ def make_parser() -> argparse.ArgumentParser:
     build.add_argument("--commit", required=True)
     build.add_argument("--output", type=Path, required=True)
     build.add_argument("--image", default=DEFAULT_ARCH_IMAGE)
+    build.add_argument("--previous-manifest", type=Path,
+                       help="manifiesto global anterior firmado para reutilización selectiva")
+    build.add_argument("--previous-manifest-signature", type=Path,
+                       help="firma detached del manifiesto anterior")
+    build.add_argument("--keyring-public-key", type=Path,
+                       help="keyring público CambonOS para verificar artefactos recuperados")
+    build.add_argument("--keyring-trusted", type=Path,
+                       help="ownertrust CambonOS")
+    build.add_argument("--recovered-dir", type=Path,
+                       help="directorio de artefactos recuperados y verificados")
     build.set_defaults(func=build_command)
 
     plan = subparsers.add_parser(
