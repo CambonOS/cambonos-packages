@@ -1,20 +1,17 @@
 pkgname=cambonos-branding
 pkgver=0.1.2
-pkgrel=2
+pkgrel=3
 pkgdesc="CambonOS visual identity assets"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
 groups=('cambonos-base')
-depends=('bash' 'coreutils' 'fontconfig' 'gawk' 'kbd')
+depends=('bash' 'coreutils' 'gawk' 'kbd')
 install=cambonos-branding.install
 backup=('etc/dialogrc')
 
 package() {
   local branding_dir="$pkgdir/usr/share/cambonos/branding"
-  local font_dir="$pkgdir/usr/share/fonts/TTF"
-  local fontconfig_avail="$pkgdir/usr/share/fontconfig/conf.avail"
-  local fontconfig_default="$pkgdir/usr/share/fontconfig/conf.default"
   local udev_rules_dir="$pkgdir/usr/lib/udev/rules.d"
   local libalpm_hooks_dir="$pkgdir/usr/share/libalpm/hooks"
 
@@ -46,17 +43,6 @@ package() {
     "$pkgdir/usr/lib/cambonos-branding/manage-xfce-terminal"
   install -Dm644 "$startdir/files/hooks/cambonos-branding-xfce-terminal.hook" \
     "$libalpm_hooks_dir/cambonos-branding-xfce-terminal.hook"
-
-  # Install the prebuilt symbol font as a static branding resource.
-  install -Dm644 "$startdir/files/ttf/CambonOS-Symbols.ttf" \
-    "$font_dir/CambonOS-Symbols.ttf"
-
-  # Publish the private-use glyph fallback through Fontconfig defaults.
-  install -Dm644 "$startdir/files/ttf/65-cambonos-symbols.conf" \
-    "$fontconfig_avail/65-cambonos-symbols.conf"
-  install -d "$fontconfig_default"
-  ln -s ../conf.avail/65-cambonos-symbols.conf \
-    "$fontconfig_default/65-cambonos-symbols.conf"
 
   install -Dm644 "$startdir/files/LICENSE" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"

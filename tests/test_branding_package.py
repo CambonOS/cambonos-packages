@@ -9,7 +9,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "packages" / "cambonos-branding"
 FILES = PACKAGE / "files"
-TTF_DIR = FILES / "ttf"
 PKGBUILD = PACKAGE / "PKGBUILD"
 
 CANONICAL_SVGS = {"cambonos-icon.svg", "cambonos-text.svg"}
@@ -37,7 +36,7 @@ PNG_DIMENSIONS = {
 
 
 class BrandingPackageTests(unittest.TestCase):
-    def test_source_contains_graphic_assets_license_and_ttf_directory(self):
+    def test_source_contains_graphic_assets_license_and_integration_assets(self):
         names = {path.name for path in FILES.iterdir()}
         self.assertEqual(
             names,
@@ -45,16 +44,14 @@ class BrandingPackageTests(unittest.TestCase):
             | PLYMOUTH_ASSETS
             | CONSOLE_ASSETS
             | XFCE_TERMINAL_ASSETS
-            | {"LICENSE", "dialogrc", "ttf"},
+            | {"LICENSE", "dialogrc"},
         )
-        self.assertTrue((TTF_DIR / "CambonOS-Symbols.ttf").is_file())
-        self.assertTrue((TTF_DIR / "65-cambonos-symbols.conf").is_file())
         self.assertTrue((FILES / "lib/manage-xfce-terminal").is_file())
         self.assertTrue((FILES / "hooks/cambonos-branding-xfce-terminal.hook").is_file())
         self.assertTrue((FILES / "xfce-terminalrc").is_file())
         self.assertFalse(REMOVED_ASSETS.intersection(names))
 
-    def test_pkgbuild_installs_svg_png_and_font_assets(self):
+    def test_pkgbuild_installs_svg_png_and_integration_assets(self):
         content = PKGBUILD.read_text(encoding="utf-8")
         for name in sorted(GRAPHIC_ASSETS):
             self.assertIn(f'"$branding_dir/{name}"', content)
@@ -62,14 +59,13 @@ class BrandingPackageTests(unittest.TestCase):
         self.assertIn('"$startdir/files/progress-foreground.png.base64"', content)
         self.assertIn('"$branding_dir/progress-background.png"', content)
         self.assertIn('"$branding_dir/progress-foreground.png"', content)
-        self.assertIn('"$font_dir/CambonOS-Symbols.ttf"', content)
-        self.assertIn('"$fontconfig_avail/65-cambonos-symbols.conf"', content)
-        self.assertIn('"$fontconfig_default/65-cambonos-symbols.conf"', content)
         self.assertIn(
-            "depends=('bash' 'coreutils' 'fontconfig' 'gawk' 'kbd')", content
+            "depends=('bash' 'coreutils' 'gawk' 'kbd')", content
         )
         self.assertIn("pkgver=0.1.2", content)
-        self.assertIn("pkgrel=2", content)
+        self.assertNotIn("fontconfig", content)
+        self.assertNotIn("CambonOS-Symbols", content)
+        self.assertIn("pkgrel=3", content)
         self.assertIn("backup=('etc/dialogrc')", content)
         self.assertIn('"$startdir/files/dialogrc"', content)
         self.assertIn('"$pkgdir/etc/dialogrc"', content)
@@ -160,16 +156,6 @@ class BrandingPackageTests(unittest.TestCase):
                 )
                 self.assertEqual(dimensions, expected_dimensions)
 
-    def test_fontconfig_rule_is_well_formed_and_targets_private_use_codepoint(self):
-        path = TTF_DIR / "65-cambonos-symbols.conf"
-        ET.parse(path)
-        content = path.read_text(encoding="utf-8")
-        self.assertIn("<int>1114109</int>", content)
-        self.assertIn("<string>CambonOS Symbols</string>", content)
-
-    def test_ttf_has_a_valid_sfnt_signature(self):
-        signature = (TTF_DIR / "CambonOS-Symbols.ttf").read_bytes()[:4]
-        self.assertIn(signature, {b"\x00\x01\x00\x00", b"OTTO", b"true", b"typ1"})
 
 
 class XfceTerminalDefaultTests(unittest.TestCase):

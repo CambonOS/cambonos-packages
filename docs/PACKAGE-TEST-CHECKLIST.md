@@ -13,8 +13,6 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 
 - [x] Los recursos SVG de identidad se muestran correctamente.
 - [x] Los recursos PNG de identidad se muestran correctamente.
-- [x] La fuente CambonOS Symbols se reconoce y sus glifos se representan correctamente.
-- [x] Fontconfig encuentra y aplica la configuración de la fuente.
 - [ ] La paleta ANSI de CambonOS se aplica a cada TTY virtual al inicializarse.
 - [ ] Los 16 colores de consola corresponden a la paleta publicada.
 - [ ] `dialog` aplica el tema CambonOS de `/etc/dialogrc`.
