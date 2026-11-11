@@ -13,6 +13,7 @@ from pathlib import Path
 from .common import CambonosError
 from .config import ARCHITECTURE, REQUIRED_PACKAGES
 from .models import Package
+from .versioning import validate_package_version
 
 
 NAME_RE = re.compile(r"^[A-Za-z0-9@._+:-]+$")
@@ -304,6 +305,10 @@ def validate_package(package: Package) -> list[str]:
         errors.append("pkgver no tiene un formato válido de Arch")
     if not PKGREL_RE.fullmatch(package.pkgrel):
         errors.append("pkgrel debe ser un entero positivo")
+    try:
+        validate_package_version(package.pkgver, package.pkgrel, package.epoch)
+    except CambonosError as exc:
+        errors.append(str(exc))
     if "$" in package.pkgver or "$" in package.pkgrel or "$" in package.epoch:
         errors.append("pkgver, pkgrel y epoch deben ser valores estáticos")
     if not package.epoch.isdigit():

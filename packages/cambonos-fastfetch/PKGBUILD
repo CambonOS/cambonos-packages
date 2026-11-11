@@ -1,6 +1,6 @@
 pkgname=cambonos-fastfetch
-pkgver=0.1.1
-pkgrel=3
+pkgver=0.1.2
+pkgrel=1
 pkgdesc="CambonOS branding and automatic Fastfetch integration for interactive shells"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"

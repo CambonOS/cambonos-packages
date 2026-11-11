@@ -9,6 +9,7 @@ from pathlib import Path
 from .common import CambonosError, compare_arch_versions, sha256_directory, sha256_file
 from .config import MANIFEST_SCHEMA_VERSION
 from .models import Package
+from .versioning import validate_version_transition
 
 
 def package_source_records(packages: dict[str, Package]) -> dict[str, dict]:
@@ -82,17 +83,36 @@ def validate_version_policy(
         if old is None:
             print(f"Paquete nuevo en {channel}: {name}")
             continue
+        old_version = old.get("version", "0")
         changed = old.get("source_hash") != new["source_hash"]
-        comparison = compare_arch_versions(old.get("version", "0"), new["version"], image)
-        if comparison > 0:
-            raise CambonosError(
-                f"{channel}/{name}: retroceso de versión {old.get('version')} -> {new['version']}"
+        try:
+            comparison = validate_version_transition(
+                old_version,
+                new["pkgver"],
+                new["pkgrel"],
+                new["epoch"],
+                image,
+                comparator=compare_arch_versions,
             )
-        if changed and comparison == 0:
-            raise CambonosError(
-                f"{channel}/{name}: cambió el contenido fuente sin incrementar pkgrel/pkgver "
-                f"(versión {new['version']})"
-            )
+        except CambonosError as exc:
+            raise CambonosError(f"{channel}/{name}: {exc}") from exc
+        if comparison == 0:
+            if changed:
+                raise CambonosError(
+                    f"{channel}/{name}: cambió el contenido fuente sin incrementar "
+                    f"pkgver (versión {new['version']})"
+                )
+            old_package_hash = old.get("package_hash")
+            new_package_hash = new.get("package_hash")
+            if (
+                old_package_hash is not None
+                and new_package_hash is not None
+                and old_package_hash != new_package_hash
+            ):
+                raise CambonosError(
+                    f"{channel}/{name}: la versión publicada {new['version']} "
+                    "no es inmutable: el SHA-256 del binario ha cambiado"
+                )
     removed = sorted(set(old_packages) - set(current))
     if removed:
         print(f"Paquetes que se retirarán de {channel}: {', '.join(removed)}")

@@ -36,7 +36,8 @@ El repositorio mantiene dos ramas y canales:
 - `dev` genera el canal `testing`, destinado a probar cambios antes de su integración estable.
 - `main` genera el canal `stable`, destinado a los usuarios.
 
-Los canales se construyen de forma independiente.
+Los canales se construyen de forma independiente. Ambos utilizan la misma política
+de versiones CPV; el canal no se codifica en `pkgver` ni en `pkgrel`.
 
 ## Desarrollo
 
@@ -58,6 +59,7 @@ Antes de fusionar `dev` en `main`, deben estar verificadas en un entorno real to
 
 ## Documentación
 
+- [Versionado de paquetes CPV](docs/VERSIONING.md)
 - [Despliegue automatizado](docs/DEPLOYMENT.md)
 - [Gestión de claves GPG](docs/GPG-SETUP.md)
 - [Checklist funcional de paquetes](docs/PACKAGE-TEST-CHECKLIST.md)

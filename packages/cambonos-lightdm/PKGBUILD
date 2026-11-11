@@ -1,6 +1,6 @@
 pkgname=cambonos-lightdm
-pkgver=0.1.0
-pkgrel=5
+pkgver=0.2.0
+pkgrel=1
 pkgdesc="CambonOS LightDM and Slick Greeter configuration"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
