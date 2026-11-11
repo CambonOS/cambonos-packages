@@ -26,6 +26,7 @@ from cambonos_lib.manifest import (
 )
 from cambonos_lib.signing import sign_and_create_site
 from cambonos_lib.planner import create_build_plan
+from cambonos_lib.artifacts import recover_previous_artifacts
 from cambonos_lib.validation import discover_packages, validate_all
 
 
@@ -163,6 +164,21 @@ def sign_command(args: argparse.Namespace) -> None:
     print(f"Sitio completo preparado en {args.output.resolve()}")
 
 
+def recover_command(args: argparse.Namespace) -> None:
+    report = recover_previous_artifacts(
+        manifest_path=args.previous_manifest.resolve(),
+        signature_path=args.previous_manifest_signature.resolve(),
+        public_key_path=args.keyring_public_key.resolve(),
+        trusted_path=args.keyring_trusted.resolve(),
+        channel=args.channel,
+        output=args.output.resolve(),
+        base_url=args.base_url,
+        image=args.image,
+    )
+    print(json.dumps(report, indent=2, sort_keys=True))
+    print(f"Recuperación verificada: {report['summary']['recovered']} paquetes; canal={args.channel}.")
+
+
 def make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cambonos",
@@ -201,6 +217,19 @@ def make_parser() -> argparse.ArgumentParser:
     plan.add_argument("--previous-manifest", type=Path)
     plan.add_argument("--output", type=Path)
     plan.set_defaults(func=plan_command)
+
+    recover = subparsers.add_parser(
+        "recover-artifacts", help="recuperar y verificar artefactos de una publicación anterior sin modificar el mirror"
+    )
+    recover.add_argument("--previous-manifest", type=Path, required=True)
+    recover.add_argument("--previous-manifest-signature", type=Path, required=True)
+    recover.add_argument("--keyring-public-key", type=Path, required=True)
+    recover.add_argument("--keyring-trusted", type=Path, required=True)
+    recover.add_argument("--channel", required=True, choices=("stable", "testing"))
+    recover.add_argument("--output", type=Path, required=True)
+    recover.add_argument("--base-url", default="https://mirror.cambonos.org")
+    recover.add_argument("--image", default=DEFAULT_ARCH_IMAGE)
+    recover.set_defaults(func=recover_command)
 
     sign = subparsers.add_parser("sign", help="firmar ambos canales y preparar el sitio")
     sign.add_argument("--testing-dir", type=Path, required=True)

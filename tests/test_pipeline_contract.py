@@ -54,7 +54,7 @@ class PipelineContractTests(unittest.TestCase):
 
     def test_public_cli_exposes_the_pipeline_operations(self):
         cli = ROOT / "scripts/cambonos.py"
-        for command in ("validate", "plan", "build", "sign"):
+        for command in ("validate", "plan", "build", "recover-artifacts", "sign"):
             with self.subTest(command=command):
                 result = subprocess.run(
                     [sys.executable, str(cli), command, "--help"],
