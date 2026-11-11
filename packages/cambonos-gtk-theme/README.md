@@ -2,7 +2,7 @@
 
 Paquete del único tema oscuro de CambonOS para GTK 3, GTK 4 y Xfwm4.
 
-**Versión del paquete Arch:** `0.6.2-1`. **Versión unificada:** `0.6.2`.
+**Versión del paquete Arch:** `0.6.2-11`. **Versión unificada:** `0.6.2`.
 
 ## Construcción
 

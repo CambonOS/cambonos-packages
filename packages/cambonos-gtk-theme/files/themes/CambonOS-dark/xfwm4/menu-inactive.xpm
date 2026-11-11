@@ -23,5 +23,5 @@ static char * menu_inactive_xpm[] = {
 "                ",
 "                ",
 "                ",
-"                "
+"                ",
 };

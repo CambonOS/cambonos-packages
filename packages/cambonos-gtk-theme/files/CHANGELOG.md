@@ -2,6 +2,18 @@
 
 ## 0.6.2
 
+- Added explicit symbolic glyphs for checked, radio-selected and indeterminate GTK 3 indicators; removed hover/selected indicator fills that forced unchecked menu indicators to white.
+
+- Removed the unnecessary GTK 3 `menu` ancestor from menu check/radio selectors so indicators are styled across different GtkCheckMenuItem menu-shell hierarchies, including Thunar and Xfwm4.
+
+- Strengthened GTK 3 popup-menu indicator selectors for left/right check and radio nodes, including Xfwm4 draw-as-radio check menu items; increased GTK 4 menu model-button selector coverage.
+
+- Applied the accessible checkbox/radio contrast and state styling to GTK 3 menu items and GTK 4 model buttons, including checked, hover/selected, disabled and indeterminate states.
+
+- Added direction-aware spacing between check/radio indicators and menu labels in GTK 3 and GTK 4.
+
+- Redesigned all Xfwm4 titlebar button XPMs in the CambonOS navy/teal palette and made every button-state pixel opaque so the full icon canvas remains an input target.
+
 - Improved GTK 3 TreeView checkbox contrast on selected rows and added clearer checked, unchecked, disabled and indeterminate states; strengthened GTK 3/4 checkbox borders and disabled styling.
 
 - Explicitly assign the pan-down symbolic icon to GTK 3/4 ComboBox and GTK 4 DropDown arrow nodes so the chevron is rendered instead of relying on the node's implicit built-in image.

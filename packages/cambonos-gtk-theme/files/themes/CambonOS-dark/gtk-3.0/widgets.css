@@ -138,13 +138,28 @@ check, radio {
   border-radius: 4px;
   min-width: 14px;
   min-height: 14px;
+  -gtk-icon-source: none;
+  -gtk-icon-size: 12px;
 }
 radio { border-radius: 999px; }
 check:hover, radio:hover { border-color: @focus_color; }
-check:checked, radio:checked {
+check:checked {
   color: @accent_fg_color;
   background-color: @accent;
   border-color: @accent;
+  -gtk-icon-source: -gtk-recolor(url("assets/scalable/checkmark-symbolic.svg"));
+}
+radio:checked {
+  color: @accent_fg_color;
+  background-color: @accent;
+  border-color: @accent;
+  -gtk-icon-source: -gtk-recolor(url("assets/scalable/radio-dot-symbolic.svg"));
+}
+check:indeterminate {
+  color: @accent_fg_color;
+  background-color: @accent_soft_color;
+  border-color: @accent;
+  -gtk-icon-source: -gtk-recolor(url("assets/scalable/mixed-symbolic.svg"));
 }
 check:disabled, radio:disabled {
   color: @disabled_fg_color;
@@ -247,6 +262,94 @@ popover, .popover, menu, .menu, .context-menu {
   border-radius: 8px;
 }
 menuitem { padding: 6px 10px; }
+
+/* Keep check/radio indicators separated from menu item labels. */
+menuitem check,
+menuitem radio {
+  margin-right: 8px;
+}
+menuitem:dir(rtl) check,
+menuitem:dir(rtl) radio {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+
+/* Accessible indicators in GTK 3 menu items.
+ * Do not require a `menu` ancestor: GtkCheckMenuItem instances can be hosted
+ * by different menu shells (including Thunar and Xfwm4).
+ * GTK exposes the indicator position as the .left/.right node class.
+ */
+menuitem check,
+menuitem check.left,
+menuitem check.right,
+menuitem radio,
+menuitem radio.left,
+menuitem radio.right {
+  color: @theme_fg_color;
+  background-color: @theme_base_color;
+  border: 1px solid @theme_unfocused_fg_color;
+  min-width: 14px;
+  min-height: 14px;
+}
+menuitem radio,
+menuitem radio.left,
+menuitem radio.right {
+  border-radius: 999px;
+}
+menuitem check:checked,
+menuitem check.left:checked,
+menuitem check.right:checked,
+menuitem radio:checked,
+menuitem radio.left:checked,
+menuitem radio.right:checked {
+  color: @accent_fg_color;
+  background-color: @accent;
+  border-color: @accent;
+}
+/* Menu-row hover is expressed on the row itself; do not turn every child
+ * indicator white. Keep the indicator surface/state independently legible.
+ */
+menuitem:hover check,
+menuitem:hover check.left,
+menuitem:hover check.right,
+menuitem:hover radio,
+menuitem:hover radio.left,
+menuitem:hover radio.right,
+menuitem:selected check,
+menuitem:selected check.left,
+menuitem:selected check.right,
+menuitem:selected radio,
+menuitem:selected radio.left,
+menuitem:selected radio.right {
+  border-color: @focus_color;
+}
+menuitem:disabled check,
+menuitem:disabled check.left,
+menuitem:disabled check.right,
+menuitem:disabled radio,
+menuitem:disabled radio.left,
+menuitem:disabled radio.right {
+  color: @disabled_fg_color;
+  background-color: @disabled_bg_color;
+  border-color: @borders;
+}
+menuitem check:indeterminate,
+menuitem check.left:indeterminate,
+menuitem check.right:indeterminate {
+  color: @accent_fg_color;
+  background-color: @accent_soft_color;
+  border-color: @accent;
+}
+menuitem check:focus,
+menuitem check.left:focus,
+menuitem check.right:focus,
+menuitem radio:focus,
+menuitem radio.left:focus,
+menuitem radio.right:focus {
+  border-color: @focus_color;
+}
+
 menuitem:hover {
   color: @theme_selected_fg_color;
   background-color: @menu_hover_bg_color;

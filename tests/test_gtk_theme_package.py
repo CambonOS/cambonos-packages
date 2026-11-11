@@ -20,14 +20,14 @@ class GtkThemePackageTests(unittest.TestCase):
     def test_package_is_discovered_and_statically_valid(self):
         packages = discover_packages(ROOT)
         package = packages["cambonos-gtk-theme"]
-        self.assertEqual(package.pkgver, "0.6.1")
-        self.assertEqual(package.pkgrel, "1")
+        self.assertEqual(package.pkgver, "0.6.2")
+        self.assertEqual(package.pkgrel, "11")
         self.assertEqual(package.architecture, ("any",))
         self.assertEqual(package.makedepends, ("python",))
         self.assertEqual(validate_package(package), [])
         readme = (self.package_dir / "README.md").read_text(encoding="utf-8")
         self.assertIn("Versión unificada:", readme)
-        self.assertIn("`0.6.1`", readme)
+        self.assertIn("`0.6.2`", readme)
 
     def test_complete_upstream_source_and_builder_are_preserved(self):
         required = (

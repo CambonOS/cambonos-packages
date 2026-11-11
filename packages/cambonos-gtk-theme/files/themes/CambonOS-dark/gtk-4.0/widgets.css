@@ -195,6 +195,69 @@ popover, menu, .menu, .context-menu {
   border-radius: 8px;
 }
 modelbutton { color: @popover_fg_color; padding: 6px 10px; }
+
+/* Keep check/radio indicators separated from model button labels. */
+modelbutton check,
+modelbutton radio {
+  margin-right: 8px;
+}
+modelbutton:dir(rtl) check,
+modelbutton:dir(rtl) radio {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+
+/* Accessible indicators in GTK 4 menu model buttons. */
+popover.menu modelbutton check,
+popover.menu modelbutton radio,
+modelbutton check,
+modelbutton radio {
+  color: @view_fg_color;
+  background-color: @input_bg_color;
+  border: 1px solid @text_muted_color;
+  min-width: 14px;
+  min-height: 14px;
+}
+popover.menu modelbutton radio,
+modelbutton radio { border-radius: 999px; }
+popover.menu modelbutton check:checked,
+popover.menu modelbutton radio:checked,
+modelbutton check:checked,
+modelbutton radio:checked {
+  color: @accent_fg_color;
+  background-color: @accent_bg_color;
+  border-color: @accent_bg_color;
+}
+popover.menu modelbutton:hover check,
+popover.menu modelbutton:hover radio,
+modelbutton:hover check,
+modelbutton:hover radio {
+  color: @view_bg_color;
+  background-color: @view_fg_color;
+  border-color: @view_fg_color;
+}
+popover.menu modelbutton:disabled check,
+popover.menu modelbutton:disabled radio,
+modelbutton:disabled check,
+modelbutton:disabled radio {
+  color: @disabled_fg_color;
+  background-color: @disabled_bg_color;
+  border-color: @borders;
+}
+popover.menu modelbutton check:indeterminate,
+modelbutton check:indeterminate {
+  color: @accent_fg_color;
+  background-color: @accent_bg_color;
+  border-color: @accent_bg_color;
+}
+popover.menu modelbutton:focus check,
+popover.menu modelbutton:focus radio,
+modelbutton:focus check,
+modelbutton:focus radio {
+  border-color: @focus_color;
+}
+
 modelbutton:hover { color: @accent_fg_color; background-color: @menu_hover_bg_color; }
 
 /* Expander, calendar, separators and scrollbars */
