@@ -2,6 +2,8 @@
 
 Este documento registra las funciones de los paquetes y si han sido verificadas en un entorno real. No es una guía de instalación ni una lista de tareas de publicación.
 
+Esta checklist es complementaria a la suite automatizada descrita en [TESTING.md](TESTING.md): las pruebas automatizadas verifican contratos esenciales y errores detectables sin instalar el sistema; esta checklist registra validaciones funcionales que requieren un sistema Arch real, una sesión gráfica o un arranque.
+
 Marca una función únicamente cuando se haya comprobado su funcionamiento en un sistema Arch de pruebas. Una función implementada pero no probada debe permanecer pendiente. Antes de fusionar `dev` en `main`, deben estar verificadas todas las funciones que formen parte del alcance soportado de esa versión. Las pruebas que dependan de capacidades todavía no soportadas pueden permanecer pendientes únicamente si la limitación está documentada y su exclusión del alcance ha sido aceptada expresamente; no deben marcarse como verificadas. Toda función nueva debe añadirse aquí y probarse antes de ese merge.
 
 - `[ ]` Pendiente de verificación funcional.

@@ -24,7 +24,7 @@ Los paquetes del instalador y de creación de imágenes se mantienen en sus prop
 ## Organización
 
 - `packages/`: fuentes, recursos y archivos de construcción de cada paquete.
-- `tests/`: comprobaciones automáticas del contenido de los paquetes y de las herramientas del repositorio.
+- `tests/`: contratos funcionales esenciales por paquete y comprobaciones transversales de sintaxis e integridad de la pipeline.
 - `scripts/`: herramientas de validación, construcción y publicación.
 - `docs/`: documentación operativa y checklist funcional.
 - `.github/workflows/`: automatización de integración y publicación.
@@ -40,11 +40,13 @@ Los canales se construyen de forma independiente.
 
 ## Desarrollo
 
-Para ejecutar toda la suite localmente se necesita Python, Bash, Zsh y Fish. La validación de scripts Zsh y Fish se omite si sus intérpretes no están instalados:
+Para ejecutar la suite localmente se necesita Python, Bash y PyYAML. Las comprobaciones de fragmentos Zsh y Fish se ejecutan cuando sus intérpretes están instalados; en CI ambos intérpretes se instalan expresamente:
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
+
+La filosofía, el alcance y las obligaciones de mantenimiento de las pruebas están definidos en [docs/TESTING.md](docs/TESTING.md).
 
 La ayuda de las herramientas está disponible mediante:
 
