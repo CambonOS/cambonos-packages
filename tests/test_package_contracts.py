@@ -7,7 +7,12 @@ block markers, or the exact way a PKGBUILD installs a file.
 from __future__ import annotations
 
 import configparser
+import os
 import re
+import shlex
+import shutil
+import subprocess
+import tempfile
 import tomllib
 import unittest
 from pathlib import Path
@@ -55,7 +60,9 @@ REQUIRED_PAYLOADS = {
         "files/cambonos/os-release", "files/cambonos/lsb-release",
     ),
     "cambonos-shell-prompt": (
-        "files/starship.toml", "files/bash/cambonos-shell-prompt.bash",
+        "files/starship.toml", "files/starship-tty.toml",
+        "files/cambonos/bin/cambonos-starship-directory",
+        "files/bash/cambonos-shell-prompt.bash",
         "files/fish/cambonos-shell-prompt.fish",
     ),
     "cambonos-zsh": (
@@ -147,10 +154,105 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue(parser["script"].get("ScriptFile"))
 
     def test_shell_prompt_configuration_is_valid_toml(self):
-        config = PACKAGES / "cambonos-shell-prompt/files/starship.toml"
-        parsed = tomllib.loads(config.read_text(encoding="utf-8"))
-        self.assertIn("palettes", parsed)
-        self.assertIn("cambonos", parsed["palettes"])
+        package = PACKAGES / "cambonos-shell-prompt/files"
+        for filename in ("starship.toml", "starship-tty.toml"):
+            with self.subTest(filename=filename):
+                config = tomllib.loads((package / filename).read_text(encoding="utf-8"))
+                self.assertIn("palettes", config)
+                self.assertIn("cambonos", config["palettes"])
+                self.assertIn("$character", config["format"])
+                self.assertEqual(config["right_format"].strip(), "$status$jobs$cmd_duration")
+
+    def test_shell_integrations_select_console_profile_only_on_virtual_ttys(self):
+        package = PACKAGES / "cambonos-shell-prompt/files"
+        shells = [
+            (
+                "bash",
+                ["bash", "--noprofile", "--norc", "-ic"],
+                'printf \'%s\\n\' "$STARSHIP_CONFIG"',
+                package / "bash/cambonos-shell-prompt.bash",
+            ),
+        ]
+        zsh = shutil.which("zsh")
+        if zsh:
+            shells.append(("zsh", [zsh, "-f", "-i", "-c"], 'print -r -- "$STARSHIP_CONFIG"', package / "zsh/conf.d/50-shell-prompt.zsh"))
+        fish = shutil.which("fish")
+        if fish:
+            shells.append(("fish", [fish, "--no-config", "-i", "-c"], 'printf \'%s\\n\' "$STARSHIP_CONFIG"', package / "fish/cambonos-shell-prompt.fish"))
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            bin_dir = Path(temp_dir) / "bin"
+            bin_dir.mkdir()
+            tty = bin_dir / "tty"
+            tty.write_text('#!/bin/sh\nprintf \'%s\\n\' "$MOCK_TTY"\n', encoding="utf-8")
+            starship = bin_dir / "starship"
+            starship.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            tty.chmod(0o755)
+            starship.chmod(0o755)
+            xdg_config = Path(temp_dir) / "xdg"
+            user_config = xdg_config / "starship.toml"
+            user_config.parent.mkdir()
+            user_config.write_text("", encoding="utf-8")
+
+            cases = (
+                ("/dev/tty2", "/usr/share/cambonos/shell-prompt/starship-tty.toml", "default"),
+                ("/dev/pts/3", "/usr/share/cambonos/shell-prompt/starship.toml", "default"),
+                ("/dev/tty2", "/tmp/user-starship.toml", "explicit"),
+                ("/dev/tty2", "", "user"),
+            )
+            for shell_name, command, print_config, integration in shells:
+                for device, configured_path, config_kind in cases:
+                    with self.subTest(shell=shell_name, device=device, config=config_kind):
+                        env = os.environ.copy()
+                        env.update({
+                            "HOME": temp_dir,
+                            "XDG_CONFIG_HOME": str(Path(temp_dir) / "missing-xdg"),
+                            "MOCK_TTY": device,
+                            "PATH": f"{bin_dir}:{env['PATH']}",
+                        })
+                        env.pop("STARSHIP_CONFIG", None)
+                        if config_kind == "explicit":
+                            env["STARSHIP_CONFIG"] = configured_path
+                        elif config_kind == "user":
+                            env["XDG_CONFIG_HOME"] = str(xdg_config)
+                        shell_command = (
+                            f"source {shlex.quote(str(integration))}; {print_config}"
+                        )
+                        result = subprocess.run(
+                            [*command, shell_command],
+                            env=env,
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                        )
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        actual_config = result.stdout.strip().splitlines()
+                        self.assertEqual(actual_config[-1] if actual_config else "", configured_path)
+
+    def test_starship_directory_preserves_emulator_output_and_supports_tty(self):
+        helper = PACKAGES / "cambonos-shell-prompt/files/cambonos/bin/cambonos-starship-directory"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            env = os.environ.copy()
+            env["HOME"] = "/nonexistent"
+            outputs = {}
+            for mode, args in (("emulator", []), ("tty", ["--tty"])):
+                result = subprocess.run(
+                    [str(helper), *args],
+                    cwd=temp_dir,
+                    env=env,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                outputs[mode] = result.stdout
+
+            self.assertIn("", outputs["emulator"])
+            self.assertIn("\x1b[38;2;112;231;230m", outputs["emulator"])
+            self.assertIn("dir\x1b[0m ", outputs["tty"])
+            self.assertIn("\x1b[94m", outputs["tty"])
+            self.assertNotIn("\x1b[38;2;", outputs["tty"])
+            self.assertTrue(all(ord(character) < 128 for character in outputs["tty"]))
 
     def test_zsh_package_provides_its_core_shell_configuration(self):
         package = PACKAGES / "cambonos-zsh/files/zsh/conf.d"

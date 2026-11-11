@@ -1,0 +1,116 @@
+"$schema" = "https://starship.rs/config-schema.json"
+
+palette = "cambonos"
+
+add_newline = true
+command_timeout = 500
+scan_timeout = 250
+
+format = """
+[+--](fg:primary) ${custom.cambonos_directory}$git_branch$git_status$fill$python${custom.cambonos_pkgbuild}$package$username$hostname
+[+--](fg:primary) $character
+"""
+
+right_format = """
+$status$jobs$cmd_duration
+"""
+
+[palettes.cambonos]
+primary = "bright-green"
+secondary = "green"
+accent = "bright-blue"
+deep_blue = "blue"
+background = "black"
+text = "white"
+
+[fill]
+symbol = " "
+style = "none"
+
+[directory]
+disabled = true
+
+[custom.cambonos_directory]
+command = "/usr/bin/cambonos-starship-directory --tty"
+when = true
+shell = ["/usr/bin/bash", "--noprofile", "--norc"]
+format = "$output"
+unsafe_no_escape = false
+
+[git_branch]
+symbol = " git "
+format = "[$symbol$branch]($style) "
+style = "bold fg:accent"
+truncation_length = 32
+
+[git_status]
+format = '([$ahead_behind$all_status]($style) )'
+style = "fg:text"
+conflicted = "[=$count](bold fg:accent)"
+ahead = "[^$count](fg:accent)"
+behind = "[v$count](fg:accent)"
+diverged = "[^$ahead_count v$behind_count](fg:accent)"
+up_to_date = ""
+untracked = "[?$count](fg:secondary)"
+stashed = "[*$count](fg:secondary)"
+modified = "[!$count](fg:secondary)"
+staged = "[+$count](fg:primary)"
+renamed = "[>$count](fg:primary)"
+deleted = "[-$count](fg:secondary)"
+
+[python]
+symbol = "py "
+format = "[$symbol$virtualenv]($style) "
+style = "fg:secondary"
+detect_extensions = []
+detect_files = []
+detect_folders = []
+
+[custom.cambonos_pkgbuild]
+command = '''pkgver=$(sed -n 's/^[[:space:]]*pkgver[[:space:]]*=[[:space:]]*//p' PKGBUILD | head -n1 | tr -d "\"' "); pkgrel=$(sed -n 's/^[[:space:]]*pkgrel[[:space:]]*=[[:space:]]*//p' PKGBUILD | head -n1 | tr -d "\"' "); [ -n "$pkgver" ] && printf '%s-%s' "$pkgver" "${pkgrel:-1}"'''
+when = "test -f PKGBUILD"
+shell = ["/usr/bin/bash", "--noprofile", "--norc"]
+format = "[$symbol$output]($style) "
+symbol = "pkg "
+style = "fg:secondary"
+
+[package]
+symbol = "pkg "
+format = "[$symbol$version]($style) "
+version_format = "v${raw}"
+style = "fg:secondary"
+display_private = true
+
+[character]
+success_symbol = "[>](bold fg:primary)"
+error_symbol = "[>](bold fg:accent)"
+vimcmd_symbol = "[<](bold fg:accent)"
+
+[status]
+disabled = false
+format = "[$symbol$status]($style) "
+symbol = "x "
+style = "bold fg:accent"
+
+[jobs]
+symbol = "* "
+format = "[$symbol$number]($style) "
+style = "fg:accent"
+number_threshold = 1
+
+[cmd_duration]
+min_time = 2000
+format = "[@ $duration]($style)"
+style = "fg:deep_blue"
+
+[username]
+show_always = false
+format = "[$user]($style)"
+style_user = "fg:secondary"
+style_root = "bold fg:secondary"
+
+[hostname]
+ssh_only = true
+format = "[@](fg:deep_blue)[$hostname]($style) "
+style = "bold fg:secondary"
+trim_at = "."

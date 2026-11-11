@@ -6,12 +6,29 @@
 
 set -u
 
-readonly COLOR_ACCENT=$'\033[38;2;112;231;230m'    # #70E7E6
-readonly COLOR_DEEP_BLUE=$'\033[38;2;1;159;167m'   # #019FA7
+tty_mode=0
+case "${1:-}" in
+    '') ;;
+    --tty) tty_mode=1 ;;
+    *) printf 'Usage: %s [--tty]\n' "$0" >&2; exit 2 ;;
+esac
+
+if (( tty_mode )); then
+    readonly COLOR_ACCENT=$'\033[94m'
+    readonly COLOR_DEEP_BLUE=$'\033[34m'
+    readonly ICON_DIRECTORY='dir'
+    readonly ICON_HOME='~'
+    readonly ICON_READ_ONLY='ro'
+    readonly ICON_ELLIPSIS='...'
+else
+    readonly COLOR_ACCENT=$'\033[38;2;112;231;230m'    # #70E7E6
+    readonly COLOR_DEEP_BLUE=$'\033[38;2;1;159;167m'   # #019FA7
+    readonly ICON_DIRECTORY=''
+    readonly ICON_HOME=''
+    readonly ICON_READ_ONLY=''
+    readonly ICON_ELLIPSIS='…'
+fi
 readonly COLOR_RESET=$'\033[0m'
-readonly ICON_DIRECTORY=''
-readonly ICON_HOME=''
-readonly ICON_READ_ONLY=''
 readonly MAX_VISIBLE_DIRECTORIES=4
 
 sanitize_segment() {
@@ -94,7 +111,7 @@ else
     first_visible=0
     if (( directory_count > MAX_VISIBLE_DIRECTORIES )); then
         first_visible=$((directory_count - MAX_VISIBLE_DIRECTORIES))
-        printf '%s…/%s' "$COLOR_DEEP_BLUE" "$COLOR_RESET"
+        printf '%s%s/%s' "$COLOR_DEEP_BLUE" "$ICON_ELLIPSIS" "$COLOR_RESET"
     fi
 
     for ((index = first_visible; index < directory_count; index++)); do

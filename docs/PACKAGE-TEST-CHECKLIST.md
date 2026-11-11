@@ -58,6 +58,8 @@ no sustituye las comprobaciones visuales en una sesión real.
 - [x] El prompt funciona en sesiones interactivas de Fish.
 - [x] El directorio actual y sus directorios padre se representan correctamente.
 - [x] Se respeta la configuración personal de Starship del usuario.
+- [ ] Las consolas virtuales Linux usan el perfil compatible con TTY y los emuladores conservan el perfil visual actual.
+- [ ] Bash, Zsh y Fish seleccionan el perfil TTY correctamente en una consola virtual real.
 
 ## cambonos-zsh
 

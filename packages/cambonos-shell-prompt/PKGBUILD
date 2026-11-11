@@ -1,5 +1,5 @@
 pkgname=cambonos-shell-prompt
-pkgver=0.2.0
+pkgver=0.3.0
 pkgrel=1
 pkgdesc="CambonOS Starship prompt configuration and shell integrations"
 arch=('any')
@@ -16,6 +16,8 @@ package() {
 
   install -Dm644 "$startdir/files/starship.toml" \
     "$pkgdir/usr/share/cambonos/shell-prompt/starship.toml"
+  install -Dm644 "$startdir/files/starship-tty.toml" \
+    "$pkgdir/usr/share/cambonos/shell-prompt/starship-tty.toml"
   install -Dm755 "$startdir/files/cambonos/bin/cambonos-starship-directory" \
     "$pkgdir/usr/bin/cambonos-starship-directory"
   install -Dm644 "$startdir/files/bash/cambonos-shell-prompt.bash" \
