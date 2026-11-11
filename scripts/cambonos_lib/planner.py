@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
 from .build import build_order
@@ -20,26 +21,71 @@ def _json_hash(value: object) -> str:
     return _digest(json.dumps(value, sort_keys=True, separators=(",", ":")).encode())
 
 
+def _validate_payload_symlink(package: Package, path: Path) -> str:
+    """Return a safe symlink target without ever reading through the link."""
+    try:
+        target = os.readlink(path)
+        resolved = path.resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise CambonosError(
+            f"{package.name}: enlace simbólico roto o cíclico en entradas de build: {path}"
+        ) from exc
+    root = package.directory.resolve()
+    if not resolved.is_relative_to(root):
+        raise CambonosError(
+            f"{package.name}: enlace simbólico fuera del árbol del paquete: {path} -> {target}"
+        )
+    return target
+
+
 def package_input_hash(package: Package) -> str:
-    """Hash build payload, deliberately excluding package-level documentation."""
+    """Hash build payload, including safe symlinks and excluding documentation."""
     digest = hashlib.sha256()
     candidates = [package.directory / "PKGBUILD"]
     candidates.extend(sorted(package.directory.glob("*.install")))
     payload = package.directory / "files"
     if payload.is_dir():
-        candidates.extend(sorted(p for p in payload.rglob("*") if p.is_file()))
+        # Include symlinked files and directories, but never recurse through them.
+        candidates.extend(sorted(
+            path for path in payload.rglob("*")
+            if path.is_symlink() or path.is_file()
+        ))
     metadata = package.directory / ".cambonos-source.json"
-    if metadata.is_file():
+    if metadata.is_file() or metadata.is_symlink():
         candidates.append(metadata)
-    for path in candidates:
-        if path.is_symlink():
-            raise CambonosError(f"{package.name}: symlink no permitido en entradas de build: {path}")
-        relative = path.relative_to(package.directory).as_posix().encode()
+
+    root = package.directory.resolve()
+    for path in sorted(set(candidates), key=lambda item: item.relative_to(package.directory).as_posix()):
+        try:
+            relative_path = path.relative_to(package.directory)
+            stat = path.lstat()
+        except (OSError, ValueError) as exc:
+            raise CambonosError(
+                f"{package.name}: no se pudo inspeccionar una entrada de build: {path}"
+            ) from exc
+        relative = relative_path.as_posix().encode("utf-8")
         digest.update(len(relative).to_bytes(4, "big"))
         digest.update(relative)
-        data = path.read_bytes()
-        digest.update(len(data).to_bytes(8, "big"))
-        digest.update(data)
+        digest.update(str(stat.st_mode & 0o777).encode("ascii"))
+        if path.is_symlink():
+            target = _validate_payload_symlink(package, path)
+            encoded_target = target.encode("utf-8")
+            digest.update(b"L")
+            digest.update(len(encoded_target).to_bytes(4, "big"))
+            digest.update(encoded_target)
+        elif path.is_file():
+            if not path.resolve().is_relative_to(root):
+                raise CambonosError(
+                    f"{package.name}: entrada de build fuera del árbol del paquete: {path}"
+                )
+            data = path.read_bytes()
+            digest.update(b"F")
+            digest.update(len(data).to_bytes(8, "big"))
+            digest.update(data)
+        else:
+            raise CambonosError(
+                f"{package.name}: tipo de entrada de build no compatible: {path}"
+            )
     return digest.hexdigest()
 
 

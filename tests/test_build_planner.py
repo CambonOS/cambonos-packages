@@ -5,7 +5,8 @@ import unittest
 from pathlib import Path
 
 from scripts.cambonos_lib.models import Package
-from scripts.cambonos_lib.planner import create_build_plan
+from scripts.cambonos_lib.common import CambonosError
+from scripts.cambonos_lib.planner import create_build_plan, package_input_hash
 
 
 def make_package(root: Path, name: str, makedepends: str = "") -> Package:
@@ -75,6 +76,51 @@ class BuildPlannerTests(unittest.TestCase):
         second = create_build_plan(self.packages, "testing", "arch-image", previous)
         self.assertEqual(second["packages"]["cambonos-dep"]["action"], "build")
         self.assertEqual(second["packages"]["cambonos-app"]["action"], "build")
+
+    def test_systemd_wants_symlink_is_included_in_fingerprint(self):
+        systemd = self.app.directory / "files/profile/airootfs/etc/systemd/system"
+        wants = systemd / "multi-user.target.wants"
+        wants.mkdir(parents=True)
+        (systemd / "pacman-init.service").write_text("[Service]\n")
+        link = wants / "pacman-init.service"
+        link.symlink_to("../pacman-init.service")
+
+        first = package_input_hash(self.app)
+        link.unlink()
+        link.symlink_to("../../system/pacman-init.service")
+
+        self.assertNotEqual(first, package_input_hash(self.app))
+
+    def test_internal_directory_symlink_is_hashed_without_traversal(self):
+        target = self.app.directory / "files/systemd"
+        target.mkdir()
+        (target / "unit.service").write_text("[Service]\n")
+        (self.app.directory / "files/systemd-link").symlink_to("systemd", target_is_directory=True)
+
+        self.assertEqual(len(package_input_hash(self.app)), 64)
+
+    def test_external_symlink_is_rejected(self):
+        outside = self.root / "outside.service"
+        outside.write_text("[Service]\n")
+        (self.app.directory / "files/outside.service").symlink_to(outside)
+
+        with self.assertRaisesRegex(CambonosError, "fuera del árbol del paquete"):
+            package_input_hash(self.app)
+
+    def test_broken_symlink_is_rejected(self):
+        (self.app.directory / "files/broken.service").symlink_to("missing.service")
+
+        with self.assertRaisesRegex(CambonosError, "roto o cíclico"):
+            package_input_hash(self.app)
+
+    def test_symlink_cycle_is_rejected(self):
+        first = self.app.directory / "files/first"
+        second = self.app.directory / "files/second"
+        first.symlink_to("second")
+        second.symlink_to("first")
+
+        with self.assertRaisesRegex(CambonosError, "roto o cíclico"):
+            package_input_hash(self.app)
 
     def test_channel_profiles_are_distinct_for_pacman_only(self):
         pacman = make_package(self.root, "cambonos-pacman")
