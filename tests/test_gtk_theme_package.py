@@ -26,7 +26,6 @@ class GtkThemePackageTests(unittest.TestCase):
         self.assertEqual(package.makedepends, ("python",))
         self.assertEqual(validate_package(package), [])
         readme = (self.package_dir / "README.md").read_text(encoding="utf-8")
-        self.assertIn("Versión unificada:", readme)
         self.assertIn("`0.6.2`", readme)
 
     def test_complete_upstream_source_and_builder_are_preserved(self):

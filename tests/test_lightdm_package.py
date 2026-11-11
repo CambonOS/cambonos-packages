@@ -16,7 +16,7 @@ class LightDMPackageTests(unittest.TestCase):
         content = (PACKAGE / "PKGBUILD").read_text(encoding="utf-8")
         self.assertIn("pkgname=cambonos-lightdm", content)
         self.assertIn("pkgver=0.1.0", content)
-        self.assertIn("pkgrel=4", content)
+        self.assertIn("pkgrel=5", content)
         self.assertIn("license=('GPL-3.0-only')", content)
         self.assertIn(
             "depends=('lightdm' 'lightdm-slick-greeter' 'numlockx' 'cambonos-gtk-theme')", content
@@ -70,12 +70,13 @@ class LightDMPackageTests(unittest.TestCase):
         content = path.read_text(encoding="utf-8")
         self.assertIn("post_install()", content)
         self.assertNotIn("post_upgrade()", content)
-        self.assertNotIn("post_remove()", content)
+        self.assertIn("post_remove()", content)
         self.assertIn('[[ -e "$display_manager_link" || -L "$display_manager_link" ]]', content)
         self.assertIn('/usr/bin/systemctl --root="$root" enable lightdm.service', content)
         self.assertIn("_cambonos_lightdm_enable_service /", content)
         self.assertNotIn("enable --now", content)
-        self.assertNotIn("disable lightdm.service", content)
+        self.assertIn('/usr/bin/systemctl --root="$root" disable lightdm.service', content)
+        self.assertIn("/var/lib/cambonos-lightdm/auto-enabled", content)
         self.assertNotIn("--force", content)
 
     @unittest.skipUnless(shutil.which("systemctl"), "systemctl is not installed")
@@ -127,6 +128,69 @@ class LightDMPackageTests(unittest.TestCase):
                 "/usr/lib/systemd/system/sddm.service",
             )
             self.assertIn("preserving existing display-manager.service", preserved.stderr)
+
+    @unittest.skipUnless(shutil.which("systemctl"), "systemctl is not installed")
+    def test_post_remove_disables_only_package_owned_lightdm_activation(self):
+        scriptlet = PACKAGE / "cambonos-lightdm.install"
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            unit_dir = root / "usr/lib/systemd/system"
+            link_dir = root / "etc/systemd/system"
+            state_dir = root / "var/lib/cambonos-lightdm"
+            unit_dir.mkdir(parents=True)
+            link_dir.mkdir(parents=True)
+            state_dir.mkdir(parents=True)
+            (unit_dir / "lightdm.service").write_text(
+                "[Unit]\nDescription=Test LightDM\n"
+                "[Service]\nExecStart=/usr/bin/true\n"
+                "[Install]\nAlias=display-manager.service\n",
+                encoding="utf-8",
+            )
+            state_file = state_dir / "auto-enabled"
+            state_file.touch()
+            display_manager = link_dir / "display-manager.service"
+            display_manager.symlink_to("/usr/lib/systemd/system/lightdm.service")
+
+            removed = subprocess.run(
+                [
+                    "bash", "-c",
+                    'source "$1"; _cambonos_lightdm_disable_owned_service "$2"',
+                    "test", str(scriptlet), str(root),
+                ],
+                text=True, capture_output=True, check=False,
+            )
+            self.assertEqual(removed.returncode, 0, removed.stderr)
+            self.assertFalse(display_manager.is_symlink())
+            self.assertFalse(state_file.exists())
+
+    @unittest.skipUnless(shutil.which("systemctl"), "systemctl is not installed")
+    def test_post_remove_preserves_replaced_display_manager(self):
+        scriptlet = PACKAGE / "cambonos-lightdm.install"
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            link_dir = root / "etc/systemd/system"
+            state_dir = root / "var/lib/cambonos-lightdm"
+            link_dir.mkdir(parents=True)
+            state_dir.mkdir(parents=True)
+            state_file = state_dir / "auto-enabled"
+            state_file.touch()
+            display_manager = link_dir / "display-manager.service"
+            display_manager.symlink_to("/usr/lib/systemd/system/sddm.service")
+
+            removed = subprocess.run(
+                [
+                    "bash", "-c",
+                    'source "$1"; _cambonos_lightdm_disable_owned_service "$2"',
+                    "test", str(scriptlet), str(root),
+                ],
+                text=True, capture_output=True, check=False,
+            )
+            self.assertEqual(removed.returncode, 0, removed.stderr)
+            self.assertEqual(
+                display_manager.readlink().as_posix(),
+                "/usr/lib/systemd/system/sddm.service",
+            )
+            self.assertFalse(state_file.exists())
 
     def test_scriptlet_has_valid_bash_syntax(self):
         for path in (PACKAGE / "PKGBUILD", PACKAGE / "cambonos-lightdm.install"):

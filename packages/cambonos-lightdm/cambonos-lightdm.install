@@ -1,15 +1,27 @@
 #!/bin/bash
 
-_cambonos_lightdm_enable_service() {
+_cambonos_lightdm_state_paths() {
   local root="${1:-/}"
   local root_prefix=""
-  local display_manager_link
-  local selected_display_manager=""
 
   if [[ "$root" != "/" ]]; then
     root_prefix="${root%/}"
   fi
-  display_manager_link="${root_prefix}/etc/systemd/system/display-manager.service"
+
+  printf '%s\n' \
+    "${root_prefix}/etc/systemd/system/display-manager.service" \
+    "${root_prefix}/var/lib/cambonos-lightdm/auto-enabled"
+}
+
+_cambonos_lightdm_enable_service() {
+  local root="${1:-/}"
+  local display_manager_link
+  local state_file
+  local selected_display_manager=""
+
+  readarray -t paths < <(_cambonos_lightdm_state_paths "$root")
+  display_manager_link="${paths[0]}"
+  state_file="${paths[1]}"
 
   if [[ -e "$display_manager_link" || -L "$display_manager_link" ]]; then
     if [[ -L "$display_manager_link" ]]; then
@@ -27,9 +39,56 @@ _cambonos_lightdm_enable_service() {
   if ! /usr/bin/systemctl --root="$root" enable lightdm.service; then
     printf 'cambonos-lightdm: could not enable lightdm.service automatically.\n' >&2
     printf 'cambonos-lightdm: run systemctl enable lightdm.service after resolving any display-manager conflict.\n' >&2
+    return 0
+  fi
+
+  # Record ownership only when this invocation created the expected alias.
+  # This marker lets post_remove undo only the activation performed here.
+  if [[ -L "$display_manager_link" ]] &&
+     [[ "$(readlink -- "$display_manager_link" 2>/dev/null || true)" == "/usr/lib/systemd/system/lightdm.service" ]]; then
+    install -D -m 0644 /dev/null "$state_file" || {
+      printf 'cambonos-lightdm: warning: could not record automatic LightDM activation.\n' >&2
+      return 0
+    }
+  fi
+}
+
+_cambonos_lightdm_disable_owned_service() {
+  local root="${1:-/}"
+  local display_manager_link
+  local state_file
+
+  readarray -t paths < <(_cambonos_lightdm_state_paths "$root")
+  display_manager_link="${paths[0]}"
+  state_file="${paths[1]}"
+
+  # Never disable a display manager unless this package recorded that it
+  # enabled LightDM and the alias still points to LightDM.
+  if [[ ! -f "$state_file" ]]; then
+    return 0
+  fi
+
+  if [[ ! -L "$display_manager_link" ]] ||
+     [[ "$(readlink -- "$display_manager_link" 2>/dev/null || true)" != "/usr/lib/systemd/system/lightdm.service" ]]; then
+    rm -f -- "$state_file"
+    return 0
+  fi
+
+  if /usr/bin/systemctl --root="$root" disable lightdm.service; then
+    # systemctl may leave the Alias= symlink in place for some unit layouts.
+    # It is safe to remove because ownership and its exact target were checked.
+    rm -f -- "$display_manager_link"
+    rm -f -- "$state_file"
+    rmdir -- "$(dirname -- "$state_file")" 2>/dev/null || true
+  else
+    printf 'cambonos-lightdm: warning: could not undo automatic LightDM activation.\n' >&2
   fi
 }
 
 post_install() {
   _cambonos_lightdm_enable_service /
+}
+
+post_remove() {
+  _cambonos_lightdm_disable_owned_service /
 }
