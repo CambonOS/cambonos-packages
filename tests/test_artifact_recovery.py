@@ -30,6 +30,10 @@ def package_record(name: str = "cambonos-demo") -> tuple[dict, bytes, bytes]:
         "architecture": "any",
         "source_hash": "a" * 64,
         "build_input_hash": "b" * 64,
+        "build_fingerprint": "c" * 64,
+        "build_recipe_hash": "d" * 64,
+        "channel_profile_hash": "e" * 64,
+        "dependency_fingerprints": {"cambonos-dep": "f" * 64},
         "package_file": filename,
         "package_hash": digest(archive_data),
         "signature_file": filename + ".sig",
@@ -95,6 +99,8 @@ class ArtifactRecoveryTests(unittest.TestCase):
         self.assertEqual((self.output / self.record["package_file"]).read_bytes(), self.archive_data)
         self.assertEqual((self.output / self.record["signature_file"]).read_bytes(), self.signature_data)
         self.assertTrue((self.output / "recovery-report.json").is_file())
+        self.assertEqual(report["packages"][0]["build_fingerprint"], "c" * 64)
+        self.assertEqual(report["packages"][0]["dependency_fingerprints"], {"cambonos-dep": "f" * 64})
         verify_signature.assert_called_once()
         verify_metadata.assert_called_once()
 

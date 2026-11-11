@@ -27,6 +27,7 @@ from cambonos_lib.manifest import (
 from cambonos_lib.signing import sign_and_create_site
 from cambonos_lib.planner import create_build_plan
 from cambonos_lib.artifacts import recover_previous_artifacts
+from cambonos_lib.shadow import compare_build_with_recovered, write_shadow_report
 from cambonos_lib.validation import discover_packages, validate_all
 
 
@@ -179,6 +180,35 @@ def recover_command(args: argparse.Namespace) -> None:
     print(f"Recuperación verificada: {report['summary']['recovered']} paquetes; canal={args.channel}.")
 
 
+def compare_shadow_command(args: argparse.Namespace) -> None:
+    report = compare_build_with_recovered(
+        build_dir=args.build_dir.resolve(),
+        recovered_dir=args.recovered_dir.resolve(),
+        manifest_path=args.previous_manifest.resolve(),
+        signature_path=args.previous_manifest_signature.resolve(),
+        public_key_path=args.keyring_public_key.resolve(),
+        trusted_path=args.keyring_trusted.resolve(),
+    )
+    if args.output:
+        path = write_shadow_report(report, args.output)
+        print(f"Informe shadow escrito: {path}")
+    print(json.dumps(report, indent=2, sort_keys=True))
+    summary = report["summary"]
+    print(
+        f"Comparación shadow ({report['channel']}): "
+        f"{summary['reusable']} reutilizables, "
+        f"{summary['input_changed']} entradas cambiadas, "
+        f"{summary['fingerprint_changed']} fingerprints cambiados, "
+        f"{summary['binary_mismatch']} discrepancias binarias, "
+        f"{summary['identity_mismatch']} identidades incoherentes, "
+        f"{summary['legacy_unverifiable']} registros antiguos sin fingerprint, "
+        f"{summary['new_package']} paquetes nuevos, "
+        f"{summary['removed_package']} paquetes retirados. "
+        "No se ha omitido ninguna compilación ni modificado la publicación.",
+        file=sys.stderr,
+    )
+
+
 def make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cambonos",
@@ -230,6 +260,26 @@ def make_parser() -> argparse.ArgumentParser:
     recover.add_argument("--base-url", default="https://mirror.cambonos.org")
     recover.add_argument("--image", default=DEFAULT_ARCH_IMAGE)
     recover.set_defaults(func=recover_command)
+
+    compare_shadow = subparsers.add_parser(
+        "compare-shadow",
+        help="comparar un build completo con artefactos recuperados sin reutilizar ni publicar",
+    )
+    compare_shadow.add_argument("--build-dir", type=Path, required=True,
+                                help="directorio del build con build-manifest.json y packages/")
+    compare_shadow.add_argument("--recovered-dir", type=Path, required=True,
+                                help="directorio de recover-artifacts con recovery-report.json")
+    compare_shadow.add_argument("--previous-manifest", type=Path, required=True,
+                                help="manifiesto global anterior firmado")
+    compare_shadow.add_argument("--previous-manifest-signature", type=Path, required=True,
+                                help="firma detached del manifiesto anterior")
+    compare_shadow.add_argument("--keyring-public-key", type=Path, required=True,
+                                help="keyring público CambonOS")
+    compare_shadow.add_argument("--keyring-trusted", type=Path, required=True,
+                                help="ownertrust CambonOS")
+    compare_shadow.add_argument("--output", type=Path,
+                                help="ruta opcional del informe JSON; no sobrescribe archivos")
+    compare_shadow.set_defaults(func=compare_shadow_command)
 
     sign = subparsers.add_parser("sign", help="firmar ambos canales y preparar el sitio")
     sign.add_argument("--testing-dir", type=Path, required=True)

@@ -227,6 +227,16 @@ def recover_previous_artifacts(
                 "signature_hash": record["signature_hash"],
                 "signature_verified": True,
                 "metadata_verified": True,
+                # Preserve the signed build identity for the shadow comparison.
+                "build_fingerprint": record.get("build_fingerprint"),
+                "build_input_hash": record.get("build_input_hash"),
+                "build_recipe_hash": record.get("build_recipe_hash"),
+                "channel_profile_hash": record.get("channel_profile_hash"),
+                "dependency_fingerprints": record.get("dependency_fingerprints"),
+                "source_hash": record.get("source_hash"),
+                "pkgver": record.get("pkgver"),
+                "pkgrel": record.get("pkgrel"),
+                "epoch": record.get("epoch"),
             })
         subprocess.run(
             ["gpgconf", "--homedir", str(gnupghome), "--kill", "gpg-agent"],

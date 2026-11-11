@@ -49,12 +49,30 @@ class PipelineContractTests(unittest.TestCase):
                 if "shell" in step and step["shell"] == "bash":
                     self.assertIn("set -Eeuo pipefail", script)
 
+    def test_shadow_comparison_runs_after_full_build_without_gating_publication(self):
+        build_steps = self.workflow["jobs"]["build"].get("steps", [])
+        by_name = {step.get("name"): step for step in build_steps}
+        recovery = by_name.get("Recover previous artifacts for shadow comparison")
+        comparison = by_name.get("Compare full build with previous artifacts (shadow only)")
+        self.assertIsNotNone(recovery)
+        self.assertIsNotNone(comparison)
+        self.assertEqual(recovery.get("continue-on-error"), "true")
+        self.assertEqual(comparison.get("continue-on-error"), "true")
+        names = [step.get("name", "") for step in build_steps]
+        self.assertLess(names.index("Build all packages in disposable Arch containers"),
+                        names.index("Compare full build with previous artifacts (shadow only)"))
+        self.assertLess(names.index("Compare full build with previous artifacts (shadow only)"),
+                        names.index("Upload unsigned build artifacts"))
+        self.assertNotIn("CAMBONOS_SIGNING_KEY", "\n".join(
+            str(step.get("env", {})) + str(step.get("run", "")) for step in build_steps
+        ))
+
     def test_workflow_has_read_only_default_permissions(self):
         self.assertEqual(self.workflow.get("permissions", {}).get("contents"), "read")
 
     def test_public_cli_exposes_the_pipeline_operations(self):
         cli = ROOT / "scripts/cambonos.py"
-        for command in ("validate", "plan", "build", "recover-artifacts", "sign"):
+        for command in ("validate", "plan", "build", "recover-artifacts", "compare-shadow", "sign"):
             with self.subTest(command=command):
                 result = subprocess.run(
                     [sys.executable, str(cli), command, "--help"],

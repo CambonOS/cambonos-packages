@@ -278,6 +278,48 @@ jobs:
             --image "${ARCH_IMAGE}" \
             --output "${RUNNER_TEMP}/build-output"
 
+      - name: Download previous publication manifest for shadow comparison
+        id: shadow-manifest
+        if: needs.validate.outputs.bootstrap == 'false'
+        continue-on-error: true
+        uses: actions/download-artifact@v8.0.2
+        with:
+          name: previous-publication-manifest
+          path: ${{ runner.temp }}/previous-manifest
+
+      - name: Recover previous artifacts for shadow comparison
+        id: shadow-recovery
+        if: needs.validate.outputs.bootstrap == 'false' && steps.shadow-manifest.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/cambonos.py recover-artifacts \
+            --previous-manifest "${RUNNER_TEMP}/previous-manifest/previous-manifest.json" \
+            --previous-manifest-signature "${RUNNER_TEMP}/previous-manifest/previous-manifest.json.sig" \
+            --keyring-public-key "${RUNNER_TEMP}/package-source/packages/cambonos-keyring/files/cambonos.gpg" \
+            --keyring-trusted "${RUNNER_TEMP}/package-source/packages/cambonos-keyring/files/cambonos-trusted" \
+            --channel "${{ matrix.channel }}" \
+            --base-url "${CAMBONOS_PAGES_URL%/}" \
+            --image "${ARCH_IMAGE}" \
+            --output "${RUNNER_TEMP}/recovered-${{ matrix.channel }}"
+
+      - name: Compare full build with previous artifacts (shadow only)
+        id: shadow-comparison
+        if: needs.validate.outputs.bootstrap == 'false' && steps.shadow-recovery.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/cambonos.py compare-shadow \
+            --build-dir "${RUNNER_TEMP}/build-output" \
+            --recovered-dir "${RUNNER_TEMP}/recovered-${{ matrix.channel }}" \
+            --previous-manifest "${RUNNER_TEMP}/previous-manifest/previous-manifest.json" \
+            --previous-manifest-signature "${RUNNER_TEMP}/previous-manifest/previous-manifest.json.sig" \
+            --keyring-public-key "${RUNNER_TEMP}/package-source/packages/cambonos-keyring/files/cambonos.gpg" \
+            --keyring-trusted "${RUNNER_TEMP}/package-source/packages/cambonos-keyring/files/cambonos-trusted" \
+            --output "${RUNNER_TEMP}/build-output/shadow-report.json"
+
       - name: Upload unsigned build artifacts
         uses: actions/upload-artifact@v7.0.2
         with:
