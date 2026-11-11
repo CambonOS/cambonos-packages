@@ -24,12 +24,20 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 
 ## cambonos-gtk-theme
 
-- [ ] El paquete instala únicamente `CambonOS-dark` en `/usr/share/themes/`.
-- [ ] GTK3 aplica correctamente los estilos de ambas variantes.
-- [ ] GTK4 aplica correctamente los estilos de ambas variantes en aplicaciones GTK4 compatibles.
-- [ ] Xfwm4 aplica las decoraciones de ambas variantes y muestra correctamente el icono de aplicación.
-- [ ] Las superficies translúcidas se representan correctamente con el compositor XFCE activado.
-- [ ] La legibilidad de texto, menús, tooltips, entradas y controles se mantiene con alpha 0.88.
+Alcance del paquete: una única variante (`CambonOS-dark`) con recursos GTK 3,
+GTK 4 y Xfwm4. GTK 2 no forma parte del alcance: no se incluye
+`gtk-2.0/gtkrc`. La validación estructural ejecutada durante la construcción
+no sustituye las comprobaciones visuales en una sesión real.
+
+- [x] La instalación deja únicamente `CambonOS-dark` en `/usr/share/themes/` y la licencia en `/usr/share/licenses/cambonos-gtk-theme/`.
+- [x] La instalación no modifica preferencias de usuario ni archivos de configuración global de GTK.
+- [x] GTK 3 carga los recursos del tema en aplicaciones compatibles de una sesión XFCE real.
+- [x] GTK 4 carga los recursos del tema en aplicaciones compatibles probadas; no implica compatibilidad completa con aplicaciones libadwaita.
+- [x] La selección del tema requiere acción del usuario; el paquete no fuerza un tema ni sustituye la configuración local del escritorio.
+- [x] La retirada elimina los recursos instalados sin alterar la configuración previa del sistema ni de los usuarios.
+- [ ] Xfwm4 representa correctamente las decoraciones y todos los estados de los botones en una sesión real (activa/inactiva, maximizar, minimizar, cerrar, sombrear y fijar).
+- [ ] La banda de selección al arrastrar en el escritorio XFCE muestra el relleno translúcido y el borde turquesa del tema.
+- [ ] La legibilidad y el contraste de texto, menús, tooltips, entradas y controles se mantienen con las superficies translúcidas definidas en la paleta.
 - [ ] La selección del tema en Apariencia y Gestor de ventanas persiste tras cerrar sesión e iniciar de nuevo.
 
 ## cambonos-fastfetch
@@ -125,16 +133,6 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 - [x] La instalación o retirada del metapaquete no cambia la shell de inicio de sesión de usuarios existentes.
 - [x] `cambonos-grub` y `cambonos-plymouth` permanecen independientes.
 
-## cambonos-gtk-theme
-
-- [x] La instalación deja el tema `CambonOS-dark` en `/usr/share/themes/` sin tocar preferencias del usuario ni archivos de configuración global de GTK.
-- [x] GTK 2, GTK 3, GTK 4 y XFWM4 reconocen el tema y cargan sus recursos sin errores de lectura ni rutas rotas.
-- [x] La paleta oficial de CambonOS se aplica de forma consistente en ventanas, controles y paneles de una sesión XFCE real.
-- [x] La selección del tema requiere acción del usuario; el paquete no fuerza un tema ni sustituye la configuración local del escritorio.
-- [x] Las aplicaciones GTK y los componentes de escritorio muestran el modo oscuro con la identidad CambonOS sin forzar acentos o esquemas ajenos.
-- [ ] La banda de selección al arrastrar en el escritorio XFCE muestra el relleno translúcido y el borde turquesa del tema.
-- [x] La retirada del paquete elimina los recursos del tema sin alterar la configuración previa del sistema ni de los usuarios.
-
 ## cambonos-mkiso
 
 - [ ] La comprobación de red live accede al mirror geo de Arch configurado para `[core]` y `[extra]`.
@@ -160,5 +158,5 @@ Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última
 | `cambonos-base` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-keyring` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-lightdm` | VM (iso-install) | 08/11/2026 | - |
-| `cambonos-gtk-theme` | VM (iso-install) | 08/11/2026 | - |
+| `cambonos-gtk-theme` | VM (iso-install) | 08/11/2026 | GTK 3/4 y retirada comprobados; validación visual completa de Xfwm4, selección XFCE y contraste/translucidez pendientes |
 | `cambonos-mkiso` | Pendiente de prueba real | — | Verificaciones funcionales pendientes |
