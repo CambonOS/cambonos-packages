@@ -99,13 +99,37 @@ class BuildPlannerTests(unittest.TestCase):
 
         self.assertEqual(len(package_input_hash(self.app)), 64)
 
-    def test_external_symlink_is_rejected(self):
-        outside = self.root / "outside.service"
-        outside.write_text("[Service]\n")
-        (self.app.directory / "files/outside.service").symlink_to(outside)
+    def test_relative_symlink_escaping_files_is_rejected(self):
+        (self.app.directory / "README.md").write_text("not a build payload")
+        (self.app.directory / "files/outside.service").symlink_to("../README.md")
 
-        with self.assertRaisesRegex(CambonosError, "fuera del árbol del paquete"):
+        with self.assertRaisesRegex(CambonosError, "fuera de files"):
             package_input_hash(self.app)
+
+    def test_absolute_rootfs_symlinks_are_hashed_without_host_resolution(self):
+        wants = self.app.directory / "files/systemd/multi-user.target.wants"
+        wants.mkdir(parents=True)
+        (wants / "NetworkManager.service").symlink_to(
+            "/usr/lib/systemd/system/NetworkManager.service"
+        )
+        (self.app.directory / "files/systemd/systemd-firstboot.service").symlink_to(
+            "/dev/null"
+        )
+
+        first = package_input_hash(self.app)
+        (wants / "NetworkManager.service").unlink()
+        (wants / "NetworkManager.service").symlink_to(
+            "/usr/lib/systemd/system/NetworkManager-wait-online.service"
+        )
+        self.assertNotEqual(first, package_input_hash(self.app))
+
+    def test_relative_symlink_chain_may_end_at_absolute_rootfs_target(self):
+        systemd = self.app.directory / "files/systemd"
+        systemd.mkdir()
+        (systemd / "real.service").symlink_to("/usr/lib/systemd/system/real.service")
+        (systemd / "alias.service").symlink_to("real.service")
+
+        self.assertEqual(len(package_input_hash(self.app)), 64)
 
     def test_broken_symlink_is_rejected(self):
         (self.app.directory / "files/broken.service").symlink_to("missing.service")

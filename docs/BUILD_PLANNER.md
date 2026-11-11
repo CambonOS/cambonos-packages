@@ -57,3 +57,13 @@ al payload no provocan un cambio de entradas de build.
 
 Este planificador es una primera fase de observación. No ofrece reproducibilidad
 binaria absoluta ni decide por sí solo incrementos de `pkgrel`.
+
+## Enlaces simbólicos del payload
+
+Los enlaces simbólicos de `files/` se incorporan al fingerprint mediante su
+ruta, permisos y destino literal. Los enlaces absolutos se interpretan como
+rutas de la raíz del sistema destino (por ejemplo `/dev/null` o
+`/usr/lib/systemd/system/NetworkManager.service`): no se resuelven contra el
+runner ni se siguen. Los enlaces relativos deben resolver a una entrada
+existente dentro de `files/`; se rechazan los enlaces relativos rotos, cíclicos
+o que escapen de ese árbol.

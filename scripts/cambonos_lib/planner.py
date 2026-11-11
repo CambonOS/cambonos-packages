@@ -21,19 +21,60 @@ def _json_hash(value: object) -> str:
     return _digest(json.dumps(value, sort_keys=True, separators=(",", ":")).encode())
 
 
-def _validate_payload_symlink(package: Package, path: Path) -> str:
-    """Return a safe symlink target without ever reading through the link."""
+def _validate_payload_symlink(
+    package: Package,
+    path: Path,
+    payload_root: Path,
+    seen: set[Path] | None = None,
+) -> str:
+    """Return a symlink target without dereferencing absolute rootfs links.
+
+    Absolute targets in a package payload are paths in the target system's root
+    namespace (for example /usr/lib/systemd/system/foo.service), not paths on
+    the build runner. Hash their literal value and never follow them.
+    Relative targets must resolve inside files/.
+    """
     try:
         target = os.readlink(path)
-        resolved = path.resolve(strict=True)
+    except OSError as exc:
+        raise CambonosError(
+            f"{package.name}: no se pudo leer un enlace simbólico de build: {path}"
+        ) from exc
+
+    if os.path.isabs(target):
+        if not path.is_relative_to(payload_root):
+            raise CambonosError(
+                f"{package.name}: enlace absoluto permitido únicamente en files/: {path} -> {target}"
+            )
+        return target
+
+    root = payload_root.resolve()
+    visited = set() if seen is None else seen
+    link_path = path.absolute()
+    if link_path in visited:
+        raise CambonosError(
+            f"{package.name}: enlace simbólico roto o cíclico en entradas de build: {path}"
+        )
+    visited.add(link_path)
+
+    candidate = Path(os.path.abspath(path.parent / target))
+    if not candidate.is_relative_to(root):
+        raise CambonosError(
+            f"{package.name}: enlace simbólico relativo fuera de files/: {path} -> {target}"
+        )
+    if candidate.is_symlink():
+        _validate_payload_symlink(package, candidate, payload_root, visited)
+        return target
+
+    try:
+        resolved = candidate.resolve(strict=True)
     except (OSError, RuntimeError) as exc:
         raise CambonosError(
             f"{package.name}: enlace simbólico roto o cíclico en entradas de build: {path}"
         ) from exc
-    root = package.directory.resolve()
     if not resolved.is_relative_to(root):
         raise CambonosError(
-            f"{package.name}: enlace simbólico fuera del árbol del paquete: {path} -> {target}"
+            f"{package.name}: enlace simbólico relativo fuera de files/: {path} -> {target}"
         )
     return target
 
@@ -68,7 +109,7 @@ def package_input_hash(package: Package) -> str:
         digest.update(relative)
         digest.update(str(stat.st_mode & 0o777).encode("ascii"))
         if path.is_symlink():
-            target = _validate_payload_symlink(package, path)
+            target = _validate_payload_symlink(package, path, payload)
             encoded_target = target.encode("utf-8")
             digest.update(b"L")
             digest.update(len(encoded_target).to_bytes(4, "big"))
