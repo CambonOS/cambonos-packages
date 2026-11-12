@@ -16,9 +16,6 @@ Registra el entorno, la fecha y las observaciones de cada comprobación. La exis
 - [ ] La paleta ANSI de CambonOS se aplica a cada TTY virtual al inicializarse.
 - [ ] Los 16 colores de consola corresponden a la paleta publicada.
 - [ ] `dialog` aplica el tema CambonOS de `/etc/dialogrc`.
-- [ ] Xfce Terminal aplica la paleta CambonOS como predeterminado global cuando está instalado.
-- [ ] La configuración global previa se restaura al retirar `xfce4-terminal` o `cambonos-branding`.
-- [ ] Las preferencias de usuario y las opciones globales ajenas a la paleta se conservan.
 
 ## cambonos-gtk-theme
 
@@ -101,9 +98,9 @@ visuales en una sesión real.
 
 ## cambonos-plymouth
 
-- [ ] Plymouth muestra correctamente el tema CambonOS durante el arranque.
-- [ ] Los recursos gráficos de CambonOS se cargan desde el initramfs.
-- [ ] El logo, la barra y el fondo se adaptan correctamente a distintas resoluciones.
+- [x] Plymouth muestra correctamente el tema CambonOS durante el arranque.
+- [x] Los recursos gráficos de CambonOS se cargan desde el initramfs.
+- [x] El logo, la barra y el fondo se adaptan correctamente a distintas resoluciones.
 - [x] La integración con mkinitcpio incorpora Plymouth a las imágenes initramfs.
 - [x] La selección de tema del administrador se conserva durante las actualizaciones.
 
@@ -138,11 +135,11 @@ visuales en una sesión real.
 
 ## cambonos-mkiso
 
-- [ ] La comprobación de red live accede al mirror geo de Arch configurado para `[core]` y `[extra]`.
-- [ ] La actualización de `cambonos-installer` muestra la salida de Pacman y maneja correctamente errores.
+- [x] La comprobación de red live accede al mirror geo de Arch configurado para `[core]` y `[extra]`.
+- [x] La actualización de `cambonos-installer` muestra la salida de Pacman y maneja correctamente errores.
 - [ ] El menú gráfico Syslinux BIOS muestra el fondo y los colores CambonOS legibles en hardware real.
-- [ ] Las entradas BIOS, UEFI y UEFI loopback arrancan sin copiar la imagen raíz a RAM y permiten instalar con el medio conectado.
-- [ ] La ISO arranca e instala correctamente en una máquina virtual o equipo de prueba, en BIOS y UEFI.
+- [x] Las entradas BIOS, UEFI y UEFI loopback arrancan sin copiar la imagen raíz a RAM y permiten instalar con el medio conectado.
+- [x] La ISO arranca e instala correctamente en una máquina virtual o equipo de prueba, en BIOS y UEFI.
 
 ## Registro de verificación
 
@@ -150,16 +147,16 @@ Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última
 
 | Paquete | Entorno de prueba | Fecha | Observaciones |
 |---|---|---|---|
-| `cambonos-branding` | VM (iso-install) | 07/11/2026 | Paletas TTY y Xfce Terminal pendientes de verificación funcional (09/11/2026) |
+| `cambonos-branding` | VM (iso-install) | 07/11/2026 | Paleta TTY pendiente de verificación funcional (09/11/2026) |
 | `cambonos-fastfetch` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-shell-prompt` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-zsh` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-release` | VM (iso-install) | 07/11/2026 | — |
-| `cambonos-pacman` | VM (iso-install) | 07/11/2026 | — |
-| `cambonos-grub` | VM (iso-install) | 07/11/2026 | — |
-| `cambonos-plymouth` | VM (iso-install) | 07/11/2026 | Cambios recientes pendientes de verificación funcional (09/11/2026) |
-| `cambonos-base` | VM (iso-install) | 07/11/2026 | — |
-| `cambonos-keyring` | VM (iso-install) | 07/11/2026 | — |
-| `cambonos-lightdm` | VM (iso-install) | 08/11/2026 | — |
-| `cambonos-gtk-theme` | VM (iso-install) | 08/11/2026 | GTK 3/4 y retirada comprobados; validación visual completa de Xfwm4, selección XFCE y contraste/translucidez pendientes |
-| `cambonos-mkiso` | Pendiente de prueba real | — | Verificaciones funcionales pendientes |
+| `cambonos-pacman` | VM (iso-install) | 12/11/2026 | — |
+| `cambonos-grub` | VM (iso-install) | 12/11/2026 | — |
+| `cambonos-plymouth` | VM (iso-install) | 12/11/2026 | - |
+| `cambonos-base` | VM (iso-install) | 12/11/2026 | — |
+| `cambonos-keyring` | VM (iso-install) | 12/11/2026 | — |
+| `cambonos-lightdm` | VM (iso-install) | 12/11/2026 | — |
+| `cambonos-gtk-theme` | VM (iso-install) | 08/11/2026 | Pendiente verificaciones |
+| `cambonos-mkiso` | VM (iso-install) | 12/11/2026 | - |
