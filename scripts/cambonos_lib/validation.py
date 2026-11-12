@@ -13,14 +13,15 @@ from pathlib import Path
 from .common import CambonosError
 from .config import ARCHITECTURE, REQUIRED_PACKAGES
 from .models import Package
+from .versioning import validate_package_version
 
 
 NAME_RE = re.compile(r"^[A-Za-z0-9@._+:-]+$")
 PKGVER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+]*$")
 PKGREL_RE = re.compile(r"^[1-9][0-9]*$")
 EXTERNAL_SOURCES = {
-    "https://github.com/CambonOS/installer": "cambonos-installer",
-    "https://github.com/CambonOS/iso": "cambonos-mkiso",
+    "https://github.com/CambonOS/cambonos-installer": "cambonos-installer",
+    "https://github.com/CambonOS/cambonos-mkiso": "cambonos-mkiso",
 }
 
 
@@ -304,6 +305,10 @@ def validate_package(package: Package) -> list[str]:
         errors.append("pkgver no tiene un formato válido de Arch")
     if not PKGREL_RE.fullmatch(package.pkgrel):
         errors.append("pkgrel debe ser un entero positivo")
+    try:
+        validate_package_version(package.pkgver, package.pkgrel, package.epoch)
+    except CambonosError as exc:
+        errors.append(str(exc))
     if "$" in package.pkgver or "$" in package.pkgrel or "$" in package.epoch:
         errors.append("pkgver, pkgrel y epoch deben ser valores estáticos")
     if not package.epoch.isdigit():
@@ -326,13 +331,23 @@ def validate_package(package: Package) -> list[str]:
     if body is None:
         errors.append("no se encuentra package()")
         return errors
-    errors.extend(validate_source_files(package, body))
-    errors.extend(validate_script_syntax(package))
-    refs = re.findall(r"""\$startdir/([^\s"']+)""", body)
-    if re.search(r"\$startdir/(?:files/)?(?:\$|\{)", body):
-        errors.append("package() contiene rutas dinámicas bajo startdir; utiliza rutas estáticas")
+    build_body = extract_function(text, "build")
+    # Packages that compile local sources may stage payloads in build() and
+    # install the resulting artifacts from srcdir in package(). Keep the
+    # source-path validation anchored to the build() input in that case.
+    source_body = body
     if re.search(r"\$\{?(?:srcdir)\}?", body):
-        errors.append("package() debe leer los payloads locales desde startdir")
+        if build_body is None or not re.search(r"\$startdir/files/", build_body):
+            errors.append(
+                "package() puede usar srcdir únicamente si build() consume payloads locales desde startdir/files"
+            )
+        else:
+            source_body = build_body
+    errors.extend(validate_source_files(package, source_body))
+    errors.extend(validate_script_syntax(package))
+    refs = re.findall(r"""\$startdir/([^\s"']+)""", source_body)
+    if re.search(r"\$startdir/(?:files/)?(?:\$|\{)", source_body):
+        errors.append("build()/package() contiene rutas dinámicas bajo startdir; utiliza rutas estáticas")
     for raw in refs:
         source_path = Path(raw.rstrip("\\"))
         if source_path.is_absolute() or ".." in source_path.parts:

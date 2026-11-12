@@ -1,0 +1,506 @@
+name: CambonOS package build
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  repository_dispatch:
+    types:
+      - external-package-updated
+
+# Keep one active build and one latest pending build. A newer notification
+# replaces an older pending run; the active run is allowed to finish.
+concurrency:
+  group: cambonos-package-build
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  ARCH_IMAGE: archlinux:base-devel-20261011.0.609700@sha256:d6979123107e7a9f52c2de19104966b5f809e13a4593017780bd8c0b140f80ff
+  CAMBONOS_PAGES_URL: ${{ vars.CAMBONOS_PAGES_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
+  CAMBONOS_BOOTSTRAP: ${{ vars.CAMBONOS_BOOTSTRAP || 'false' }}
+
+jobs:
+  validate:
+    name: Validate both source branches
+    runs-on: ubuntu-latest
+    outputs:
+      sha_dev: ${{ steps.snapshots.outputs.sha_dev }}
+      sha_main: ${{ steps.snapshots.outputs.sha_main }}
+      installer_testing: ${{ steps.external.outputs.installer_testing }}
+      installer_stable: ${{ steps.external.outputs.installer_stable }}
+      mkiso_testing: ${{ steps.external.outputs.mkiso_testing }}
+      mkiso_stable: ${{ steps.external.outputs.mkiso_stable }}
+      bootstrap: ${{ steps.previous.outputs.bootstrap }}
+      installer_testing_branch: ${{ steps.external.outputs.installer_testing_branch }}
+      installer_stable_branch: ${{ steps.external.outputs.installer_stable_branch }}
+      mkiso_testing_branch: ${{ steps.external.outputs.mkiso_testing_branch }}
+      mkiso_stable_branch: ${{ steps.external.outputs.mkiso_stable_branch }}
+    steps:
+      - name: Checkout pipeline tooling
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python for unit tests
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: Install Python dependencies for tests
+        run: python -m pip install tinycss2 PyYAML
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Resolve immutable branch snapshots
+        id: snapshots
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git fetch --no-tags origin \
+            +refs/heads/dev:refs/remotes/origin/dev \
+            +refs/heads/main:refs/remotes/origin/main
+          SHA_DEV="$(git rev-parse refs/remotes/origin/dev)"
+          SHA_MAIN="$(git rev-parse refs/remotes/origin/main)"
+          echo "sha_dev=${SHA_DEV}" >> "$GITHUB_OUTPUT"
+          echo "sha_main=${SHA_MAIN}" >> "$GITHUB_OUTPUT"
+          git worktree add --detach "${RUNNER_TEMP}/source-dev" "${SHA_DEV}"
+          git worktree add --detach "${RUNNER_TEMP}/source-main" "${SHA_MAIN}"
+
+      - name: Validate external package dispatch
+        if: github.event_name == 'repository_dispatch'
+        env:
+          DISPATCH_REPOSITORY: ${{ github.event.client_payload.repository }}
+          DISPATCH_PACKAGE: ${{ github.event.client_payload.package }}
+          DISPATCH_BRANCH: ${{ github.event.client_payload.branch }}
+          DISPATCH_COMMIT: ${{ github.event.client_payload.commit }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/validate_external_dispatch.py \
+            --repository "${DISPATCH_REPOSITORY}" \
+            --package "${DISPATCH_PACKAGE}" \
+            --branch "${DISPATCH_BRANCH}" \
+            --commit "${DISPATCH_COMMIT}"
+
+          # The notification SHA must be an ancestor of the current branch tip.
+          # If the branch has advanced, the build will use its latest snapshot;
+          # if it was force-pushed away, reject the stale event.
+          checkout="${RUNNER_TEMP}/dispatch-source"
+          git init --quiet "${checkout}"
+          git -C "${checkout}" remote add origin \
+            "https://github.com/${DISPATCH_REPOSITORY}.git"
+          git -C "${checkout}" fetch --no-tags origin \
+            "refs/heads/${DISPATCH_BRANCH}"
+          current_head="$(git -C "${checkout}" rev-parse FETCH_HEAD)"
+          git -C "${checkout}" cat-file -e "${DISPATCH_COMMIT}^{commit}"
+          git -C "${checkout}" merge-base --is-ancestor \
+            "${DISPATCH_COMMIT}" "${current_head}" || {
+              echo "::error::El commit notificado ya no pertenece al historial de ${DISPATCH_BRANCH}."
+              exit 1
+            }
+
+      - name: Resolve immutable external package snapshots
+        id: external
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          resolve() {
+            local repository="$1" requested_branch="$2" resolved_branch="$2" result
+            result="$(git ls-remote --heads "${repository}" "refs/heads/${resolved_branch}" | awk 'NR == 1 { print $1 }')"
+            if [[ -z "${result}" && "${requested_branch}" == "dev" ]]; then
+              resolved_branch=main
+              result="$(git ls-remote --heads "${repository}" refs/heads/main | awk 'NR == 1 { print $1 }')"
+            fi
+            [[ -n "${result}" ]] || return 1
+            printf '%s %s\n' "${result}" "${resolved_branch}"
+          }
+          read -r installer_testing installer_testing_branch < <(resolve https://github.com/CambonOS/cambonos-installer.git dev)
+          read -r installer_stable installer_stable_branch < <(resolve https://github.com/CambonOS/cambonos-installer.git main)
+          read -r mkiso_testing mkiso_testing_branch < <(resolve https://github.com/CambonOS/cambonos-mkiso.git dev)
+          read -r mkiso_stable mkiso_stable_branch < <(resolve https://github.com/CambonOS/cambonos-mkiso.git main)
+          for commit in "${installer_testing}" "${installer_stable}" "${mkiso_testing}" "${mkiso_stable}"; do
+            [[ "${commit}" =~ ^[0-9a-f]{40}$ ]]
+          done
+          echo "installer_testing=${installer_testing}" >> "$GITHUB_OUTPUT"
+          echo "installer_stable=${installer_stable}" >> "$GITHUB_OUTPUT"
+          echo "mkiso_testing=${mkiso_testing}" >> "$GITHUB_OUTPUT"
+          echo "mkiso_stable=${mkiso_stable}" >> "$GITHUB_OUTPUT"
+          echo "installer_testing_branch=${installer_testing_branch}" >> "$GITHUB_OUTPUT"
+          echo "installer_stable_branch=${installer_stable_branch}" >> "$GITHUB_OUTPUT"
+          echo "mkiso_testing_branch=${mkiso_testing_branch}" >> "$GITHUB_OUTPUT"
+          echo "mkiso_stable_branch=${mkiso_stable_branch}" >> "$GITHUB_OUTPUT"
+          checkout_at() {
+            local repository="$1" commit="$2" destination="$3"
+            git clone --no-checkout "${repository}" "${destination}"
+            git -C "${destination}" fetch --no-tags origin "${commit}"
+            git -C "${destination}" checkout --detach FETCH_HEAD
+            test "$(git -C "${destination}" rev-parse HEAD)" = "${commit}"
+          }
+          for channel in testing stable; do
+            if [[ "${channel}" == "testing" ]]; then
+              installer_commit="${installer_testing}"
+              mkiso_commit="${mkiso_testing}"
+              source=source-dev
+            else
+              installer_commit="${installer_stable}"
+              mkiso_commit="${mkiso_stable}"
+              source=source-main
+            fi
+            checkout_at https://github.com/CambonOS/cambonos-installer.git "${installer_commit}" \
+              "${RUNNER_TEMP}/external-installer-${channel}"
+            checkout_at https://github.com/CambonOS/cambonos-mkiso.git "${mkiso_commit}" \
+              "${RUNNER_TEMP}/external-mkiso-${channel}"
+            python3 scripts/stage_external_packages.py \
+              --source-root "${RUNNER_TEMP}/${source}" \
+              --installer-source "${RUNNER_TEMP}/external-installer-${channel}" \
+              --installer-commit "${installer_commit}" \
+              --mkiso-source "${RUNNER_TEMP}/external-mkiso-${channel}" \
+              --mkiso-commit "${mkiso_commit}"
+          done
+
+      - name: Validate Zsh and Fish syntax in Arch container
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          docker run --rm --platform linux/amd64 \
+            -v "${RUNNER_TEMP}/source-dev:/source-dev:ro" \
+            -v "${RUNNER_TEMP}/source-main:/source-main:ro" \
+            "${ARCH_IMAGE}" bash -euc '
+              set -Eeuo pipefail
+              pacman -Syu --noconfirm
+              pacman -S --needed --noconfirm zsh fish
+
+              for source_root in /source-dev /source-main; do
+                echo "Validando scripts Zsh y Fish en ${source_root}"
+                while IFS= read -r -d "" source; do
+                  first_line="$(head -n 1 "${source}" || true)"
+                  if [[ "${source}" == *.zsh || "${first_line}" == *zsh* ]]; then
+                    zsh -n "${source}" || {
+                      echo "Error de sintaxis Zsh: ${source}" >&2
+                      exit 1
+                    }
+                  elif [[ "${source}" == *.fish || "${first_line}" == *fish* ]]; then
+                    fish --no-execute "${source}" || {
+                      echo "Error de sintaxis Fish: ${source}" >&2
+                      exit 1
+                    }
+                  fi
+                done < <(find "${source_root}/packages" -type f -print0)
+              done
+            '
+
+      - name: Verify identical package signing keyrings
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          for keyfile in cambonos.gpg cambonos-trusted cambonos-revoked; do
+            cmp "${RUNNER_TEMP}/source-dev/packages/cambonos-keyring/files/${keyfile}" \
+                "${RUNNER_TEMP}/source-main/packages/cambonos-keyring/files/${keyfile}"
+          done
+
+      - name: Retrieve previous publication manifest
+        id: previous
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          manifest="${RUNNER_TEMP}/previous-manifest.json"
+          signature="${manifest}.sig"
+          if ! status="$(curl --silent --show-error --location --retry 5 --retry-delay 2 \
+            --header 'Cache-Control: no-cache' --header 'Pragma: no-cache' \
+            --output "${manifest}" --write-out '%{http_code}' \
+            "${CAMBONOS_PAGES_URL%/}/metadata/manifest.json?run=${GITHUB_RUN_ID}")"; then
+            echo "::error::Error de red al recuperar el manifiesto anterior."
+            exit 1
+          fi
+
+          if [[ "${status}" == "200" ]]; then
+            curl --fail --silent --show-error --location --retry 5 --retry-delay 2 \
+              --header 'Cache-Control: no-cache' --header 'Pragma: no-cache' \
+              "${CAMBONOS_PAGES_URL%/}/metadata/manifest.json.sig?run=${GITHUB_RUN_ID}" \
+              --output "${signature}"
+            echo "manifest=${manifest}" >> "$GITHUB_OUTPUT"
+            echo "signature=${signature}" >> "$GITHUB_OUTPUT"
+            echo "bootstrap=false" >> "$GITHUB_OUTPUT"
+          elif [[ "${status}" == "404" && "${CAMBONOS_BOOTSTRAP}" == "true" ]]; then
+            echo "No previous manifest: explicit first-publication bootstrap enabled."
+            echo "manifest=" >> "$GITHUB_OUTPUT"
+            echo "signature=" >> "$GITHUB_OUTPUT"
+            echo "bootstrap=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::El manifiesto anterior devolvió HTTP ${status}; no se permite omitir el control de versiones."
+            exit 1
+          fi
+
+      - name: Validate testing snapshot and version policy
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          args=(validate --source-root "${RUNNER_TEMP}/source-dev"
+            --channel testing --branch dev --commit "${{ steps.snapshots.outputs.sha_dev }}"
+            --image "${ARCH_IMAGE}")
+          if [[ -n "${{ steps.previous.outputs.manifest }}" ]]; then
+            args+=(--previous-manifest "${{ steps.previous.outputs.manifest }}"
+              --previous-manifest-signature "${{ steps.previous.outputs.signature }}"
+              --keyring-public-key "${RUNNER_TEMP}/source-dev/packages/cambonos-keyring/files/cambonos.gpg"
+              --keyring-trusted "${RUNNER_TEMP}/source-dev/packages/cambonos-keyring/files/cambonos-trusted")
+          elif [[ "${{ steps.previous.outputs.bootstrap }}" == "true" ]]; then
+            args+=(--allow-bootstrap)
+          else
+            echo "::error::No existe un manifiesto y el bootstrap no está autorizado."
+            exit 1
+          fi
+          python3 scripts/cambonos.py "${args[@]}"
+
+      - name: Validate stable snapshot and version policy
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          args=(validate --source-root "${RUNNER_TEMP}/source-main"
+            --channel stable --branch main --commit "${{ steps.snapshots.outputs.sha_main }}"
+            --image "${ARCH_IMAGE}")
+          if [[ -n "${{ steps.previous.outputs.manifest }}" ]]; then
+            args+=(--previous-manifest "${{ steps.previous.outputs.manifest }}"
+              --previous-manifest-signature "${{ steps.previous.outputs.signature }}"
+              --keyring-public-key "${RUNNER_TEMP}/source-main/packages/cambonos-keyring/files/cambonos.gpg"
+              --keyring-trusted "${RUNNER_TEMP}/source-main/packages/cambonos-keyring/files/cambonos-trusted")
+          elif [[ "${{ steps.previous.outputs.bootstrap }}" == "true" ]]; then
+            args+=(--allow-bootstrap)
+          else
+            echo "::error::No existe un manifiesto y el bootstrap no está autorizado."
+            exit 1
+          fi
+          python3 scripts/cambonos.py "${args[@]}"
+
+      - name: Upload verified previous manifest for source version policy
+        if: steps.previous.outputs.bootstrap == 'false'
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: previous-publication-manifest
+          path: |
+            ${{ runner.temp }}/previous-manifest.json
+            ${{ runner.temp }}/previous-manifest.json.sig
+          if-no-files-found: error
+          retention-days: 2
+
+      - name: Write immutable build context
+        env:
+          BOOTSTRAP: ${{ steps.previous.outputs.bootstrap }}
+          SHA_DEV: ${{ steps.snapshots.outputs.sha_dev }}
+          SHA_MAIN: ${{ steps.snapshots.outputs.sha_main }}
+          INSTALLER_TESTING: ${{ steps.external.outputs.installer_testing }}
+          INSTALLER_STABLE: ${{ steps.external.outputs.installer_stable }}
+          INSTALLER_TESTING_BRANCH: ${{ steps.external.outputs.installer_testing_branch }}
+          INSTALLER_STABLE_BRANCH: ${{ steps.external.outputs.installer_stable_branch }}
+          MKISO_TESTING: ${{ steps.external.outputs.mkiso_testing }}
+          MKISO_STABLE: ${{ steps.external.outputs.mkiso_stable }}
+          MKISO_TESTING_BRANCH: ${{ steps.external.outputs.mkiso_testing_branch }}
+          MKISO_STABLE_BRANCH: ${{ steps.external.outputs.mkiso_stable_branch }}
+          TRIGGER_EVENT: ${{ github.event_name }}
+          TRIGGER_REPOSITORY: ${{ github.event.client_payload.repository || github.repository }}
+          TRIGGER_PACKAGE: ${{ github.event.client_payload.package || 'cambonos-packages' }}
+          TRIGGER_BRANCH: ${{ github.event.client_payload.branch || github.ref_name }}
+          TRIGGER_COMMIT: ${{ github.event.client_payload.commit || github.sha }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          jq -n \
+            --arg bootstrap "${BOOTSTRAP}" \
+            --arg sha_dev "${SHA_DEV}" \
+            --arg sha_main "${SHA_MAIN}" \
+            --arg installer_testing "${INSTALLER_TESTING}" \
+            --arg installer_stable "${INSTALLER_STABLE}" \
+            --arg installer_testing_branch "${INSTALLER_TESTING_BRANCH}" \
+            --arg installer_stable_branch "${INSTALLER_STABLE_BRANCH}" \
+            --arg mkiso_testing "${MKISO_TESTING}" \
+            --arg mkiso_stable "${MKISO_STABLE}" \
+            --arg mkiso_testing_branch "${MKISO_TESTING_BRANCH}" \
+            --arg mkiso_stable_branch "${MKISO_STABLE_BRANCH}" \
+            --arg trigger_event "${TRIGGER_EVENT}" \
+            --arg trigger_repository "${TRIGGER_REPOSITORY}" \
+            --arg trigger_package "${TRIGGER_PACKAGE}" \
+            --arg trigger_branch "${TRIGGER_BRANCH}" \
+            --arg trigger_commit "${TRIGGER_COMMIT}" \
+            '{schema_version: 2,
+              bootstrap: $bootstrap,
+              sha_dev: $sha_dev,
+              sha_main: $sha_main,
+              external_sources: {
+                "cambonos-installer": {
+                  repository: "CambonOS/cambonos-installer",
+                  testing: {branch: $installer_testing_branch, commit: $installer_testing},
+                  stable: {branch: $installer_stable_branch, commit: $installer_stable}
+                },
+                "cambonos-mkiso": {
+                  repository: "CambonOS/cambonos-mkiso",
+                  testing: {branch: $mkiso_testing_branch, commit: $mkiso_testing},
+                  stable: {branch: $mkiso_stable_branch, commit: $mkiso_stable}
+                }
+              },
+              trigger: {
+                event: $trigger_event,
+                repository: $trigger_repository,
+                package: $trigger_package,
+                branch: $trigger_branch,
+                commit: $trigger_commit
+              }}' > "${RUNNER_TEMP}/build-context.json"
+
+      - name: Upload immutable build context
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: build-context
+          path: ${{ runner.temp }}/build-context.json
+          if-no-files-found: error
+          retention-days: 2
+
+  build:
+    name: Build ${{ matrix.channel }}
+    runs-on: ubuntu-latest
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - channel: testing
+            branch: dev
+            commit: ${{ needs.validate.outputs.sha_dev }}
+            installer_commit: ${{ needs.validate.outputs.installer_testing }}
+            mkiso_commit: ${{ needs.validate.outputs.mkiso_testing }}
+          - channel: stable
+            branch: main
+            commit: ${{ needs.validate.outputs.sha_main }}
+            installer_commit: ${{ needs.validate.outputs.installer_stable }}
+            mkiso_commit: ${{ needs.validate.outputs.mkiso_stable }}
+    steps:
+      - name: Checkout pipeline tooling
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Prepare immutable package source
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ matrix.commit }}
+          INSTALLER_COMMIT: ${{ matrix.installer_commit }}
+          MKISO_COMMIT: ${{ matrix.mkiso_commit }}
+        run: |
+          set -Eeuo pipefail
+          git fetch --no-tags origin "${SOURCE_COMMIT}"
+          git worktree add --detach "${RUNNER_TEMP}/package-source" "${SOURCE_COMMIT}"
+          checkout_at() {
+            local repository="$1" commit="$2" destination="$3"
+            git clone --no-checkout "${repository}" "${destination}"
+            git -C "${destination}" fetch --no-tags origin "${commit}"
+            git -C "${destination}" checkout --detach FETCH_HEAD
+            test "$(git -C "${destination}" rev-parse HEAD)" = "${commit}"
+          }
+          checkout_at https://github.com/CambonOS/cambonos-installer.git "${INSTALLER_COMMIT}" \
+            "${RUNNER_TEMP}/external-installer"
+          checkout_at https://github.com/CambonOS/cambonos-mkiso.git "${MKISO_COMMIT}" \
+            "${RUNNER_TEMP}/external-mkiso"
+          python3 scripts/stage_external_packages.py \
+            --source-root "${RUNNER_TEMP}/package-source" \
+            --installer-source "${RUNNER_TEMP}/external-installer" \
+            --installer-commit "${INSTALLER_COMMIT}" \
+            --mkiso-source "${RUNNER_TEMP}/external-mkiso" \
+            --mkiso-commit "${MKISO_COMMIT}"
+
+      - name: Download previous publication manifest for selective build
+        id: selective-manifest
+        if: needs.validate.outputs.bootstrap == 'false'
+        uses: actions/download-artifact@v8.0.2
+        with:
+          name: previous-publication-manifest
+          path: ${{ runner.temp }}/previous-manifest
+
+      - name: Recover previous artifacts for selective build
+        id: selective-recovery
+        if: needs.validate.outputs.bootstrap == 'false'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/cambonos.py recover-artifacts \
+            --previous-manifest "${RUNNER_TEMP}/previous-manifest/previous-manifest.json" \
+            --previous-manifest-signature "${RUNNER_TEMP}/previous-manifest/previous-manifest.json.sig" \
+            --keyring-public-key "${RUNNER_TEMP}/package-source/packages/cambonos-keyring/files/cambonos.gpg" \
+            --keyring-trusted "${RUNNER_TEMP}/package-source/packages/cambonos-keyring/files/cambonos-trusted" \
+            --channel "${{ matrix.channel }}" \
+            --base-url "${CAMBONOS_PAGES_URL%/}" \
+            --image "${ARCH_IMAGE}" \
+            --output "${RUNNER_TEMP}/recovered-${{ matrix.channel }}"
+
+      - name: Build packages selectively from verified publication
+        id: selective-build
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          args=(build \
+            --source-root "${RUNNER_TEMP}/package-source" \
+            --channel "${{ matrix.channel }}" \
+            --branch "${{ matrix.branch }}" \
+            --commit "${{ matrix.commit }}" \
+            --image "${ARCH_IMAGE}" \
+            --output "${RUNNER_TEMP}/build-output")
+          if [[ "${{ needs.validate.outputs.bootstrap }}" == "false" && \
+                "${{ steps.selective-recovery.outcome }}" == "success" ]]; then
+            args+=(--previous-manifest "${RUNNER_TEMP}/previous-manifest/previous-manifest.json" \
+              --previous-manifest-signature "${RUNNER_TEMP}/previous-manifest/previous-manifest.json.sig" \
+              --keyring-public-key "${RUNNER_TEMP}/package-source/packages/cambonos-keyring/files/cambonos.gpg" \
+              --keyring-trusted "${RUNNER_TEMP}/package-source/packages/cambonos-keyring/files/cambonos-trusted" \
+              --recovered-dir "${RUNNER_TEMP}/recovered-${{ matrix.channel }}")
+          elif [[ "${{ needs.validate.outputs.bootstrap }}" == "false" ]]; then
+            echo "::warning::No se pudo recuperar la publicación anterior; se ejecutará una compilación completa segura."
+          fi
+          python3 scripts/cambonos.py "${args[@]}"
+
+      - name: Attach external source snapshots to build manifest
+        env:
+          INSTALLER_TESTING: ${{ needs.validate.outputs.installer_testing }}
+          INSTALLER_STABLE: ${{ needs.validate.outputs.installer_stable }}
+          INSTALLER_TESTING_BRANCH: ${{ needs.validate.outputs.installer_testing_branch }}
+          INSTALLER_STABLE_BRANCH: ${{ needs.validate.outputs.installer_stable_branch }}
+          MKISO_TESTING: ${{ needs.validate.outputs.mkiso_testing }}
+          MKISO_STABLE: ${{ needs.validate.outputs.mkiso_stable }}
+          MKISO_TESTING_BRANCH: ${{ needs.validate.outputs.mkiso_testing_branch }}
+          MKISO_STABLE_BRANCH: ${{ needs.validate.outputs.mkiso_stable_branch }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          manifest="${RUNNER_TEMP}/build-output/build-manifest.json"
+          jq \
+            --arg installer_testing "${INSTALLER_TESTING}" \
+            --arg installer_stable "${INSTALLER_STABLE}" \
+            --arg installer_testing_branch "${INSTALLER_TESTING_BRANCH}" \
+            --arg installer_stable_branch "${INSTALLER_STABLE_BRANCH}" \
+            --arg mkiso_testing "${MKISO_TESTING}" \
+            --arg mkiso_stable "${MKISO_STABLE}" \
+            --arg mkiso_testing_branch "${MKISO_TESTING_BRANCH}" \
+            --arg mkiso_stable_branch "${MKISO_STABLE_BRANCH}" \
+            '.external_sources = {
+              "cambonos-installer": {
+                repository: "CambonOS/cambonos-installer",
+                testing: {branch: $installer_testing_branch, commit: $installer_testing},
+                stable: {branch: $installer_stable_branch, commit: $installer_stable}
+              },
+              "cambonos-mkiso": {
+                repository: "CambonOS/cambonos-mkiso",
+                testing: {branch: $mkiso_testing_branch, commit: $mkiso_testing},
+                stable: {branch: $mkiso_stable_branch, commit: $mkiso_stable}
+              }
+            }' "${manifest}" > "${manifest}.tmp"
+          mv "${manifest}.tmp" "${manifest}"
+
+      - name: Upload unsigned build artifacts
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: build-${{ matrix.channel }}
+          path: ${{ runner.temp }}/build-output/
+          if-no-files-found: error
+          retention-days: 2

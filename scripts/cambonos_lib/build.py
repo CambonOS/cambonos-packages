@@ -273,6 +273,12 @@ def build_channel(
     commit: str,
     image: str,
     output: Path,
+    *,
+    previous_manifest_path: Path | None = None,
+    previous_manifest_signature_path: Path | None = None,
+    keyring_public_key_path: Path | None = None,
+    keyring_trusted_path: Path | None = None,
+    recovered_dir: Path | None = None,
 ) -> Path:
     if channel not in {"stable", "testing"}:
         raise CambonosError(f"canal no válido: {channel}")
@@ -280,11 +286,118 @@ def build_channel(
     package_output = output / "packages"
     package_output.mkdir(exist_ok=True)
     ordered = build_order(packages)
+    from .planner import create_build_plan, package_input_hash
+    from .artifacts import validate_recovered_artifacts_for_build
+
+    recovery_args = (
+        previous_manifest_path, previous_manifest_signature_path,
+        keyring_public_key_path, keyring_trusted_path, recovered_dir,
+    )
+    if any(recovery_args) and not all(recovery_args):
+        raise CambonosError(
+            "la reutilización selectiva requiere manifiesto, firma, keyring, ownertrust y recuperación"
+        )
+    previous_manifest = None
+    recovered_artifacts: dict[str, tuple[Path, Path]] = {}
+    if recovered_dir is not None:
+        previous_manifest, recovered_artifacts = validate_recovered_artifacts_for_build(
+            previous_manifest_path, previous_manifest_signature_path,
+            keyring_public_key_path, keyring_trusted_path,
+            channel, recovered_dir, image,
+        )
+    plan = create_build_plan(packages, channel, image, previous_manifest)
     built_by_name: dict[str, Path] = {}
     records: dict[str, dict] = {}
     environment_record = {}
+    selection: dict[str, dict] = {}
     for name in ordered:
         package = packages[name]
+        planned = plan["packages"][name]
+        if planned["action"] == "reuse-candidate":
+            if name not in recovered_artifacts or previous_manifest is None:
+                raise CambonosError(
+                    f"{name}: el planificador autorizó reutilización sin artefacto verificado"
+                )
+            previous_record = previous_manifest["channels"][channel]["packages"][name]
+            archive_source, signature_source = recovered_artifacts[name]
+            archive_destination = package_output / previous_record["package_file"]
+            signature_destination = package_output / previous_record["signature_file"]
+            shutil.copy2(archive_source, archive_destination)
+            shutil.copy2(signature_source, signature_destination)
+            version = (
+                f"{package.epoch}:{package.pkgver}-{package.pkgrel}"
+                if package.epoch != "0" else f"{package.pkgver}-{package.pkgrel}"
+            )
+            reused_source_date_epoch = previous_record.get("source_date_epoch")
+            if (
+                not isinstance(reused_source_date_epoch, int)
+                or isinstance(reused_source_date_epoch, bool)
+                or reused_source_date_epoch < 0
+            ):
+                raise CambonosError(
+                    f"{name}: source_date_epoch ausente o inválido en el artefacto publicado"
+                )
+            record = {
+                "version": version,
+                "pkgver": package.pkgver,
+                "pkgrel": package.pkgrel,
+                "epoch": package.epoch,
+                "architecture": "any" if "any" in package.architecture else ARCHITECTURE,
+                # Preserve original artifact provenance; top-level commit identifies
+                # the current source snapshot, while these fields identify the build
+                # that actually produced this reused archive.
+                "source_hash": previous_record.get("source_hash"),
+                "source_date_epoch": reused_source_date_epoch,
+                "package_file": archive_destination.name,
+                "package_hash": sha256_file(archive_destination),
+                "signature_file": signature_destination.name,
+                "signature_hash": sha256_file(signature_destination),
+                "build_fingerprint": planned["build_fingerprint"],
+                "build_input_hash": planned["build_input_hash"],
+                "build_recipe_hash": planned["build_recipe_hash"],
+                "channel_profile_hash": planned["channel_profile_hash"],
+                "dependency_fingerprints": planned["dependency_fingerprints"],
+                "reused_from_publication": True,
+                "reused_from_commit": previous_manifest["channels"][channel].get("commit"),
+                "reused_from_manifest_sha256": sha256_file(previous_manifest_path),
+            }
+            for provenance_field in ("source_repository", "source_commit"):
+                if provenance_field in previous_record:
+                    record[provenance_field] = previous_record[provenance_field]
+            if name == "cambonos-keyring":
+                material_source = package.directory / "files"
+                material_dest = output / "keyring-material"
+                material_dest.mkdir(parents=True, exist_ok=True)
+                for keyfile in ("cambonos.gpg", "cambonos-trusted", "cambonos-revoked"):
+                    source = material_source / keyfile
+                    if not source.is_file():
+                        raise CambonosError(f"cambonos-keyring: falta {keyfile} en el source tree")
+                    shutil.copy2(source, material_dest / keyfile)
+            records[name] = record
+            built_by_name[name] = archive_destination
+            previous_environment_data = previous_manifest["channels"][channel].get(
+                "build_environment", {}
+            )
+            previous_environment_packages = (
+                previous_environment_data.get("packages", {})
+                if isinstance(previous_environment_data, dict) else {}
+            )
+            previous_environment = (
+                previous_environment_packages.get(name)
+                if isinstance(previous_environment_packages, dict) else None
+            )
+            environment_record[name] = previous_environment or (
+                "Reutilizado desde la publicación anterior tras verificar manifiesto, "
+                "firma, SHA-256 e identidad del paquete."
+            )
+            selection[name] = {
+                "action": "reuse",
+                "reason": planned["reason"],
+                "package_hash": record["package_hash"],
+            }
+            print(f"==> Reutilizando {name} ({channel}) desde publicación verificada")
+            continue
+
         info = f"Construyendo {name} ({channel})"
         print(f"==> {info}")
         internal: list[tuple[str, Path]] = []
@@ -309,7 +422,20 @@ def build_channel(
         shutil.copy2(archive, destination)
         record["package_file"] = destination.name
         record["package_hash"] = sha256_file(destination)
+        record.update({
+            "build_fingerprint": planned["build_fingerprint"],
+            "build_input_hash": package_input_hash(package),
+            "build_recipe_hash": planned["build_recipe_hash"],
+            "channel_profile_hash": planned["channel_profile_hash"],
+            "dependency_fingerprints": planned["dependency_fingerprints"],
+            "reused_from_publication": False,
+        })
         records[name] = record
+        selection[name] = {
+            "action": "build",
+            "reason": planned["reason"],
+            "package_hash": record["package_hash"],
+        }
         built_by_name[name] = destination
         env_file = per_package_output / "build-environment.txt"
         if env_file.is_file():
@@ -327,6 +453,30 @@ def build_channel(
     (output / "build-environment.txt").write_text(
         "\n\n".join(f"### {name}\n{content}" for name, content in sorted(environment_record.items()))
         + "\n",
+        encoding="utf-8",
+    )
+    selection_report = {
+        "schema_version": 1,
+        "mode": "selective" if recovered_dir is not None else "full-build",
+        "channel": channel,
+        "commit": commit,
+        "image": image,
+        "packages": selection,
+        "removed_packages": plan.get("removed_packages", []),
+        "summary": {
+            "total": len(selection),
+            "built": sum(item["action"] == "build" for item in selection.values()),
+            "reused": sum(item["action"] == "reuse" for item in selection.values()),
+            "removed": len(plan.get("removed_packages", [])),
+        },
+    }
+    (output / "build-selection-report.json").write_text(
+        json.dumps(selection_report, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    plan["mode"] = selection_report["mode"]
+    (output / "build-plan.json").write_text(
+        json.dumps(plan, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     write_build_manifest(

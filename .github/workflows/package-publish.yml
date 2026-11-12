@@ -30,11 +30,21 @@ jobs:
       baseline_signature_sha256: ${{ steps.mirror-guard.outputs.baseline_signature_sha256 }}
       head_branch: ${{ steps.provenance.outputs.head_branch }}
       head_sha: ${{ steps.provenance.outputs.head_sha }}
+      installer_testing: ${{ steps.context.outputs.installer_testing }}
+      installer_stable: ${{ steps.context.outputs.installer_stable }}
+      installer_testing_branch: ${{ steps.context.outputs.installer_testing_branch }}
+      installer_stable_branch: ${{ steps.context.outputs.installer_stable_branch }}
+      mkiso_testing: ${{ steps.context.outputs.mkiso_testing }}
+      mkiso_stable: ${{ steps.context.outputs.mkiso_stable }}
+      mkiso_testing_branch: ${{ steps.context.outputs.mkiso_testing_branch }}
+      mkiso_stable_branch: ${{ steps.context.outputs.mkiso_stable_branch }}
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      (github.event.workflow_run.head_branch == 'dev' ||
-       github.event.workflow_run.head_branch == 'main')
+      ((github.event.workflow_run.event == 'push' &&
+        (github.event.workflow_run.head_branch == 'dev' ||
+         github.event.workflow_run.head_branch == 'main')) ||
+       (github.event.workflow_run.event == 'repository_dispatch' &&
+        github.event.workflow_run.head_branch == 'main'))
     runs-on: ubuntu-latest
     environment: package-signing
     permissions:
@@ -55,6 +65,7 @@ jobs:
           EXPECTED_REPOSITORY: ${{ github.repository }}
           EXPECTED_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
           EXPECTED_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          EXPECTED_EVENT: ${{ github.event.workflow_run.event }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -63,14 +74,22 @@ jobs:
             --arg repository "${EXPECTED_REPOSITORY}" \
             --arg branch "${EXPECTED_HEAD_BRANCH}" \
             --arg sha "${EXPECTED_HEAD_SHA}" \
+            --arg event "${EXPECTED_EVENT}" \
             '.repository.full_name == $repository and
-             .event == "push" and .status == "completed" and
-             .conclusion == "success" and .head_branch == $branch and
-             .head_sha == $sha and
+             .event == $event and
+             (.event == "push" or .event == "repository_dispatch") and
+             .status == "completed" and .conclusion == "success" and
+             .head_branch == $branch and .head_sha == $sha and
+             ((.event == "push" and ($branch == "dev" or $branch == "main")) or
+              (.event == "repository_dispatch" and $branch == "main")) and
              (.path | endswith(".github/workflows/package-build.yml"))' \
             <<<"${run_json}" >/dev/null
           [[ "${EXPECTED_HEAD_SHA}" =~ ^[0-9a-f]{40}$ ]]
-          [[ "${EXPECTED_HEAD_BRANCH}" == dev || "${EXPECTED_HEAD_BRANCH}" == main ]]
+          if [[ "${EXPECTED_EVENT}" == push ]]; then
+            [[ "${EXPECTED_HEAD_BRANCH}" == dev || "${EXPECTED_HEAD_BRANCH}" == main ]]
+          else
+            [[ "${EXPECTED_EVENT}" == repository_dispatch && "${EXPECTED_HEAD_BRANCH}" == main ]]
+          fi
           echo "run_id=${RUN_ID}" >> "$GITHUB_OUTPUT"
           echo "head_branch=${EXPECTED_HEAD_BRANCH}" >> "$GITHUB_OUTPUT"
           echo "head_sha=${EXPECTED_HEAD_SHA}" >> "$GITHUB_OUTPUT"
@@ -84,16 +103,65 @@ jobs:
           repository: ${{ github.repository }}
           path: ${{ runner.temp }}/build-context
 
-      - name: Read immutable build context
+      - name: Read and validate immutable build context
         id: context
+        env:
+          RUN_EVENT: ${{ github.event.workflow_run.event }}
+          RUN_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         shell: bash
         run: |
           set -Eeuo pipefail
           context="${RUNNER_TEMP}/build-context/build-context.json"
-          jq -e '.bootstrap == "true" or .bootstrap == "false"' "${context}" >/dev/null
+          jq -e '
+            .schema_version == 2 and
+            (.bootstrap == "true" or .bootstrap == "false") and
+            (.sha_dev | test("^[0-9a-f]{40}$")) and
+            (.sha_main | test("^[0-9a-f]{40}$")) and
+            (.external_sources["cambonos-installer"].repository == "CambonOS/cambonos-installer") and
+            (.external_sources["cambonos-mkiso"].repository == "CambonOS/cambonos-mkiso") and
+            (.external_sources["cambonos-installer"].testing.commit | test("^[0-9a-f]{40}$")) and
+            (.external_sources["cambonos-installer"].stable.commit | test("^[0-9a-f]{40}$")) and
+            (.external_sources["cambonos-mkiso"].testing.commit | test("^[0-9a-f]{40}$")) and
+            (.external_sources["cambonos-mkiso"].stable.commit | test("^[0-9a-f]{40}$")) and
+            (.external_sources["cambonos-installer"].testing.branch == "dev" or
+             .external_sources["cambonos-installer"].testing.branch == "main") and
+            (.external_sources["cambonos-mkiso"].testing.branch == "dev" or
+             .external_sources["cambonos-mkiso"].testing.branch == "main") and
+            (.external_sources["cambonos-installer"].stable.branch == "main") and
+            (.external_sources["cambonos-mkiso"].stable.branch == "main")
+          ' "${context}" >/dev/null
+          if [[ "${RUN_EVENT}" == push ]]; then
+            jq -e --arg branch "${RUN_HEAD_BRANCH}" --arg sha "${RUN_HEAD_SHA}" \
+              '.trigger.event == "push" and
+               .trigger.repository == "CambonOS/cambonos-packages" and
+               .trigger.branch == $branch and .trigger.commit == $sha and
+               (if $branch == "dev" then .sha_dev == $sha else .sha_main == $sha end)' \
+              "${context}" >/dev/null
+          else
+            jq -e --arg sha "${RUN_HEAD_SHA}" \
+              '.trigger.event == "repository_dispatch" and .sha_main == $sha and
+               ((.trigger.repository == "CambonOS/cambonos-installer" and
+                 .trigger.package == "cambonos-installer") or
+                (.trigger.repository == "CambonOS/cambonos-mkiso" and
+                 .trigger.package == "cambonos-mkiso")) and
+               (.trigger.branch == "dev" or .trigger.branch == "main") and
+               (.trigger.commit | test("^[0-9a-f]{40}$"))' \
+              "${context}" >/dev/null
+          fi
           echo "bootstrap=$(jq -r '.bootstrap' "${context}")" >> "$GITHUB_OUTPUT"
           echo "sha_dev=$(jq -r '.sha_dev' "${context}")" >> "$GITHUB_OUTPUT"
           echo "sha_main=$(jq -r '.sha_main' "${context}")" >> "$GITHUB_OUTPUT"
+          for source in cambonos-installer cambonos-mkiso; do
+            if [[ "${source}" == cambonos-installer ]]; then prefix=installer; else prefix=mkiso; fi
+            for channel in testing stable; do
+              key="${prefix}_${channel}"
+              commit="$(jq -r --arg source "${source}" --arg channel "${channel}" '.external_sources[$source][$channel].commit' "${context}")"
+              branch="$(jq -r --arg source "${source}" --arg channel "${channel}" '.external_sources[$source][$channel].branch' "${context}")"
+              echo "${key}=${commit}" >> "$GITHUB_OUTPUT"
+              echo "${key}_branch=${branch}" >> "$GITHUB_OUTPUT"
+            done
+          done
 
       - name: Download testing build artifact from triggering run
         uses: actions/download-artifact@v8.0.2
@@ -131,6 +199,14 @@ jobs:
           EXPECTED_DEV_SHA: ${{ steps.context.outputs.sha_dev }}
           EXPECTED_MAIN_SHA: ${{ steps.context.outputs.sha_main }}
           BOOTSTRAP: ${{ steps.context.outputs.bootstrap }}
+          INSTALLER_TESTING: ${{ steps.context.outputs.installer_testing }}
+          INSTALLER_STABLE: ${{ steps.context.outputs.installer_stable }}
+          INSTALLER_TESTING_BRANCH: ${{ steps.context.outputs.installer_testing_branch }}
+          INSTALLER_STABLE_BRANCH: ${{ steps.context.outputs.installer_stable_branch }}
+          MKISO_TESTING: ${{ steps.context.outputs.mkiso_testing }}
+          MKISO_STABLE: ${{ steps.context.outputs.mkiso_stable }}
+          MKISO_TESTING_BRANCH: ${{ steps.context.outputs.mkiso_testing_branch }}
+          MKISO_STABLE_BRANCH: ${{ steps.context.outputs.mkiso_stable_branch }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -144,6 +220,37 @@ jobs:
           current_main="$(resolve_branch main)"
           [[ "${EXPECTED_DEV_SHA}" == "${current_dev}" ]] || { echo "::error::El snapshot dev cambió después de la validación."; exit 1; }
           [[ "${EXPECTED_MAIN_SHA}" == "${current_main}" ]] || { echo "::error::El snapshot main cambió después de la validación."; exit 1; }
+          check_external_snapshot() {
+            local repository="$1" branch="$2" expected="$3" actual
+            actual="$(git ls-remote --heads "https://github.com/${repository}.git" \
+              "refs/heads/${branch}" | awk 'NR == 1 { print $1 }')"
+            [[ "${actual}" =~ ^[0-9a-f]{40}$ && "${actual}" == "${expected}" ]] || {
+              echo "::error::El snapshot externo ${repository}/${branch} cambió desde el build."; exit 1;
+            }
+          }
+          check_external_snapshot CambonOS/cambonos-installer "${INSTALLER_TESTING_BRANCH}" "${INSTALLER_TESTING}"
+          check_external_snapshot CambonOS/cambonos-installer "${INSTALLER_STABLE_BRANCH}" "${INSTALLER_STABLE}"
+          check_external_snapshot CambonOS/cambonos-mkiso "${MKISO_TESTING_BRANCH}" "${MKISO_TESTING}"
+          check_external_snapshot CambonOS/cambonos-mkiso "${MKISO_STABLE_BRANCH}" "${MKISO_STABLE}"
+          for channel in testing stable; do
+            manifest="${RUNNER_TEMP}/build-${channel}/build-manifest.json"
+            jq -e \
+              --arg it "${INSTALLER_TESTING}" --arg is "${INSTALLER_STABLE}" \
+              --arg itb "${INSTALLER_TESTING_BRANCH}" --arg isb "${INSTALLER_STABLE_BRANCH}" \
+              --arg mt "${MKISO_TESTING}" --arg ms "${MKISO_STABLE}" \
+              --arg mtb "${MKISO_TESTING_BRANCH}" --arg msb "${MKISO_STABLE_BRANCH}" \
+              '.external_sources["cambonos-installer"].testing.commit == $it and
+               .external_sources["cambonos-installer"].testing.branch == $itb and
+               .external_sources["cambonos-installer"].stable.commit == $is and
+               .external_sources["cambonos-installer"].stable.branch == $isb and
+               .external_sources["cambonos-mkiso"].testing.commit == $mt and
+               .external_sources["cambonos-mkiso"].testing.branch == $mtb and
+               .external_sources["cambonos-mkiso"].stable.commit == $ms and
+               .external_sources["cambonos-mkiso"].stable.branch == $msb' \
+              "${manifest}" >/dev/null || {
+                echo "::error::El manifiesto ${channel} no coincide con los snapshots externos validados."; exit 1;
+              }
+          done
           if [[ "${HEAD_BRANCH}" == dev && "${HEAD_SHA}" != "${current_dev}" ]]; then
             echo "::error::El build de dev está obsoleto; no se publicará."; exit 1
           fi
@@ -235,6 +342,14 @@ jobs:
           HEAD_BRANCH: ${{ needs.sign.outputs.head_branch }}
           HEAD_SHA: ${{ needs.sign.outputs.head_sha }}
           BOOTSTRAP: ${{ needs.sign.outputs.bootstrap }}
+          INSTALLER_TESTING: ${{ needs.sign.outputs.installer_testing }}
+          INSTALLER_STABLE: ${{ needs.sign.outputs.installer_stable }}
+          INSTALLER_TESTING_BRANCH: ${{ needs.sign.outputs.installer_testing_branch }}
+          INSTALLER_STABLE_BRANCH: ${{ needs.sign.outputs.installer_stable_branch }}
+          MKISO_TESTING: ${{ needs.sign.outputs.mkiso_testing }}
+          MKISO_STABLE: ${{ needs.sign.outputs.mkiso_stable }}
+          MKISO_TESTING_BRANCH: ${{ needs.sign.outputs.mkiso_testing_branch }}
+          MKISO_STABLE_BRANCH: ${{ needs.sign.outputs.mkiso_stable_branch }}
           BASELINE_MANIFEST_SHA256: ${{ needs.sign.outputs.baseline_manifest_sha256 }}
           BASELINE_SIGNATURE_SHA256: ${{ needs.sign.outputs.baseline_signature_sha256 }}
         shell: bash
@@ -250,6 +365,18 @@ jobs:
           current_main="$(resolve_branch main)"
           [[ "${current_dev}" == "${EXPECTED_DEV_SHA}" ]] || { echo "::error::dev avanzó durante la firma; despliegue cancelado."; exit 1; }
           [[ "${current_main}" == "${EXPECTED_MAIN_SHA}" ]] || { echo "::error::main avanzó durante la firma; despliegue cancelado."; exit 1; }
+          check_external_snapshot() {
+            local repository="$1" branch="$2" expected="$3" actual
+            actual="$(git ls-remote --heads "https://github.com/${repository}.git" \
+              "refs/heads/${branch}" | awk 'NR == 1 { print $1 }')"
+            [[ "${actual}" =~ ^[0-9a-f]{40}$ && "${actual}" == "${expected}" ]] || {
+              echo "::error::El snapshot externo ${repository}/${branch} avanzó durante la firma; despliegue cancelado."; exit 1;
+            }
+          }
+          check_external_snapshot CambonOS/cambonos-installer "${INSTALLER_TESTING_BRANCH}" "${INSTALLER_TESTING}"
+          check_external_snapshot CambonOS/cambonos-installer "${INSTALLER_STABLE_BRANCH}" "${INSTALLER_STABLE}"
+          check_external_snapshot CambonOS/cambonos-mkiso "${MKISO_TESTING_BRANCH}" "${MKISO_TESTING}"
+          check_external_snapshot CambonOS/cambonos-mkiso "${MKISO_STABLE_BRANCH}" "${MKISO_STABLE}"
           if [[ "${HEAD_BRANCH}" == dev && "${HEAD_SHA}" != "${current_dev}" ]] || \
              [[ "${HEAD_BRANCH}" == main && "${HEAD_SHA}" != "${current_main}" ]]; then
             echo "::error::El workflow de origen dejó de representar la punta de su rama."; exit 1

@@ -1,11 +1,12 @@
 pkgname=cambonos-shell-prompt
-pkgver=0.1.0
-pkgrel=6
+pkgver=0.3.0
+pkgrel=1
 pkgdesc="CambonOS Starship prompt configuration and shell integrations"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
-depends=('starship' 'bash' 'util-linux')
+groups=('cambonos-base')
+depends=('starship' 'bash' 'util-linux' 'ttf-nerd-fonts-symbols-mono')
 optdepends=('fish: automatic Starship integration in Fish')
 install=cambonos-shell-prompt.install
 
@@ -15,6 +16,8 @@ package() {
 
   install -Dm644 "$startdir/files/starship.toml" \
     "$pkgdir/usr/share/cambonos/shell-prompt/starship.toml"
+  install -Dm644 "$startdir/files/starship-tty.toml" \
+    "$pkgdir/usr/share/cambonos/shell-prompt/starship-tty.toml"
   install -Dm755 "$startdir/files/cambonos/bin/cambonos-starship-directory" \
     "$pkgdir/usr/bin/cambonos-starship-directory"
   install -Dm644 "$startdir/files/bash/cambonos-shell-prompt.bash" \

@@ -1,0 +1,40 @@
+# Maintainer: CambonOS contributors
+pkgname=cambonos-gtk-theme
+pkgver=0.7.0
+pkgrel=1
+pkgdesc="CambonOS GTK 3/4 and Xfwm4 dark theme"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('GPL-3.0-only')
+makedepends=('python')
+optdepends=(
+  'gtk3: GTK 3 application styling'
+  'gtk4: GTK 4 application styling'
+  'xfwm4: Xfwm4 window decoration theme'
+)
+
+build() {
+  local builddir="$srcdir/$pkgname-$pkgver"
+
+  rm -rf "$builddir"
+  install -d "$builddir"
+  cp -a "$startdir/files/." "$builddir/"
+
+  # Generate GTK color definitions from the canonical palette, then validate
+  # the complete GTK3/GTK4 and Xfwm4 theme tree before packaging it.
+  python "$builddir/tools/build-theme.py"
+  python "$builddir/tools/validate-theme.py"
+}
+
+package() {
+  local builddir="$srcdir/$pkgname-$pkgver"
+
+  # Keep the complete local source payload accounted for by repository checks.
+  [[ -d "$startdir/files" ]] || return 1
+
+  install -d "$pkgdir/usr/share/themes"
+  cp -a "$builddir/themes/CambonOS-dark" "$pkgdir/usr/share/themes/"
+
+  install -Dm644 "$builddir/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

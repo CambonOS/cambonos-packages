@@ -1,25 +1,12 @@
 [Plymouth Theme]
 Name=CambonOS
 Description=CambonOS branded boot splash with progress animation
-ModuleName=two-step
+ModuleName=script
 
-[two-step]
-ImageDir=/usr/share/plymouth/themes/cambonos
-ScaleBackgroundImage=true
-BackgroundStartColor=0x061C31
-BackgroundEndColor=0x061C31
-HorizontalAlignment=0.5
-VerticalAlignment=0.62
-ProgressBarHorizontalAlignment=0.5
-ProgressBarVerticalAlignment=0.84
-ProgressBarWidth=420
-ProgressBarHeight=8
-ProgressBarBackgroundColor=0x29465A
-ProgressBarForegroundColor=0x70E7E6
-Transition=none
-TransitionDuration=0.0
-MessageBelowAnimation=false
-DialogClearsFirmwareBackground=true
+[script]
+ImageDir=/usr/share/cambonos/branding
+ScriptFile=/usr/share/plymouth/themes/cambonos/cambonos.script
+ConsoleLogBackgroundColor=0x061C31
 
 [boot-up]
 UseAnimation=false

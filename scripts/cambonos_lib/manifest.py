@@ -9,9 +9,12 @@ from pathlib import Path
 from .common import CambonosError, compare_arch_versions, sha256_directory, sha256_file
 from .config import MANIFEST_SCHEMA_VERSION
 from .models import Package
+from .versioning import validate_version_transition
 
 
 def package_source_records(packages: dict[str, Package]) -> dict[str, dict]:
+    from .planner import package_input_hash
+
     records = {}
     for name, package in sorted(packages.items()):
         version = f"{package.epoch}:{package.pkgver}-{package.pkgrel}" if package.epoch != "0" else f"{package.pkgver}-{package.pkgrel}"
@@ -22,6 +25,7 @@ def package_source_records(packages: dict[str, Package]) -> dict[str, dict]:
             "pkgrel": package.pkgrel,
             "architecture": list(package.architecture),
             "source_hash": sha256_directory(package.directory),
+            "build_input_hash": package_input_hash(package),
         }
     return records
 
@@ -82,17 +86,41 @@ def validate_version_policy(
         if old is None:
             print(f"Paquete nuevo en {channel}: {name}")
             continue
-        changed = old.get("source_hash") != new["source_hash"]
-        comparison = compare_arch_versions(old.get("version", "0"), new["version"], image)
-        if comparison > 0:
-            raise CambonosError(
-                f"{channel}/{name}: retroceso de versión {old.get('version')} -> {new['version']}"
+        old_version = old.get("version", "0")
+        if old.get("build_input_hash") and new.get("build_input_hash"):
+            changed = old["build_input_hash"] != new["build_input_hash"]
+        else:
+            # Legacy manifests cannot distinguish build inputs from documentation.
+            # Keep the old conservative source-tree comparison for this transition.
+            changed = old.get("source_hash") != new["source_hash"]
+        try:
+            comparison = validate_version_transition(
+                old_version,
+                new["pkgver"],
+                new["pkgrel"],
+                new["epoch"],
+                image,
+                comparator=compare_arch_versions,
             )
-        if changed and comparison == 0:
-            raise CambonosError(
-                f"{channel}/{name}: cambió el contenido fuente sin incrementar pkgrel/pkgver "
-                f"(versión {new['version']})"
-            )
+        except CambonosError as exc:
+            raise CambonosError(f"{channel}/{name}: {exc}") from exc
+        if comparison == 0:
+            if changed:
+                raise CambonosError(
+                    f"{channel}/{name}: cambió el contenido fuente sin incrementar "
+                    f"pkgver (versión {new['version']})"
+                )
+            old_package_hash = old.get("package_hash")
+            new_package_hash = new.get("package_hash")
+            if (
+                old_package_hash is not None
+                and new_package_hash is not None
+                and old_package_hash != new_package_hash
+            ):
+                raise CambonosError(
+                    f"{channel}/{name}: la versión publicada {new['version']} "
+                    "no es inmutable: el SHA-256 del binario ha cambiado"
+                )
     removed = sorted(set(old_packages) - set(current))
     if removed:
         print(f"Paquetes que se retirarán de {channel}: {', '.join(removed)}")
@@ -245,8 +273,24 @@ def verify_build_manifest(path: Path, package_dir: Path) -> dict:
         ):
             raise CambonosError(f"nombre de artefacto no válido para {name}: {filename!r}")
         archive = package_dir / filename
-        if not archive.is_file():
-            raise CambonosError(f"falta el artefacto de {name}: {archive.name}")
+        if not archive.is_file() or archive.is_symlink():
+            raise CambonosError(f"falta el artefacto regular de {name}: {archive.name}")
         if sha256_file(archive) != record.get("package_hash"):
             raise CambonosError(f"SHA256 incorrecto para {archive.name}")
+        if record.get("reused_from_publication") is True:
+            signature_name = record.get("signature_file")
+            signature_hash = record.get("signature_hash")
+            if (
+                not isinstance(signature_name, str)
+                or signature_name != filename + ".sig"
+                or not isinstance(signature_hash, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", signature_hash)
+            ):
+                raise CambonosError(f"metadata de firma preservada inválida para {name}")
+            signature_path = package_dir / signature_name
+            if (
+                not signature_path.is_file() or signature_path.is_symlink()
+                or sha256_file(signature_path) != signature_hash
+            ):
+                raise CambonosError(f"firma preservada ausente o SHA256 incorrecto para {name}")
     return data

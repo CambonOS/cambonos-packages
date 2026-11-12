@@ -1,10 +1,11 @@
 pkgname=cambonos-pacman
 pkgver=0.1.0
-pkgrel=3
+pkgrel=4
 pkgdesc="CambonOS pacman repository configuration and behavioral customizations"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
+groups=('cambonos-base')
 depends=('bash' 'coreutils' 'diffutils' 'gawk' 'cambonos-keyring')
 provides=('cambonos-repo')
 conflicts=('cambonos-repo')

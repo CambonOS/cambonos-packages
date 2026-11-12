@@ -104,6 +104,32 @@ def _sign_file(path: Path, fingerprint: str, gnupghome: Path, passphrase_file: P
     return signature
 
 
+def _verify_preserved_package_signature(
+    archive: Path,
+    signature: Path,
+    expected_fingerprint: str,
+    gnupghome: Path,
+    expected_signature_hash: str,
+) -> None:
+    if not signature.is_file() or signature.name != archive.name + ".sig":
+        raise CambonosError(f"firma preservada ausente o incoherente para {archive.name}")
+    if sha256_file(signature) != expected_signature_hash:
+        raise CambonosError(f"SHA-256 de la firma preservada incorrecto para {archive.name}")
+    result = subprocess.run(
+        ["gpg", "--batch", "--homedir", str(gnupghome), "--status-fd", "1",
+         "--verify", str(signature), str(archive)],
+        text=True, capture_output=True, check=False,
+    )
+    if result.returncode:
+        raise CambonosError(f"firma preservada inválida para {archive.name}")
+    valid = re.search(r"(?m)^\[GNUPG:\] VALIDSIG ([0-9A-F]+) ", result.stdout)
+    signer = valid.group(1).upper() if valid else None
+    if signer != expected_fingerprint:
+        raise CambonosError(
+            f"{archive.name}: la firma preservada no procede de la subclave configurada"
+        )
+
+
 def _materialize_and_sign_aliases(repository: Path, database_name: str) -> None:
     for alias, target in (
         (f"{database_name}.db", f"{database_name}.db.tar.gz"),
@@ -244,9 +270,21 @@ def sign_and_create_site(
                 build_manifest = channel_manifests[channel]
                 for name, record in build_manifest["packages"].items():
                     archive = build_root / "packages" / record["package_file"]
-                    _sign_file(archive, expected_fingerprint, gnupghome, passphrase_file)
-                    record["signature_file"] = archive.name + ".sig"
-                    record["signature_hash"] = sha256_file(Path(str(archive) + ".sig"))
+                    if record.get("reused_from_publication") is True:
+                        signature_name = record.get("signature_file")
+                        signature_hash = record.get("signature_hash")
+                        if signature_name != archive.name + ".sig" or not isinstance(signature_hash, str):
+                            raise CambonosError(
+                                f"{name}: metadata de firma preservada ausente o incoherente"
+                            )
+                        _verify_preserved_package_signature(
+                            archive, build_root / "packages" / signature_name,
+                            expected_fingerprint, gnupghome, signature_hash,
+                        )
+                    else:
+                        _sign_file(archive, expected_fingerprint, gnupghome, passphrase_file)
+                        record["signature_file"] = archive.name + ".sig"
+                        record["signature_hash"] = sha256_file(Path(str(archive) + ".sig"))
 
                 repository = output_site / channel / "x86_64"
                 create_repository(build_root, repository, channel, image)

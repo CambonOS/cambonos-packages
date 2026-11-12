@@ -10,7 +10,13 @@ if status is-interactive; and command -q starship
             set _cambonos_starship_config_home "$XDG_CONFIG_HOME"
         end
         if not test -f "$_cambonos_starship_config_home/starship.toml"
-            set -gx STARSHIP_CONFIG /usr/share/cambonos/shell-prompt/starship.toml
+            set -l _cambonos_tty (command tty 2>/dev/null)
+            if string match -rq '^/dev/tty[0-9]+$' -- "$_cambonos_tty"
+                set -gx STARSHIP_CONFIG /usr/share/cambonos/shell-prompt/starship-tty.toml
+            else
+                set -gx STARSHIP_CONFIG /usr/share/cambonos/shell-prompt/starship.toml
+            end
+            set -e _cambonos_tty
         end
         set -e _cambonos_starship_config_home
     end

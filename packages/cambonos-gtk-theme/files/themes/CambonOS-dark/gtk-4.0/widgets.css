@@ -1,0 +1,405 @@
+/*
+ * CambonOS GTK 4 theme
+ * Targets GTK 4 widgets. libadwaita applications may provide their own styling.
+ */
+
+* { caret-color: @accent_color; }
+
+/* Main surfaces */
+window, .background {
+  color: @window_fg_color;
+  background-color: @window_bg_color;
+}
+.view, textview, listview, gridview, columnview {
+  color: @view_fg_color;
+  background-color: @view_bg_color;
+}
+headerbar, .titlebar {
+  color: @headerbar_fg_color;
+  background-color: @headerbar_bg_color;
+  border-color: @borders;
+  box-shadow: none;
+}
+actionbar, toolbar { background-color: @headerbar_bg_color; }
+
+/* Buttons */
+button {
+  color: @button_fg_color;
+  background-color: @button_bg_color;
+  border: 1px solid @button_border_color;
+  background-image: none;
+  border-radius: 8px;
+  padding: 6px 11px;
+}
+button:hover {
+  background-color: @button_hover_bg_color;
+  border-color: @button_hover_border_color;
+}
+button:active {
+  color: @accent_fg_color;
+  background-color: @button_selected_bg_color;
+  border-color: @button_selected_border_color;
+}
+button:checked {
+  color: @accent_fg_color;
+  background-color: @button_selected_bg_color;
+  border-color: @button_selected_border_color;
+}
+button:disabled {
+  color: @disabled_fg_color;
+  background-color: transparent;
+  border-color: transparent;
+}
+button:focus, entry:focus, textview:focus, spinbutton:focus, dropdown:focus,
+checkbutton:focus, radiobutton:focus, switch:focus, scale:focus {
+  border-color: @focus_color;
+}
+button.suggested-action {
+  color: @accent_fg_color;
+  background-color: @accent_bg_color;
+  border-color: @accent_bg_color;
+}
+button.suggested-action:hover { background-color: @accent_hover_color; }
+button.destructive-action { color: #FFFFFF; background-color: @destructive_color; border-color: @destructive_color; }
+
+/* Entries, text views and spin buttons */
+entry, textview, spinbutton {
+  color: @view_fg_color;
+  background-color: @input_bg_color;
+  border: 1px solid @borders;
+  border-radius: 7px;
+  padding: 6px;
+}
+entry:focus, textview:focus, spinbutton:focus, entry:focus, textview:focus, spinbutton:focus, dropdown:focus,
+checkbutton:focus, radiobutton:focus, switch:focus, scale:focus {
+  border-color: @focus_color;
+}
+entry:disabled, spinbutton:disabled { color: @disabled_fg_color; background-color: @disabled_bg_color; }
+
+
+selection { color: @accent_fg_color; background-color: @accent_bg_color; }
+textview text selection { color: @accent_fg_color; background-color: @accent_bg_color; }
+
+/* Combo boxes, dropdowns and popovers */
+dropdown, combobox, popover, .popover {
+  color: @popover_fg_color;
+  background-color: @popover_bg_color;
+  border: 1px solid @borders;
+  border-radius: 8px;
+}
+dropdown button, combobox button { border: 0; background-color: transparent; }
+
+/* Persistent, minimal dropdown indicators */
+dropdown arrow,
+combobox arrow {
+  -gtk-icon-source: -gtk-icontheme('pan-down-symbolic');
+  -gtk-icon-size: 12px;
+  min-width: 12px;
+  min-height: 12px;
+  margin-left: 8px;
+  margin-right: 8px;
+  color: @text_muted_color;
+}
+dropdown:hover arrow,
+dropdown:focus arrow,
+combobox:hover arrow,
+combobox:focus arrow {
+  color: @accent_emphasis;
+}
+dropdown:disabled arrow,
+combobox:disabled arrow {
+  color: @disabled_fg_color;
+}
+
+popover contents { background-color: @popover_bg_color; }
+
+/* Check/radio buttons */
+checkbutton check, radiobutton radio {
+  color: @view_fg_color;
+  background-color: @input_bg_color;
+  border: 1px solid @text_muted_color;
+}
+checkbutton check { border-radius: 4px; }
+radiobutton radio { border-radius: 999px; }
+checkbutton:hover check, radiobutton:hover radio { border-color: @focus_color; }
+checkbutton:checked check, radiobutton:checked radio {
+  color: @accent_fg_color;
+  background-color: @accent_bg_color;
+  border-color: @accent_bg_color;
+}
+checkbutton:disabled check,
+radiobutton:disabled radio {
+  color: @disabled_fg_color;
+  background-color: @disabled_bg_color;
+  border-color: @borders;
+}
+checkbutton:focus check,
+radiobutton:focus radio {
+  border-color: @focus_color;
+}
+
+/* Switches */
+switch {
+  background-color: @switch_off_bg_color;
+  border: 1px solid @borders;
+  border-radius: 999px;
+}
+switch:checked { background-color: @accent_bg_color; border-color: @accent_bg_color; }
+switch slider {
+  background-color: @switch_slider_color;
+  border: 1px solid @borders;
+  border-radius: 999px;
+}
+
+/* Scale and progress */
+scale trough, progressbar trough {
+  background-color: @trough_color;
+  border: 1px solid @borders;
+  border-radius: 999px;
+}
+scale highlight, progressbar progress { background-color: @accent_bg_color; border-radius: 999px; }
+scale slider {
+  background-color: @switch_slider_color;
+  border: 2px solid @focus_color;
+  border-radius: 999px;
+}
+progressbar progress { min-height: 6px; }
+
+/* Tabs, lists, rows and tree views */
+notebook > header, tabbar {
+  background-color: @headerbar_bg_color;
+  border-color: @borders;
+}
+notebook > header tab, tabbar tab { color: @text_muted_color; padding: 7px 12px; }
+notebook > header tab:checked, tabbar tab:checked {
+  color: @view_fg_color;
+  box-shadow: inset 0 -2px @accent_color;
+}
+row { color: @view_fg_color; }
+row:hover { background-color: @surface_hover_color; }
+row:selected, listview row:selected, gridview child:selected {
+  color: @accent_fg_color;
+  background-color: @accent_bg_color;
+}
+columnview header button {
+  color: @headerbar_fg_color;
+  background-color: @headerbar_bg_color;
+  border-radius: 0;
+}
+
+/* Menus and model buttons */
+popover, menu, .menu, .context-menu {
+  color: @popover_fg_color;
+  background-color: @popover_bg_color;
+  border: 1px solid @borders;
+  border-radius: 8px;
+}
+modelbutton { color: @popover_fg_color; padding: 6px 10px; }
+
+/* Keep check/radio indicators separated from model button labels. */
+modelbutton check,
+modelbutton radio {
+  margin-right: 8px;
+}
+modelbutton:dir(rtl) check,
+modelbutton:dir(rtl) radio {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+
+/* Accessible indicators in GTK 4 menu model buttons. */
+popover.menu modelbutton check,
+popover.menu modelbutton radio,
+modelbutton check,
+modelbutton radio {
+  color: @view_fg_color;
+  background-color: @input_bg_color;
+  border: 1px solid @text_muted_color;
+  min-width: 14px;
+  min-height: 14px;
+}
+popover.menu modelbutton radio,
+modelbutton radio { border-radius: 999px; }
+popover.menu modelbutton check:checked,
+popover.menu modelbutton radio:checked,
+modelbutton check:checked,
+modelbutton radio:checked {
+  color: @accent_fg_color;
+  background-color: @accent_bg_color;
+  border-color: @accent_bg_color;
+}
+popover.menu modelbutton:hover check,
+popover.menu modelbutton:hover radio,
+modelbutton:hover check,
+modelbutton:hover radio {
+  color: @view_bg_color;
+  background-color: @view_fg_color;
+  border-color: @view_fg_color;
+}
+popover.menu modelbutton:disabled check,
+popover.menu modelbutton:disabled radio,
+modelbutton:disabled check,
+modelbutton:disabled radio {
+  color: @disabled_fg_color;
+  background-color: @disabled_bg_color;
+  border-color: @borders;
+}
+popover.menu modelbutton check:indeterminate,
+modelbutton check:indeterminate {
+  color: @accent_fg_color;
+  background-color: @accent_bg_color;
+  border-color: @accent_bg_color;
+}
+popover.menu modelbutton:focus check,
+popover.menu modelbutton:focus radio,
+modelbutton:focus check,
+modelbutton:focus radio {
+  border-color: @focus_color;
+}
+
+modelbutton:hover { color: @accent_fg_color; background-color: @menu_hover_bg_color; }
+
+/* Expander, calendar, separators and scrollbars */
+expander arrow { color: @text_muted_color; }
+expander arrow:hover { color: @accent_color; }
+calendar { color: @view_fg_color; background-color: @view_bg_color; border: 1px solid @borders; }
+calendar day:selected { color: @accent_fg_color; background-color: @accent_bg_color; }
+separator { background-color: @borders; min-width: 1px; min-height: 1px; }
+scrollbar { background-color: transparent; }
+scrollbar trough { background-color: transparent; }
+scrollbar slider { background-color: @scrollbar_color; border-radius: 999px; }
+scrollbar slider:hover { background-color: @scrollbar_hover_color; }
+
+/* Links and focus */
+*:link, *:visited { color: @link_color; }
+button:focus, entry:focus, textview:focus, spinbutton:focus, dropdown:focus,
+checkbutton:focus, radiobutton:focus, switch:focus, scale:focus {
+  border-color: @focus_color;
+}
+
+
+/* Compact indicators and deliberate label spacing */
+checkbutton check,
+radiobutton radio {
+  min-width: 13px;
+  min-height: 13px;
+  margin-right: 7px;
+}
+
+/* Compact scale handles: keep the thumb clear of nearby labels. */
+scale slider {
+  min-width: 12px;
+  min-height: 12px;
+  border-width: 1px;
+}
+
+/* Consistent, compact switch proportions. */
+switch {
+  min-width: 34px;
+  min-height: 18px;
+  padding: 1px;
+}
+switch slider {
+  min-width: 12px;
+  min-height: 12px;
+}
+
+/* Keep disclosure arrows visually compact without changing row geometry. */
+expander arrow {
+  min-width: 12px;
+  min-height: 12px;
+  margin-right: 5px;
+}
+
+
+/* 0.3.5: reserve room at both ends of GtkScale tracks.
+ * The thumb stays inside the trough area instead of colliding with endpoint labels.
+ */
+scale.horizontal trough {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+scale.vertical trough {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* Keep boolean switches away from the trailing edge of their containers. */
+switch {
+  margin-top: 2px;
+  margin-right: 8px;
+  margin-bottom: 2px;
+}
+
+
+/* 0.3.6: comfortable inner spacing for text-entry controls. */
+entry,
+.searchentry entry,
+entry.search,
+entry.password,
+spinbutton {
+  padding: 6px 9px;
+}
+
+/* Keep text comfortably inset in text-input controls. */
+textview {
+  padding: 6px 9px;
+}
+
+
+/* 0.3.7: external spacing between input controls and their parent/layout cells.
+ * Keep inner padding (6x9px) independent from the outer widget margin.
+ */
+entry,
+spinbutton,
+dropdown,
+.searchentry {
+  margin: 3px 4px;
+}
+/* Avoid double spacing on embedded editable children. */
+spinbutton entry,
+.searchentry entry {
+  margin: 0;
+}
+
+/* Integrated numeric stepper */
+spinbutton {
+  padding: 2px 3px 2px 8px;
+  border: 1px solid @borders;
+  border-radius: 8px;
+  background-color: transparent;
+  box-shadow: none;
+}
+spinbutton text {
+  padding: 3px 5px;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+spinbutton button,
+spinbutton button.up,
+spinbutton button.down {
+  min-width: 25px;
+  min-height: 25px;
+  padding: 0;
+  margin: 0 1px;
+  color: @view_fg_color;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+}
+spinbutton button:hover {
+  color: #FFFFFF;
+  background-color: @button_hover_bg_color;
+  border-color: @button_hover_border_color;
+}
+spinbutton button:active {
+  color: #FFFFFF;
+  background-color: @accent_pressed_color;
+  border-color: transparent;
+}
+spinbutton button:disabled {
+  color: @disabled_fg_color;
+  background-color: transparent;
+}

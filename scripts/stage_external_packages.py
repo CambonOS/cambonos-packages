@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -18,8 +19,8 @@ from cambonos_lib.validation import extract_scalar
 
 
 EXTERNAL_PACKAGES = {
-    "cambonos-installer": "https://github.com/CambonOS/installer.git",
-    "cambonos-mkiso": "https://github.com/CambonOS/iso.git",
+    "cambonos-installer": "https://github.com/CambonOS/cambonos-installer.git",
+    "cambonos-mkiso": "https://github.com/CambonOS/cambonos-mkiso.git",
 }
 
 
@@ -33,6 +34,27 @@ def _git(source: Path, *args: str) -> str:
     if result.returncode:
         raise CambonosError(f"falló git en {source}: {result.stderr.strip()}")
     return result.stdout.strip()
+
+
+def _validate_symlinks(source: Path) -> None:
+    airootfs = source / "files/profile/airootfs"
+    for path in source.rglob("*"):
+        if not path.is_symlink():
+            continue
+        if path.is_relative_to(airootfs):
+            target = path.readlink()
+            if target.is_absolute():
+                continue
+            relative_target = path.parent.relative_to(airootfs) / target
+            normalized_target = Path(os.path.normpath(str(relative_target)))
+            if ".." in normalized_target.parts:
+                raise CambonosError(
+                    f"symlink externo que escapa de airootfs: {path.relative_to(source)}"
+                )
+        elif not path.resolve().is_relative_to(source):
+            raise CambonosError(
+                f"symlink externo que escapa del checkout: {path.relative_to(source)}"
+            )
 
 
 def stage_external_package(
@@ -62,9 +84,7 @@ def stage_external_package(
         )
     if _git(source, "status", "--porcelain", "--untracked-files=all"):
         raise CambonosError(f"el checkout externo contiene cambios: {package_name}")
-    for path in source.rglob("*"):
-        if path.is_symlink() and not path.resolve().is_relative_to(source):
-            raise CambonosError(f"symlink externo que escapa del checkout: {path.relative_to(source)}")
+    _validate_symlinks(source)
 
     pkgb = source / "PKGBUILD"
     if not pkgb.is_file() or extract_scalar(pkgb.read_text(encoding="utf-8"), "pkgname") != package_name:
@@ -76,7 +96,32 @@ def stage_external_package(
     if destination.exists() or destination.is_symlink():
         raise CambonosError(f"ya existe el destino del paquete externo: {destination}")
 
-    source_date_epoch = _git(source, "show", "-s", "--format=%ct", expected_commit)
+    # Package provenance tracks the last commit that changed effective build
+    # inputs, not the branch tip. README, tests and workflow-only commits must
+    # not invalidate the package fingerprint or trigger a rebuild.
+    build_input_paths = ["PKGBUILD", "LICENSE", "*.install", "files/"]
+    for raw_reference in re.findall(
+        r"\$startdir/([^\s\"']+)", pkgb.read_text(encoding="utf-8")
+    ):
+        relative = Path(raw_reference.rstrip("\\"))
+        if relative.is_absolute() or ".." in relative.parts:
+            raise CambonosError(
+                f"referencia insegura en PKGBUILD externo de {package_name}: {raw_reference}"
+            )
+        if relative.parts and relative.parts[0] != "files":
+            build_input_paths.append(relative.as_posix())
+    input_commit = _git(
+        source,
+        "log",
+        "-1",
+        "--format=%H",
+        expected_commit,
+        "--",
+        *sorted(set(build_input_paths)),
+    )
+    if not re.fullmatch(r"[0-9a-f]{40}", input_commit):
+        raise CambonosError(f"no se pudo resolver el último commit de entradas de {package_name}")
+    source_date_epoch = _git(source, "show", "-s", "--format=%ct", input_commit)
     if not source_date_epoch.isdigit():
         raise CambonosError(f"fecha de commit inválida para {package_name}")
     try:
@@ -88,7 +133,7 @@ def stage_external_package(
         )
         metadata = {
             "repository": expected_url.removesuffix(".git"),
-            "commit": expected_commit,
+            "commit": input_commit,
             "source_date_epoch": int(source_date_epoch),
         }
         (destination / ".cambonos-source.json").write_text(

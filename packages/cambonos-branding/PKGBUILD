@@ -1,17 +1,22 @@
 pkgname=cambonos-branding
-pkgver=0.1.1
-pkgrel=4
+pkgver=0.1.3
+pkgrel=1
 pkgdesc="CambonOS visual identity assets"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
-depends=('fontconfig')
+groups=('cambonos-base')
+depends=('bash' 'coreutils' 'gawk' 'kbd')
+install=cambonos-branding.install
+backup=('etc/dialogrc')
 
 package() {
   local branding_dir="$pkgdir/usr/share/cambonos/branding"
-  local font_dir="$pkgdir/usr/share/fonts/TTF"
-  local fontconfig_avail="$pkgdir/usr/share/fontconfig/conf.avail"
-  local fontconfig_default="$pkgdir/usr/share/fontconfig/conf.default"
+  local udev_rules_dir="$pkgdir/usr/lib/udev/rules.d"
+  local libalpm_hooks_dir="$pkgdir/usr/share/libalpm/hooks"
+
+  install -Dm644 "$startdir/files/dialogrc" \
+    "$pkgdir/etc/dialogrc"
 
   # Canonical location: all original branding assets live here.
   install -Dm644 "$startdir/files/cambonos-icon.svg" \
@@ -22,17 +27,22 @@ package() {
     "$branding_dir/cambonos-icon.png"
   install -Dm644 "$startdir/files/cambonos-text.png" \
     "$branding_dir/cambonos-text.png"
-
-  # Install the prebuilt symbol font as a static branding resource.
-  install -Dm644 "$startdir/files/ttf/CambonOS-Symbols.ttf" \
-    "$font_dir/CambonOS-Symbols.ttf"
-
-  # Publish the private-use glyph fallback through Fontconfig defaults.
-  install -Dm644 "$startdir/files/ttf/65-cambonos-symbols.conf" \
-    "$fontconfig_avail/65-cambonos-symbols.conf"
-  install -d "$fontconfig_default"
-  ln -s ../conf.avail/65-cambonos-symbols.conf \
-    "$fontconfig_default/65-cambonos-symbols.conf"
+  install -Dm644 "$startdir/files/plymouth-background.png" \
+    "$branding_dir/plymouth-background.png"
+  base64 --decode "$startdir/files/progress-background.png.base64" \
+    > "$branding_dir/progress-background.png"
+  base64 --decode "$startdir/files/progress-foreground.png.base64" \
+    > "$branding_dir/progress-foreground.png"
+  install -Dm644 "$startdir/files/console-colors" \
+    "$branding_dir/console-colors"
+  install -Dm644 "$startdir/files/90-cambonos-console-colors.rules" \
+    "$udev_rules_dir/90-cambonos-console-colors.rules"
+  install -Dm644 "$startdir/files/xfce-terminalrc" \
+    "$pkgdir/usr/share/cambonos/branding/xfce-terminalrc"
+  install -Dm755 "$startdir/files/lib/manage-xfce-terminal" \
+    "$pkgdir/usr/lib/cambonos-branding/manage-xfce-terminal"
+  install -Dm644 "$startdir/files/hooks/cambonos-branding-xfce-terminal.hook" \
+    "$libalpm_hooks_dir/cambonos-branding-xfce-terminal.hook"
 
   install -Dm644 "$startdir/files/LICENSE" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"

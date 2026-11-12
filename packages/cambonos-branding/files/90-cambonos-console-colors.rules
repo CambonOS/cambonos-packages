@@ -1,0 +1,1 @@
+SUBSYSTEM=="tty", KERNEL=="tty[1-9]*", ACTION=="add", RUN+="/usr/bin/setvtrgb -C /dev/%k /usr/share/cambonos/branding/console-colors"

@@ -300,6 +300,7 @@ def write_site_metadata(
         global_manifest["channels"][channel] = {
             "branch": data["branch"],
             "commit": data["commit"],
+            "external_sources": data.get("external_sources", {}),
             "packages": data["packages"],
             "build_environment": data["build_environment"],
             "image": data["image"],
