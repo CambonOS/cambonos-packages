@@ -1,8 +1,8 @@
 # Maintainer: CambonOS contributors
 pkgname=cambonos-gtk-theme
-pkgver=0.7.0
-pkgrel=1
-pkgdesc="CambonOS GTK 3/4 and Xfwm4 dark theme"
+pkgver=0.9.7
+pkgrel=2
+pkgdesc="CambonOS GTK 3/4 and Xfwm4 dark themes with three transparency profiles"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
@@ -13,6 +13,12 @@ optdepends=(
   'xfwm4: Xfwm4 window decoration theme'
 )
 
+_themes=(
+  CambonOS-dark
+  CambonOS-dark-balanced
+  CambonOS-dark-transparent
+)
+
 build() {
   local builddir="$srcdir/$pkgname-$pkgver"
 
@@ -20,8 +26,8 @@ build() {
   install -d "$builddir"
   cp -a "$startdir/files/." "$builddir/"
 
-  # Generate GTK color definitions from the canonical palette, then validate
-  # the complete GTK3/GTK4 and Xfwm4 theme tree before packaging it.
+  # Generate all three themes from the one canonical palette/template and
+  # validate the complete GTK3/GTK4 and Xfwm4 output before packaging.
   python "$builddir/tools/build-theme.py"
   python "$builddir/tools/validate-theme.py"
 }
@@ -29,11 +35,15 @@ build() {
 package() {
   local builddir="$srcdir/$pkgname-$pkgver"
 
-  # Keep the complete local source payload accounted for by repository checks.
   [[ -d "$startdir/files" ]] || return 1
-
   install -d "$pkgdir/usr/share/themes"
-  cp -a "$builddir/themes/CambonOS-dark" "$pkgdir/usr/share/themes/"
+  for theme in "${_themes[@]}"; do
+    [[ -d "$builddir/themes/$theme" ]] || {
+      error "Generated theme is missing: $theme"
+      return 1
+    }
+    cp -a "$builddir/themes/$theme" "$pkgdir/usr/share/themes/"
+  done
 
   install -Dm644 "$builddir/LICENSE" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"

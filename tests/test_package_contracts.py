@@ -54,6 +54,10 @@ REQUIRED_PAYLOADS = {
     "cambonos-plymouth": (
         "files/themes/cambonos/cambonos.plymouth",
         "files/themes/cambonos/cambonos.script",
+        "files/themes/cambonos/cambonos-icon.png",
+        "files/themes/cambonos/plymouth-background.png",
+        "files/themes/cambonos/progress-background.png",
+        "files/themes/cambonos/progress-foreground.png",
         "files/mkinitcpio/90-cambonos-plymouth.conf",
     ),
     "cambonos-release": (
@@ -147,11 +151,56 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue(parser["Seat:*"].get("greeter-session"))
 
     def test_plymouth_theme_declares_its_script_module(self):
-        theme = PACKAGES / "cambonos-plymouth/files/themes/cambonos/cambonos.plymouth"
+        package = PACKAGES / "cambonos-plymouth"
+        theme = package / "files/themes/cambonos/cambonos.plymouth"
         parser = configparser.ConfigParser()
         parser.read(theme, encoding="utf-8")
         self.assertEqual(parser["Plymouth Theme"].get("ModuleName"), "script")
         self.assertTrue(parser["script"].get("ScriptFile"))
+        self.assertEqual(parser["script"].get("ImageDir"), "/usr/share/plymouth/themes/cambonos")
+
+        script = package / "files/themes/cambonos/cambonos.script"
+        theme_dir = theme.parent
+        for image in re.findall(r'Image\("([^"]+\.png)"\)', script.read_text(encoding="utf-8")):
+            with self.subTest(image=image):
+                self.assertTrue((theme_dir / image).is_file(), f"Falta el recurso Plymouth {image}")
+
+    def test_plymouth_does_not_depend_on_branding_assets(self):
+        branding = PACKAGES / "cambonos-branding"
+        plymouth = PACKAGES / "cambonos-plymouth"
+        for resource in (
+            "plymouth-background.png",
+            "progress-background.png.base64",
+            "progress-foreground.png.base64",
+        ):
+            with self.subTest(resource=resource):
+                self.assertFalse((branding / "files" / resource).exists())
+        self.assertNotIn("cambonos-branding", (plymouth / "PKGBUILD").read_text(encoding="utf-8"))
+
+    def test_plymouth_package_installs_all_theme_images(self):
+        package = PACKAGES / "cambonos-plymouth"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            pkgdir = Path(temp_dir) / "pkg"
+            pkgdir.mkdir()
+            env = os.environ.copy()
+            env.update({"pkgdir": str(pkgdir), "startdir": str(package)})
+            subprocess.run(
+                ["bash", "-c", 'source "$startdir/PKGBUILD" && package'],
+                check=True,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            installed_theme = pkgdir / "usr/share/plymouth/themes/cambonos"
+            for image in (
+                "cambonos-icon.png",
+                "plymouth-background.png",
+                "progress-background.png",
+                "progress-foreground.png",
+            ):
+                with self.subTest(image=image):
+                    self.assertTrue((installed_theme / image).is_file())
 
     def test_shell_prompt_configuration_is_valid_toml(self):
         package = PACKAGES / "cambonos-shell-prompt/files"

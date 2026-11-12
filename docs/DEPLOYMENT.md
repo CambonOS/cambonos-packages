@@ -1,94 +1,172 @@
-# Despliegue automatizado de paquetes
+# Despliegue automatizado
 
-El workflow `.github/workflows/package-pipeline.yml` construye y publica los canales `testing` y `stable` en GitHub Pages.
+Este documento describe los workflows que validan, construyen, firman y publican los
+paquetes CambonOS. La planificación y la reutilización de artefactos se explican en
+[BUILD.md](BUILD.md); la política de versiones está en [VERSIONING.md](VERSIONING.md).
 
-## Flujo de publicación
+## Canales
 
-El workflow se ejecuta al recibir cambios en `dev` o `main`, o manualmente desde GitHub Actions.
-
-1. **Validación:** fija los commits de `dev` y `main`, prepara las fuentes externas, ejecuta los tests y valida los dos conjuntos de paquetes y su política de versiones.
-2. **Construcción:** genera todos los paquetes de `testing` y `stable` en contenedores Arch Linux independientes. Los dos canales se construyen desde sus respectivas ramas.
-3. **Firma y ensamblado:** verifica los artefactos, firma los paquetes y las bases de datos de ambos canales, y genera el contenido completo del mirror.
-4. **Publicación:** despliega el sitio generado en GitHub Pages. Si una fase anterior falla, no se ejecuta la publicación.
-
-La fase de construcción no recibe claves privadas. Los secretos de firma solo están disponibles en el entorno protegido `package-signing`.
-
-## Ramas y canales
-
-| Rama | Canal | Finalidad |
+| Rama | Canal | Uso |
 |---|---|---|
-| `dev` | `testing` | Pruebas y validación previa a stable. |
+| `dev` | `testing` | Validación de cambios antes de su promoción. |
 | `main` | `stable` | Distribución estable. |
 
-Cada canal se valida y construye de forma independiente. Los commits de origen se fijan al comienzo de la ejecución para que validación y construcción utilicen exactamente las mismas fuentes.
+Cada canal se valida y construye desde su propio snapshot. Al comenzar la ejecución, el
+workflow fija los commits de ambas ramas y utiliza esos mismos commits durante la
+validación y la construcción.
 
-Los paquetes `cambonos-installer` y `cambonos-mkiso` proceden de repositorios externos. El workflow fija sus commits y los incorpora temporalmente al árbol de construcción; no mantiene copias de sus fuentes en este repositorio.
+Los paquetes `cambonos-installer` y `cambonos-mkiso` proceden de repositorios externos.
+Sus commits también se resuelven y fijan al inicio. Para `testing` se utiliza `dev` y,
+si esa rama no existe en el repositorio externo, se utiliza `main`; `stable` utiliza
+`main`. Las fuentes se incorporan temporalmente al árbol de paquetes y sus commits
+quedan registrados en el manifiesto de build.
 
-## Requisitos de GitHub Actions
+## Workflows y triggers
 
-Configura el entorno protegido `package-signing` y limita su uso a las ramas `dev` y `main`.
+La automatización se divide en dos workflows:
+
+- `.github/workflows/package-build.yml`: valida los snapshots y construye ambos canales.
+- `.github/workflows/package-publish.yml`: comprueba la procedencia de la ejecución de
+  build, firma los artefactos y despliega el sitio.
+
+`package-build.yml` se inicia mediante:
+
+- `push` a `dev` o `main`.
+- `repository_dispatch` de tipo `external-package-updated`, utilizado para notificar
+  cambios en los repositorios externos.
+
+No existe un trigger `workflow_dispatch`: la ejecución manual desde la interfaz de
+GitHub Actions no forma parte de la configuración actual. El evento
+`repository_dispatch` requiere una notificación externa con el payload que valida
+`scripts/validate_external_dispatch.py`.
+
+`package-publish.yml` escucha la finalización de `CambonOS package build` mediante
+`workflow_run`. Solo continúa si el build terminó correctamente y el evento de origen
+cumple las condiciones del workflow: un `push` de `dev` o `main`, o un
+`repository_dispatch` admitido desde `main`. Una notificación externa no equivale, por
+sí sola, a una publicación garantizada.
+
+## Construcción: `package-build.yml`
+
+El workflow contiene dos jobs:
+
+### `validate`
+
+- Ejecuta `python -m unittest discover -s tests -v`.
+- Obtiene los commits actuales de `dev` y `main` y crea worktrees separados para validar
+  snapshots inmutables.
+- Valida el payload de `repository_dispatch`, cuando corresponde, y comprueba que el
+  commit notificado pertenece al historial de la rama externa.
+- Resuelve y fija los commits de `cambonos-installer` y `cambonos-mkiso`.
+- Incorpora temporalmente esas fuentes a cada snapshot.
+- Comprueba que `cambonos.gpg`, `cambonos-trusted` y `cambonos-revoked` son idénticos en
+  ambos canales.
+- Recupera el manifiesto publicado y su firma. Si no existe, solo admite la primera
+  publicación cuando `CAMBONOS_BOOTSTRAP=true`.
+- Valida los paquetes y la política de versiones de `testing` y `stable` por separado.
+
+La validación estática inspecciona los `PKGBUILD`, sus metadatos, dependencias, archivos
+y rutas sin ejecutar las recetas en el runner. Las pruebas automatizadas se ejecutan
+antes de validar los snapshots.
+
+### `build`
+
+Utiliza una matriz con dos ejecuciones independientes:
+
+| Canal | Rama | Snapshot |
+|---|---|---|
+| `testing` | `dev` | Commit fijado por `validate`. |
+| `stable` | `main` | Commit fijado por `validate`. |
+
+Cada ejecución prepara las fuentes inmutables y construye los paquetes en contenedores
+Arch Linux desechables. Las dependencias de construcción (`makedepends` y, si existe
+`check()`, `checkdepends`) se instalan para cada paquete; las dependencias de ejecución
+no se instalan automáticamente como parte de la construcción.
+
+Antes de construir, intenta recuperar los artefactos de la publicación anterior para
+aplicar compilación selectiva. El comportamiento exacto y sus garantías se describen en
+[BUILD.md](BUILD.md). Si la recuperación no está disponible o falla, el builder realiza
+una compilación completa segura. Los artefactos de ambos canales se publican como
+`build-testing` y `build-stable`, junto con sus manifiestos e informes.
+
+La construcción no recibe claves privadas de firma.
+
+## Firma y publicación: `package-publish.yml`
+
+El workflow de publicación contiene dos jobs:
+
+### `sign`
+
+- Comprueba que la ejecución que lo ha activado procede del repositorio, rama, evento y
+  workflow esperados.
+- Descarga el contexto inmutable y los artefactos de ambos canales.
+- Rechaza builds obsoletos o cuyos commits no coincidan con los snapshots actuales.
+- Comprueba que el mirror no haya cambiado desde que comenzó el build.
+- Verifica los manifiestos de compilación y los artefactos.
+- Firma los paquetes nuevos, conserva las firmas de los paquetes reutilizados y firma
+  las bases de datos de Pacman y el manifiesto global.
+- Ensambla el sitio completo que se publicará.
+
+Este es el único job que utiliza el entorno protegido `package-signing` y los secretos
+de firma. No ejecuta `PKGBUILD` ni scripts de instalación.
+
+### `deploy`
+
+Antes de desplegar, vuelve a comprobar los snapshots de las ramas y que el manifiesto y
+su firma publicados no hayan cambiado durante la fase de firma. Si las comprobaciones
+pasan, publica el sitio ensamblado mediante GitHub Pages.
+
+La publicación no debe sobrescribir una ejecución más reciente ni un estado del mirror
+distinto del que se verificó al comenzar el proceso.
+
+## Configuración de GitHub
+
+Configura el entorno protegido `package-signing` y limita su uso a las ramas `dev` y
+`main`.
 
 **Secretos del entorno:**
 
 - `CAMBONOS_SIGNING_KEY`: subclave privada operativa exportada para firma.
 - `CAMBONOS_SIGNING_PASSPHRASE`: contraseña de la clave exportada.
 
-**Variables del entorno:**
+**Variable del entorno:**
 
-- `CAMBONOS_SIGNING_FINGERPRINT`: fingerprint de la subclave de firma.
+- `CAMBONOS_SIGNING_FINGERPRINT`: fingerprint completo de la subclave de firma.
 
 **Variables del repositorio:**
 
-- `CAMBONOS_PAGES_URL`: URL base del sitio publicado. Es opcional si se utiliza la URL predeterminada de GitHub Pages.
-- `CAMBONOS_BOOTSTRAP`: debe ser `true` únicamente para la primera publicación, cuando todavía no existe un manifiesto anterior firmado. Tras verificar la primera publicación, establecerlo en `false`.
+- `CAMBONOS_PAGES_URL`: URL base del sitio publicado. Es opcional si se utiliza la URL
+  predeterminada de GitHub Pages.
+- `CAMBONOS_BOOTSTRAP`: debe ser `true` únicamente para autorizar la primera publicación
+  cuando todavía no existe un manifiesto anterior firmado. Después de verificar esa
+  publicación, debe establecerse en `false`.
 
-Configura GitHub Pages para desplegar mediante GitHub Actions.
+Configura GitHub Pages para publicar mediante GitHub Actions. La clave primaria privada
+de GPG debe permanecer fuera de GitHub y de sus runners. Consulta
+[GPG-SETUP.md](GPG-SETUP.md) para preparar las claves y el entorno.
 
-La clave primaria de GPG debe permanecer fuera de GitHub Actions. La preparación y custodia de las claves se describe en [Gestión de claves GPG](GPG-SETUP.md).
+## Manifiestos, versiones y confianza
 
-## Validación y construcción
+El sitio incluye `metadata/manifest.json` y su firma detached. El manifiesto registra
+los commits de origen, las versiones de los paquetes y los hashes de los artefactos. La
+ejecución siguiente verifica la firma antes de utilizarlo como referencia.
 
-La fase `validate` ejecuta la suite de tests y valida los snapshots de ambas ramas antes de construir. La validación estática inspecciona los `PKGBUILD` sin ejecutarlos en el runner: comprueba metadatos, dependencias internas, rutas de origen y destino, archivos requeridos, sintaxis disponible y coherencia básica del contenido. La construcción real ejecuta `makepkg` dentro de contenedores Arch desechables.
+La política CPV se aplica independientemente a cada canal. Los cambios funcionales
+incrementan `pkgver`; los cambios exclusivamente de empaquetado incrementan `pkgrel`. No
+se permiten retrocesos ni sustituir un artefacto publicado por otro binario con la misma
+identidad. Consulta [VERSIONING.md](VERSIONING.md).
 
-Cada paquete se construye en su propio contenedor. Se instalan `makedepends` y, cuando el paquete define `check()`, sus `checkdepends`. Las dependencias internas de construcción se ordenan según su relación de dependencias. Las dependencias de ejecución no se instalan automáticamente durante la construcción.
+Los tres archivos públicos de `cambonos-keyring` deben ser idénticos en `dev` y `main`.
+Esto mantiene la misma raíz de confianza en ambos canales.
 
-Los dos repositorios externos se fijan a commits concretos al comienzo de la ejecución. Para `testing` se utiliza `dev` si existe y, en caso contrario, `main`; `stable` utiliza `main`. El workflow comprueba el origen y el commit antes de incorporar temporalmente esas fuentes al árbol de construcción.
+## Requisitos y límites
 
-## Manifiestos y artefactos
+La construcción necesita Docker y acceso a los repositorios rolling de Arch. La firma
+necesita GPG y los secretos del entorno protegido. La imagen `archlinux:base-devel` está
+fijada por digest, pero sus repositorios se actualizan; por tanto, el proceso no
+garantiza reproducibilidad binaria entre fechas distintas.
 
-El sitio publicado incluye `metadata/manifest.json`. El manifiesto registra los commits de origen, versiones de paquetes y hashes de fuentes y artefactos. El pipeline recupera el manifiesto anterior y verifica su firma antes de utilizarlo como referencia.
-
-La política de versiones se aplica de forma independiente a cada canal:
-
-- Si cambia el contenido fuente de un paquete, debe incrementarse `pkgrel` o `pkgver`.
-- No se permiten retrocesos de versión.
-- La incorporación o retirada de paquetes está permitida.
-- Una reconstrucción puede producir un binario distinto aunque la fuente no haya cambiado, debido a la naturaleza rolling de Arch. El hash del paquete identifica el artefacto concreto y no sustituye la política de versión.
-
-El material público de `cambonos-keyring` debe ser idéntico entre `dev` y `main`: `cambonos.gpg`, `cambonos-trusted` y `cambonos-revoked`. Esta igualdad permite mantener una única raíz de confianza en ambos canales.
-
-## Firma y mirror
-
-El job `signing` es el único que recibe los secretos de firma. Verifica los artefactos construidos, firma cada paquete y las bases de datos de Pacman, genera sus índices y firma el manifiesto global. No ejecuta `PKGBUILD` ni scripts de instalación.
-
-El job `publish` recibe el sitio completo ya ensamblado y lo despliega en GitHub Pages. No recibe la clave privada. El mirror publica ambos canales y sus metadatos de integridad y firma.
-
-La firma acredita la procedencia criptográfica del artefacto, no que el código sea benigno. La revisión de cambios y la protección de ramas siguen siendo necesarias.
-
-## Versionado de paquetes
-
-Cuando cambia el contenido fuente de un paquete, debe incrementarse `pkgrel` o `pkgver`. El pipeline rechaza cambios de fuente sin incremento de versión y retrocesos de versión. `testing` y `stable` aplican esta política de forma independiente.
-
-Los manifiestos publicados registran los commits de origen, versiones y hashes de los paquetes. El manifiesto anterior se verifica criptográficamente antes de utilizarse como referencia para una publicación posterior.
-
-## Ejecución manual
-
-La ejecución manual permite reconstruir y publicar ambos canales, por ejemplo cuando cambian los repositorios externos aunque no haya habido un commit nuevo en este repositorio.
-
-Antes de habilitar una publicación inicial, comprueba que las claves públicas están incorporadas en `cambonos-keyring` y que los secretos y variables del entorno están configurados correctamente.
-
-## Requisitos y límites operativos
-
-La construcción requiere Docker y acceso a los repositorios rolling de Arch. La firma requiere GPG y los secretos del entorno protegido. El pipeline usa una imagen `archlinux:base-devel` fijada por digest, pero actualiza el entorno de construcción desde los repositorios rolling; por ello no garantiza reproducibilidad binaria entre fechas distintas.
-
-Los tests unitarios y la validación estática detectan defectos automatizables, pero no sustituyen una instalación y comprobación funcional en un sistema Arch real. La aceptación funcional se registra en la [checklist funcional](PACKAGE-TEST-CHECKLIST.md): antes del merge de `dev` a `main` deben estar verificadas todas las funciones incluidas en el alcance soportado de esa versión. Las pruebas excluidas del alcance por limitaciones documentadas y expresamente aceptadas pueden permanecer pendientes, pero nunca deben presentarse como verificadas.
+Los tests y la validación estática no sustituyen la instalación y comprobación funcional
+en un sistema Arch real. Antes de fusionar `dev` en `main`, deben estar verificadas las
+funciones incluidas en el alcance soportado de esa versión. El estado se registra en
+[PACKAGE-TEST-CHECKLIST.md](PACKAGE-TEST-CHECKLIST.md).

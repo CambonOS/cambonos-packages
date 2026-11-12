@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 """Dependency-free structural checks for the generated CambonOS GTK theme."""
 from pathlib import Path
+import json
 import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-THEMES = ("CambonOS-dark",)
+VARIANTS = {
+    "CambonOS-dark": {"window_opacity": 0.98, "multiplier": 1},
+    "CambonOS-dark-balanced": {"window_opacity": 0.88, "multiplier": 5},
+    "CambonOS-dark-transparent": {"window_opacity": 0.78, "multiplier": 10},
+}
+THEMES = tuple(VARIANTS)
+PALETTE = json.loads((ROOT / "src/palette.json").read_text())
 APIS = ("gtk-3.0", "gtk-4.0")
 errors = []
 
@@ -35,7 +42,57 @@ for theme in THEMES:
                 errors.append(f"{theme}/{api}: missing widgets.css")
                 continue
             widgets = widget_path.read_text()
-            used = set(re.findall(r"@([\w-]+)", widgets))
+            # GtkSpinner has the same CSS node and :checked state in GTK 3/4.
+            # Keep its active-only visibility and rotation behavior in sync;
+            # only the palette token name differs between GTK APIs.
+            spinner = re.search(
+                r"(?s)spinner\s*\{([^}]*)\}\s*"
+                r"spinner:checked\s*\{([^}]*)\}\s*"
+                r"@keyframes\s+cambonos-spinner-rotate\s*\{([^}]*)\}",
+                widgets,
+            )
+            if not spinner:
+                errors.append(f"{theme}/{api}: missing complete GtkSpinner state styling")
+            else:
+                base_rule, active_rule, keyframes = spinner.groups()
+                expected_color = "@accent;" if api == "gtk-3.0" else "@accent_color;"
+                if expected_color not in base_rule or "opacity: 0" not in base_rule:
+                    errors.append(f"{theme}/{api}: GtkSpinner idle styling must use the API accent and be hidden")
+                if "opacity: 1" not in active_rule or "cambonos-spinner-rotate 1s linear infinite" not in active_rule:
+                    errors.append(f"{theme}/{api}: GtkSpinner active state must be visible and animated")
+                if "-gtk-icon-transform: rotate(1turn)" not in keyframes:
+                    errors.append(f"{theme}/{api}: GtkSpinner keyframes must rotate the icon")
+            # Grid selection and rubberband selection have equivalent roles in
+            # GTK 3 GtkIconView and GTK 4 GtkGridView, despite different CSS nodes.
+            if api == "gtk-3.0":
+                selected = re.search(r"iconview\.view:selected\s*\{([^}]*)\}", widgets)
+                expected_selected_fg = "@theme_base_color"
+                expected_rubberband_border = "@accent"
+            else:
+                selected = re.search(r"gridview child:selected\s*\{([^}]*)\}", widgets)
+                expected_selected_fg = "@view_bg_color"
+                expected_rubberband_border = "@accent_color"
+            if not selected or expected_selected_fg not in selected.group(1) or "@accent_emphasis" not in selected.group(1):
+                errors.append(f"{theme}/{api}: grid/icon selection must use the shared light-accent treatment")
+            expected_rubberband_fill = "alpha(@accent, 0.22)" if api == "gtk-3.0" else "alpha(@accent_color, 0.22)"
+            rubberband_rules = re.findall(
+                r"(?s)([^{}]*\brubberband\b[^{}]*)\{([^{}]*)\}", widgets
+            )
+            rubberband_selectors = "\n".join(
+                selectors for selectors, declarations in rubberband_rules
+                if expected_rubberband_fill in declarations
+                and expected_rubberband_border in declarations
+            )
+            required_rubberband_selectors = (
+                ("rubberband", "XfdesktopIconView.view .rubberband", ".content-view rubberband",
+                 "treeview.view rubberband", "flowbox rubberband", ".rubberband")
+                if api == "gtk-3.0" else
+                ("rubberband", ".content-view > rubberband", "columnview.view > rubberband",
+                 "treeview.view > rubberband", "gridview > rubberband", "flowbox > rubberband")
+            )
+            if any(selector not in rubberband_selectors for selector in required_rubberband_selectors):
+                errors.append(f"{theme}/{api}: drag-selection rubberband selectors do not cover the supported GTK/XFCE views")
+            used = set(re.findall(r"@([\w-]+)", widgets)) - {"keyframes"}
             missing = sorted(used - defined)
             if missing:
                 errors.append(f"{theme}/{api}/{entry}: undefined colors: {', '.join(missing)}")
@@ -145,6 +202,141 @@ for theme in THEMES:
         fields = lines[2].strip().strip('",').split() if len(lines) > 2 else []
         if len(fields) != 4 or fields[:2] != ["16", "22"]:
             errors.append(f"{theme}/xfwm4/menu-{state}.xpm: expected 16x22 menu icon area")
+
+# Verify the generated opacity policy, metadata, and RGB consistency.
+def rgba_definitions(path):
+    content = path.read_text()
+    return {
+        name: (tuple(map(int, rgb.split(","))), float(alpha))
+        for name, rgb, alpha in re.findall(
+            r"@define-color\s+([\w-]+)\s+rgba\(\s*(\d+\s*,\s*\d+\s*,\s*\d+)\s*,\s*([0-9.]+)\s*\)",
+            content,
+        )
+    }
+
+reference_rgb = {}
+for theme, policy in VARIANTS.items():
+    theme_root = ROOT / "themes" / theme
+    index = (theme_root / "index.theme").read_text(errors="replace") if (theme_root / "index.theme").is_file() else ""
+    for field in (f"Name={theme}", f"GtkTheme={theme}", f"MetacityTheme={theme}"):
+        if field not in index:
+            errors.append(f"{theme}/index.theme: missing {field!r}")
+
+    for api, window_token in (("gtk-3.0", "theme_bg_color"), ("gtk-4.0", "window_bg_color")):
+        colors_path = theme_root / api / "colors-dark.css"
+        if not colors_path.is_file():
+            continue
+        definitions = rgba_definitions(colors_path)
+        if window_token not in definitions:
+            errors.append(f"{theme}/{api}/colors-dark.css: missing RGBA token {window_token}")
+            continue
+        window_alpha = definitions[window_token][1]
+        if abs(window_alpha - policy["window_opacity"]) > 1e-6:
+            errors.append(
+                f"{theme}/{api}: {window_token} alpha {window_alpha} does not match "
+                f"{policy['window_opacity']}"
+            )
+
+        rgb_map = {name: value[0] for name, value in definitions.items()}
+        key = api
+        if key in reference_rgb and rgb_map != reference_rgb[key]:
+            errors.append(f"{theme}/{api}: RGB palette differs from other variants")
+        else:
+            reference_rgb.setdefault(key, rgb_map)
+
+        for token, (_, alpha) in definitions.items():
+            if not 0.0 <= alpha <= 1.0:
+                errors.append(f"{theme}/{api}: {token} alpha {alpha} is outside 0.0..1.0")
+
+        source_tokens = {
+            "theme_bg_color": "base", "window_bg_color": "base",
+            "theme_base_color": "surface", "view_bg_color": "surface",
+            "headerbar_bg_color": "header", "popover_bg_color": "popover",
+            "tooltip_bg_color": "tooltip_bg", "scrollbar_color": "scrollbar",
+            "borders": "border", "disabled_bg_color": "disabled_bg",
+            "input_bg_color": "input", "card_bg_color": "surface_raised",
+            "dialog_bg_color": "base", "sidebar_bg_color": "surface_alt",
+        }
+        for css_token, source_token in source_tokens.items():
+            if css_token not in definitions:
+                continue
+            source_value = PALETTE["dark"].get(source_token)
+            if not isinstance(source_value, dict):
+                errors.append(f"palette.dark.{source_token}: expected an alpha-bearing color")
+                continue
+            expected_alpha = policy["window_opacity"] - (
+                1.0 - source_value["alpha"]
+            ) * policy["multiplier"]
+            actual_alpha = definitions[css_token][1]
+            if abs(actual_alpha - expected_alpha) > 1e-6:
+                errors.append(
+                    f"{theme}/{api}: {css_token} alpha {actual_alpha} does not match "
+                    f"palette policy ({expected_alpha:.4f})"
+                )
+
+        widgets_path = theme_root / api / "widgets.css"
+        if widgets_path.is_file():
+            widgets = re.sub(r"/\*.*?\*/", "", widgets_path.read_text(), flags=re.S)
+            if re.search(r"rgba\s*\(|#[0-9a-fA-F]{8}\b", widgets):
+                errors.append(
+                    f"{theme}/{api}/widgets.css: inline alpha color bypasses the canonical palette"
+                )
+
+# Verify GTK4 semantic surfaces are wired to their dedicated tokens.
+for theme in VARIANTS:
+    gtk4 = (ROOT / "themes" / theme / "gtk-4.0" / "widgets.css").read_text()
+    required_rules = {
+        "dropdown input surface": (r"dropdown,\s*combobox\s*\{[^}]*background-color:\s*@input_bg_color",),
+        "popover floating surface": (r"popover,\s*\.popover\s*\{[^}]*background-color:\s*@popover_bg_color",),
+        "tooltip floating surface": (r"tooltip\s*\{[^}]*background-color:\s*@tooltip_bg_color",),
+        "sidebar secondary surface": (r"sidebar,\s*\.sidebar,\s*\.navigation-sidebar,\s*placessidebar\s*\{[^}]*background-color:\s*@sidebar_bg_color",),
+        "spinbutton input surface": (r"spinbutton\s*\{[^}]*background-color:\s*@input_bg_color",),
+    }
+    for label, patterns in required_rules.items():
+        if not any(re.search(pattern, gtk4, re.S) for pattern in patterns):
+            errors.append(f"{theme}/gtk-4.0/widgets.css: missing {label} rule")
+
+    gtk3 = (ROOT / "themes" / theme / "gtk-3.0" / "widgets.css").read_text()
+    if not re.search(r"spinbutton\s*\{[^}]*background-color:\s*@theme_base_color", gtk3, re.S):
+        errors.append(f"{theme}/gtk-3.0/widgets.css: spinbutton outer surface is not defined")
+
+# Explicitly protect intentional transparent controls and structural containers.
+if PALETTE["dark"].get("button_bg") != "transparent" or PALETTE["dark"].get("button_border") != "transparent":
+    errors.append("palette.dark: idle button background and border must remain transparent")
+
+for theme in VARIANTS:
+    for api in APIS:
+        widgets_path = ROOT / "themes" / theme / api / "widgets.css"
+        widgets = re.sub(r"/\*.*?\*/", "", widgets_path.read_text(), flags=re.S)
+        button_selector = (
+            r"(?m)^button,\s*\.button,\s*modelbutton\s*\{[^}]*background-color:\s*@button_bg_color"
+            if api == "gtk-3.0"
+            else r"(?m)^button\s*\{[^}]*background-color:\s*@button_bg_color"
+        )
+        if not re.search(button_selector, widgets, re.S):
+            errors.append(f"{theme}/{api}/widgets.css: idle buttons must use the transparent button token")
+        if re.search(r"(?m)^box\s*\{[^}]*background-color:", widgets, re.S):
+            errors.append(f"{theme}/{api}/widgets.css: global GtkBox surface rule is forbidden")
+
+    gtk3 = (ROOT / "themes" / theme / "gtk-3.0" / "widgets.css").read_text()
+    if not re.search(r"spinbutton entry\s*\{[^}]*background-color:\s*transparent", gtk3, re.S):
+        errors.append(f"{theme}/gtk-3.0/widgets.css: SpinButton internal entry must remain transparent")
+    if not re.search(r"spinbutton button,\s*spinbutton button\.up,\s*spinbutton button\.down\s*\{[^}]*background-color:\s*transparent", gtk3, re.S):
+        errors.append(f"{theme}/gtk-3.0/widgets.css: SpinButton stepper buttons must remain transparent")
+
+    gtk4 = (ROOT / "themes" / theme / "gtk-4.0" / "widgets.css").read_text()
+    if not re.search(r"spinbutton text\s*\{[^}]*background-color:\s*transparent", gtk4, re.S):
+        errors.append(f"{theme}/gtk-4.0/widgets.css: SpinButton internal text must remain transparent")
+    if not re.search(r"spinbutton button,\s*spinbutton button\.up,\s*spinbutton button\.down\s*\{[^}]*background-color:\s*transparent", gtk4, re.S):
+        errors.append(f"{theme}/gtk-4.0/widgets.css: SpinButton stepper buttons must remain transparent")
+
+# Check the same semantic popover token is generated consistently in both GTK APIs.
+for theme in VARIANTS:
+    for api in APIS:
+        definitions = rgba_definitions(ROOT / "themes" / theme / api / "colors-dark.css")
+        token = "popover_bg_color"
+        if token not in definitions:
+            errors.append(f"{theme}/{api}/colors-dark.css: missing {token}")
 
 if errors:
     print("CambonOS theme validation: FAILED")

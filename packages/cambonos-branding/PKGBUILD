@@ -1,5 +1,5 @@
 pkgname=cambonos-branding
-pkgver=0.1.3
+pkgver=1.0.0
 pkgrel=1
 pkgdesc="CambonOS visual identity assets"
 arch=('any')
@@ -13,7 +13,6 @@ backup=('etc/dialogrc')
 package() {
   local branding_dir="$pkgdir/usr/share/cambonos/branding"
   local udev_rules_dir="$pkgdir/usr/lib/udev/rules.d"
-  local libalpm_hooks_dir="$pkgdir/usr/share/libalpm/hooks"
 
   install -Dm644 "$startdir/files/dialogrc" \
     "$pkgdir/etc/dialogrc"
@@ -27,23 +26,10 @@ package() {
     "$branding_dir/cambonos-icon.png"
   install -Dm644 "$startdir/files/cambonos-text.png" \
     "$branding_dir/cambonos-text.png"
-  install -Dm644 "$startdir/files/plymouth-background.png" \
-    "$branding_dir/plymouth-background.png"
-  base64 --decode "$startdir/files/progress-background.png.base64" \
-    > "$branding_dir/progress-background.png"
-  base64 --decode "$startdir/files/progress-foreground.png.base64" \
-    > "$branding_dir/progress-foreground.png"
   install -Dm644 "$startdir/files/console-colors" \
     "$branding_dir/console-colors"
   install -Dm644 "$startdir/files/90-cambonos-console-colors.rules" \
     "$udev_rules_dir/90-cambonos-console-colors.rules"
-  install -Dm644 "$startdir/files/xfce-terminalrc" \
-    "$pkgdir/usr/share/cambonos/branding/xfce-terminalrc"
-  install -Dm755 "$startdir/files/lib/manage-xfce-terminal" \
-    "$pkgdir/usr/lib/cambonos-branding/manage-xfce-terminal"
-  install -Dm644 "$startdir/files/hooks/cambonos-branding-xfce-terminal.hook" \
-    "$libalpm_hooks_dir/cambonos-branding-xfce-terminal.hook"
-
   install -Dm644 "$startdir/files/LICENSE" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 
