@@ -1,32 +1,28 @@
 # cambonos-gtk-theme
 
 Tema oscuro de CambonOS para GTK 3, GTK 4 y decoraciones de ventanas Xfwm4.
-Este documento reúne la documentación del paquete, su estructura, alcance,
-limitaciones, construcción y validación. Los recursos de `files/` son el
-contenido fuente del paquete; la documentación de desarrollo permanece en el
-repositorio y no se instala en el sistema.
+El paquete genera tres variantes seleccionables a partir de una única paleta y
+una única plantilla visual. Las variantes comparten RGB, geometría, widgets,
+iconografía y recursos Xfwm4; únicamente cambia la política de transparencia
+aplicada a los tokens de color.
 
-**Versión del paquete Arch:** `0.6.2-11`.
+**Versión del paquete Arch:** `0.8.0-1`.
 
-**Versión del tema:** `0.6.2`.
+## Variantes distribuidas
 
-## Tema y contenido
+| Tema | Opacidad de ventanas | Multiplicador | Uso previsto |
+|---|---:|---:|---|
+| `CambonOS-dark-Conservative` | 98 % | 1 | Ventanas prácticamente opacas; transparencia ambiental discreta. |
+| `CambonOS-dark-Balanced` | 88 % | 5 | Perfil equilibrado, equivalente al nivel de opacidad de ventana utilizado hasta ahora. |
+| `CambonOS-dark-Transparent` | 78 % | 10 | Mayor transparencia del escritorio, manteniendo los textos y controles opacos. |
 
-El paquete distribuye una única variante seleccionable: `CambonOS-dark`.
+Cada variante se instala como un tema independiente y seleccionable desde XFCE.
+Los nombres se mantienen diferenciados para GTK y Xfwm4, de modo que ambas
+selecciones puedan configurarse con el mismo identificador.
 
-Incluye:
+## Fuente única y política de transparencia
 
-- **GTK 3:** hojas de estilo y recursos en `gtk-3.0/`.
-- **GTK 4:** hojas de estilo y recursos en `gtk-4.0/`.
-- **Xfwm4:** decoraciones de ventanas y recursos XPM en `xfwm4/`.
-- **Integración XFCE:** selectores GTK para componentes como el panel y
-  Whisker Menu, sujetos a la compatibilidad de cada aplicación.
-
-Los puntos de entrada `gtk.css` y `gtk-dark.css` de GTK 3 y GTK 4 utilizan la
-misma paleta oscura. No se distribuye una variante clara ni una implementación
-GTK 2.
-
-### Estructura del paquete
+La estructura de desarrollo es:
 
 ```text
 packages/cambonos-gtk-theme/
@@ -41,121 +37,137 @@ packages/cambonos-gtk-theme/
     │   ├── build-theme.py
     │   └── validate-theme.py
     └── themes/
-        └── CambonOS-dark/
+        └── CambonOS-dark/       # Plantilla canónica, no se instala directamente
             ├── index.theme
             ├── gtk-3.0/
             ├── gtk-4.0/
             └── xfwm4/
 ```
 
-`src/palette.json` es la paleta oscura canónica. El generador
-`tools/build-theme.py` produce los archivos `colors-dark.css` para GTK 3 y
-GTK 4 a partir de ella. No se deben editar manualmente esos archivos
-generados: los cambios de color deben realizarse en la paleta y regenerarse
-mediante la herramienta.
+`src/palette.json` es la única fuente de colores. `themes/CambonOS-dark/` es
+la plantilla visual común: contiene los estilos de widgets, los recursos GTK,
+las decoraciones Xfwm4 y la estructura de los temas generados. No representa
+una cuarta variante ni se instala directamente.
 
-`tools/validate-theme.py` realiza comprobaciones estructurales de las hojas de
-estilo y los recursos Xfwm4. Estas comprobaciones detectan problemas de
-estructura, pero no sustituyen las pruebas visuales en una sesión real.
+`tools/build-theme.py` genera los tres directorios finales:
 
-## Compatibilidad y limitaciones
+- `themes/CambonOS-dark-Conservative/`
+- `themes/CambonOS-dark-Balanced/`
+- `themes/CambonOS-dark-Transparent/`
 
-- **GTK 3:** se incluyen hojas de estilo y recursos propios.
-- **GTK 4:** se incluyen hojas de estilo y recursos propios para aplicaciones
-  GTK 4 compatibles.
-- **libadwaita:** algunas aplicaciones pueden imponer su propia apariencia y
-  no respetar temas GTK externos. No se garantiza que adopten completamente
-  los estilos de `CambonOS-dark`.
-- **GTK 2:** no está soportado; no se incluye `gtk-2.0/gtkrc`.
-- **Xfwm4:** se incluyen `themerc` y recursos gráficos. La validación
-  estructural no demuestra por sí sola su representación correcta; debe
-  comprobarse en la versión de XFCE/Xfwm4 objetivo.
-- **Iconos y cursores:** son componentes independientes y requieren sus
-  propios temas o paquetes.
-- **Qt:** no está cubierto por este paquete; requiere una solución específica,
-  por ejemplo un tema Qt o Kvantum.
-- **Otros elementos del escritorio:** sonidos, fondos de pantalla, greeter,
-  pantalla de bloqueo y recursos de inicio de sesión quedan fuera de su
-  alcance.
+La política se define en `VARIANTS` dentro del builder:
 
-La presencia de recursos GTK 3 y GTK 4 no implica que todas las aplicaciones
-usen cada selector o estilo de la misma manera. El resultado depende también
-de la versión de GTK, XFCE, Xfwm4 y de las decisiones visuales de cada
-aplicación.
+```python
+VARIANTS = {
+    "Conservative": {"window_opacity": 0.98, "multiplier": 1},
+    "Balanced": {"window_opacity": 0.88, "multiplier": 5},
+    "Transparent": {"window_opacity": 0.78, "multiplier": 10},
+}
+```
+
+Los valores `alpha` de `palette.json` representan una ponderación de
+transparencia adicional respecto a la superficie de ventana, no un alfa CSS
+final. `1.0` significa que el token sigue exactamente la opacidad de ventana;
+los valores ligeramente inferiores introducen transparencia adicional en
+bordes, popovers, tooltips y barras de desplazamiento.
+
+Para cada token con alfa se aplica:
+
+```text
+alpha_generado = window_opacity - (1 - alpha_fuente) * multiplier
+```
+
+Así, la opacidad de las ventanas coincide exactamente con el 98 %, 88 % y
+78 % fijado para cada perfil, mientras que los elementos flotantes mantienen
+una transparencia mayor. La transformación se valida antes de generar los
+archivos: ningún alfa puede quedar fuera del intervalo 0.0–1.0.
+
+Los colores RGB, textos, acentos, indicadores, estados, geometría y estilos de
+widgets no se escalan. Los textos e indicadores mantienen sus colores opacos
+para preservar su contraste. No deben introducirse valores RGBA directamente
+en `widgets.css`: toda transparencia debe proceder de `palette.json`.
+
+GTK 3 y GTK 4 generan sus propios `colors-dark.css` a partir de la misma
+paleta transformada. Las diferencias de selectores y widgets entre ambas
+versiones se conservan en sus respectivas hojas `widgets.css`.
+
+### Xfwm4
+
+Las tres variantes reutilizan los mismos recursos gráficos y la misma
+configuración `themerc`. La opacidad de las sombras de Xfwm4 es independiente
+de los alfas CSS de GTK y no se escala con los multiplicadores. Esta separación
+evita confundir la transparencia de superficies GTK con la composición de
+sombras y decoraciones de ventana.
 
 ## Construcción e instalación
 
-Este directorio es un paquete Arch gestionado por el repositorio CambonOS.
-El directorio `files/` contiene el payload fuente consumido por el `PKGBUILD`;
-no es un paquete independiente y no contiene otro `PKGBUILD` ni `.SRCINFO`.
+El directorio `files/` contiene el payload fuente consumido por el `PKGBUILD`.
+Durante `build()`, se copia a un directorio de construcción, se generan las
+tres variantes y se valida cada árbol GTK 3/GTK 4/Xfwm4. `package()` instala
+únicamente los tres temas generados en `/usr/share/themes/` y la licencia en
+`/usr/share/licenses/cambonos-gtk-theme/LICENSE`.
 
-Durante `build()`, el `PKGBUILD` copia el contenido de `files/` al directorio
-de construcción, genera los CSS y ejecuta el validador. Las herramientas de
-construcción se utilizan en ese proceso y no se instalan en el sistema.
-
-`package()` instala únicamente el directorio `CambonOS-dark` en
-`/usr/share/themes/` y la licencia en
-`/usr/share/licenses/cambonos-gtk-theme/LICENSE`. El README, el changelog,
-la paleta fuente y las herramientas de desarrollo permanecen en el
-repositorio y no forman parte del paquete instalado.
-
-## Activación en XFCE
-
-El paquete no cambia la configuración global de GTK ni fuerza la selección
-del tema. Para activarlo, selecciona `CambonOS-dark` en:
-
-- **Apariencia → Estilo**, para el tema de aplicaciones GTK.
-- **Gestor de ventanas → Estilo**, para las decoraciones Xfwm4.
-
-También se puede seleccionar mediante `xfconf-query`:
-
-```bash
-xfconf-query -c xsettings -p /Net/ThemeName -s CambonOS-dark
-xfconf-query -c xfwm4 -p /general/theme -s CambonOS-dark
-```
-
-La selección de GTK y la de Xfwm4 son independientes. El paquete conserva el
-nombre `CambonOS-dark` para mantener la compatibilidad con configuraciones y
-componentes existentes.
-
-## Desarrollo y validación
-
-Desde `packages/cambonos-gtk-theme/files/`, ejecuta:
+Para generar y validar manualmente desde `packages/cambonos-gtk-theme/files/`:
 
 ```bash
 python tools/build-theme.py
 python tools/validate-theme.py
 ```
 
-El generador actualiza los archivos CSS derivados de `src/palette.json`; el
-validador comprueba la estructura de los recursos. Ejecuta ambos comandos
-después de modificar la paleta o los recursos del tema.
+El builder regenera los directorios de variantes. La plantilla
+`themes/CambonOS-dark/` permanece intacta y no debe editarse como si fuera una
+variante instalada. Los cambios visuales se realizan en la plantilla y los
+cambios de color/transparencia en `src/palette.json`.
 
-### Comprobaciones en tiempo de ejecución
+## Activación en XFCE
 
-Las comprobaciones automatizadas no sustituyen la validación en una sesión
-XFCE real. Para aceptar cambios visuales, comprueba como mínimo:
+Selecciona el mismo nombre de variante en:
 
-1. Seleccionar `CambonOS-dark` en Apariencia y verificar aplicaciones GTK 3.
+- **Apariencia → Estilo**, para GTK.
+- **Gestor de ventanas → Estilo**, para Xfwm4.
+
+También se puede seleccionar mediante `xfconf-query` (ejemplo Balanced):
+
+```bash
+xfconf-query -c xsettings -p /Net/ThemeName -s CambonOS-dark-Balanced
+xfconf-query -c xfwm4 -p /general/theme -s CambonOS-dark-Balanced
+```
+
+Sustituye `Balanced` por `Conservative` o `Transparent` para utilizar otro
+perfil. La selección GTK y Xfwm4 sigue siendo independiente.
+
+## Compatibilidad y limitaciones
+
+- **GTK 3 y GTK 4:** se incluyen hojas de estilo y recursos propios.
+- **libadwaita:** algunas aplicaciones pueden imponer su propia apariencia y
+  no respetar temas GTK externos. No se garantiza que adopten completamente
+  los estilos de estas variantes.
+- **GTK 2:** no está soportado; no se incluye `gtk-2.0/gtkrc`.
+- **Xfwm4:** se incluyen `themerc` y recursos gráficos. La validación
+  estructural no demuestra por sí sola su representación correcta; debe
+  comprobarse en la versión de XFCE/Xfwm4 objetivo.
+- **Compositor:** la transparencia real hacia el escritorio depende de que la
+  sesión disponga de composición y soporte RGBA adecuados. Los alfas CSS no
+  sustituyen la configuración del compositor.
+- **Iconos, cursores, Qt y otros elementos del escritorio:** quedan fuera del
+  alcance de este paquete y requieren componentes independientes.
+
+## Validación visual
+
+Las comprobaciones automatizadas no sustituyen las pruebas en una sesión XFCE
+real. Para aceptar cambios visuales, comprueba como mínimo:
+
+1. Seleccionar las tres variantes y verificar aplicaciones GTK 3.
 2. Verificar por separado aplicaciones GTK 4 compatibles.
 3. Revisar Thunar, Mousepad, XFCE Terminal, Ristretto, XFCE Settings, el panel
-   y Whisker Menu cuando estén disponibles en el entorno de prueba.
-4. Comprobar foco, selección, estados deshabilitados, hover, pressed y
-   backdrop en controles relevantes.
+   y Whisker Menu cuando estén disponibles.
+4. Comprobar foco, selección, estados deshabilitados, hover, pressed y backdrop.
 5. Revisar contraste y legibilidad de texto, menús, tooltips, entradas y
-   controles, incluidas las superficies translúcidas.
-6. En Xfwm4, comprobar ventanas activas e inactivas y los estados de los
-   botones de menú, minimizar, maximizar/restaurar, cerrar, sombrear y fijar.
-7. Comprobar bordes, esquinas, título y redimensionado de ventanas.
-8. Registrar la versión de CambonOS, GTK, XFCE y Xfwm4 utilizada en la
-   validación.
+   controles, especialmente en `CambonOS-dark-Transparent`.
+6. En Xfwm4, comprobar ventanas activas/inactivas, botones, bordes, esquinas,
+   título y redimensionado en las tres variantes.
+7. Confirmar que el compositor está activo y registrar las versiones de
+   CambonOS, GTK, XFCE y Xfwm4 utilizadas.
 
 Las aplicaciones libadwaita deben evaluarse como una excepción conocida: que
 no respeten el tema externo no implica necesariamente un defecto del paquete.
-
-## Criterio de alcance
-
-Este paquete proporciona el tema GTK y las decoraciones Xfwm4 descritas
-anteriormente. No pretende ser un paquete completo de personalización del
-escritorio. Los temas de iconos, cursores, Qt, sonidos, fondos, greeter y
-pantalla de bloqueo deben gestionarse mediante componentes independientes.

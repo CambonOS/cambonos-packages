@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0
+
+- Replaced the single installed dark theme with Conservative (98%), Balanced (88%) and Transparent (78%) profiles generated from one canonical palette and theme template.
+- Added a shared opacity policy with per-variant multipliers 1, 5 and 10; auxiliary surfaces retain additional transparency relative to the window background.
+- Kept RGB colors, typography, widget styling and Xfwm4 assets identical across variants; Xfwm4 shadow opacity remains independent from GTK alpha.
+- Extended the builder to generate complete GTK 3, GTK 4 and Xfwm4 theme directories and unique theme metadata.
+- Extended validation to check all generated variants, window opacity targets, RGBA ranges, RGB consistency and absence of inline alpha colors in widget stylesheets.
+- Updated the Arch package to install all three generated themes.
+
+
 ## 0.6.2
 
 - Added explicit symbolic glyphs for checked, radio-selected and indeterminate GTK 3 indicators; removed hover/selected indicator fills that forced unchecked menu indicators to white.
