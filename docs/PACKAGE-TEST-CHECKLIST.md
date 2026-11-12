@@ -1,15 +1,13 @@
 # Checklist funcional de paquetes CambonOS
 
-Este documento registra las funciones de los paquetes y si han sido verificadas en un entorno real. No es una guía de instalación ni una lista de tareas de publicación.
-
-Esta checklist es complementaria a la suite automatizada descrita en [TESTING.md](TESTING.md): las pruebas automatizadas verifican contratos esenciales y errores detectables sin instalar el sistema; esta checklist registra validaciones funcionales que requieren un sistema Arch real, una sesión gráfica o un arranque.
-
-Marca una función únicamente cuando se haya comprobado su funcionamiento en un sistema Arch de pruebas. Una función implementada pero no probada debe permanecer pendiente. Antes de fusionar `dev` en `main`, deben estar verificadas todas las funciones que formen parte del alcance soportado de esa versión. Las pruebas que dependan de capacidades todavía no soportadas pueden permanecer pendientes únicamente si la limitación está documentada y su exclusión del alcance ha sido aceptada expresamente; no deben marcarse como verificadas. Toda función nueva debe añadirse aquí y probarse antes de ese merge.
+Esta checklist registra las funciones de cada paquete que se han comprobado en un sistema Arch real. Complementa la suite automatizada descrita en [TESTING.md](TESTING.md); no es una guía de instalación ni una lista de tareas de publicación.
 
 - `[ ]` Pendiente de verificación funcional.
 - `[x]` Verificada en un entorno real.
 
-Anota el entorno y la fecha de la comprobación en el registro del paquete. Si una función no existe todavía, no debe marcarse como verificada.
+Marca una función únicamente después de comprobarla. Antes de fusionar `dev` en `main`, deben estar verificadas las funciones incluidas en el alcance soportado de esa versión. Una limitación puede quedar pendiente si está documentada y su exclusión del alcance se ha aceptado expresamente. Toda función nueva que requiera validación real debe añadirse a esta checklist.
+
+Registra el entorno, la fecha y las observaciones de cada comprobación. La existencia de archivos o una prueba estática no demuestra por sí sola el funcionamiento real.
 
 ## cambonos-branding
 
@@ -90,7 +88,7 @@ visuales en una sesión real.
 - [x] Pacman conserva la verificación obligatoria de firmas de los repositorios CambonOS.
 - [x] La integración con `/etc/pacman.conf` funciona sin eliminar configuraciones manuales del administrador.
 - [x] La transición desde la configuración anterior `cambonos-repo` conserva el funcionamiento esperado.
-- [X] Comprobar que en dev activa el repo testing y que en main activa el repo stable. Se hace mediante el workflow.
+- [x] El snapshot `dev` genera la configuración del canal `testing` y el snapshot `main` genera la del canal `stable`.
 
 ## cambonos-grub
 
@@ -118,7 +116,7 @@ visuales en una sesión real.
 - [x] HiDPI se detecta y aplica correctamente.
 - [x] La selección de sesión permite iniciar los escritorios instalados sin imponer una sesión predeterminada.
 - [x] La instalación habilita LightDM cuando no existe otro display manager seleccionado.
-- [X] La instalación conserva un display manager previamente seleccionado.
+- [x] La instalación conserva un display manager previamente seleccionado.
 - [x] Las actualizaciones y la retirada respetan el estado de activación del servicio.
 - [x] Las configuraciones locales se conservan durante las actualizaciones y la retirada.
 
@@ -162,6 +160,6 @@ Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última
 | `cambonos-plymouth` | VM (iso-install) | 07/11/2026 | Cambios recientes pendientes de verificación funcional (09/11/2026) |
 | `cambonos-base` | VM (iso-install) | 07/11/2026 | — |
 | `cambonos-keyring` | VM (iso-install) | 07/11/2026 | — |
-| `cambonos-lightdm` | VM (iso-install) | 08/11/2026 | - |
+| `cambonos-lightdm` | VM (iso-install) | 08/11/2026 | — |
 | `cambonos-gtk-theme` | VM (iso-install) | 08/11/2026 | GTK 3/4 y retirada comprobados; validación visual completa de Xfwm4, selección XFCE y contraste/translucidez pendientes |
 | `cambonos-mkiso` | Pendiente de prueba real | — | Verificaciones funcionales pendientes |

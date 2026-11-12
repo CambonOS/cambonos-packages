@@ -1,103 +1,68 @@
-# Filosofía y mantenimiento de las pruebas
+# Pruebas automatizadas
 
-La suite de `tests/` protege **el comportamiento esencial y los contratos del
-proyecto**, no la forma concreta en que se implementan. Su objetivo es detectar
-regresiones funcionales y errores que puedan romper la validación, construcción,
-firma o publicación de CambonOS Packages.
+La suite de `tests/` protege los contratos esenciales de CambonOS Packages y detecta
+regresiones que puedan afectar a los paquetes, las herramientas y la automatización.
+Comprueba el comportamiento observable, no detalles privados de implementación.
 
-## Principios
+## Alcance
 
-1. **Probar resultados, no detalles internos.** Una prueba debe describir qué
-   capacidad ofrece un paquete o qué garantía proporciona una herramienta.
-   No debe exigir nombres privados de funciones, marcadores internos,
-   secuencias exactas de comandos, nombres de hooks o una estructura de
-   implementación si existen varias formas válidas de cumplir el contrato.
-2. **Contratos esenciales por paquete.** Cada paquete debe tener pruebas que
-   representen su propósito: recursos imprescindibles, identidad, configuración
-   o integración crítica. No se pretende enumerar todos sus archivos ni
-   duplicar el contenido del PKGBUILD.
-3. **Pruebas transversales.** La suite comprueba sintaxis Python, Bash/PKGBUILD,
-   scripts de instalación y fragmentos Zsh/Fish cuando los intérpretes están
-   disponibles; también valida recursos JSON, enlaces simbólicos y la
-   estructura esencial del workflow.
-4. **La pipeline es una interfaz pública del repositorio.** Las pruebas deben
-   detectar errores de sintaxis y fallos de cableado que impidan ejecutar los
-   trabajos esenciales, sin congelar nombres de pasos, orden incidental o
-   detalles de implementación que puedan cambiar sin alterar el comportamiento.
-5. **Las pruebas automatizadas no sustituyen las pruebas reales.** La
-   instalación, actualización, retirada, arranque, escritorio y comportamiento
-   visual se registran en [PACKAGE-TEST-CHECKLIST.md](PACKAGE-TEST-CHECKLIST.md).
-6. **Evitar afirmaciones no demostradas.** Si una capacidad no puede probarse
-   en el entorno automatizado, debe quedar documentada como validación manual
-   pendiente; nunca debe marcarse como cubierta por una prueba estática.
+La suite cubre tres áreas:
 
-## Qué debe probarse
+- **Paquetes:** identidad, metadatos, archivos imprescindibles, configuración e
+  integraciones cuyo fallo supondría una regresión.
+- **Herramientas y pipeline:** comandos, políticas de publicación, sintaxis ejecutable y
+  contratos esenciales de los workflows.
+- **Recursos:** validez de datos estructurados, enlaces simbólicos y coherencia de
+  archivos utilizados por los paquetes.
 
-- **Por paquete:** identidad y metadatos mínimos, entregables que materializan
-  su función y garantías de alto nivel que serían una regresión si desaparecen.
-- **Transversalmente:** sintaxis de fuentes ejecutables, validez de recursos
-  estructurados, integridad básica de enlaces y coherencia mínima del workflow.
-- **Herramientas del repositorio:** comportamiento observable de sus comandos
-  y garantías de seguridad/publicación cuando sean relevantes. Las pruebas
-  deben invocar interfaces públicas o comprobar resultados, no acoplarse a
-  helpers privados.
+Las pruebas pueden comprobar estructura cuando esta protege un requisito real, por
+ejemplo que un metapaquete no instale archivos o que Pacman exija firmas. Deben evitar
+imponer una secuencia de comandos, nombre de función auxiliar, hook o estructura interna cuando
+varias implementaciones pueden satisfacer el mismo contrato.
 
-## Qué debe evitarse
+## Límites
 
-- Comprobar el texto literal de una implementación cuando basta con verificar
-  el resultado.
-- Exigir que exista o no exista una función, hook, archivo auxiliar o marcador
-  por razones que no formen parte del contrato funcional.
-- Replicar el PKGBUILD línea por línea en los tests.
-- Convertir una decisión temporal de arquitectura en una regla permanente.
-- Marcar como funcionalmente verificada una capacidad solo porque sus archivos
-  existen o su sintaxis es correcta.
+Las pruebas automatizadas no sustituyen la validación funcional en un sistema Arch real.
+La instalación, actualización, retirada, arranque, sesión gráfica y comportamiento
+visual se registran en [PACKAGE-TEST-CHECKLIST.md](PACKAGE-TEST-CHECKLIST.md).
 
-Una prueba estructural está justificada cuando protege un requisito real
-(por ejemplo, que un metapaquete no instale archivos o que la configuración de
-Pacman exija firmas). Debe explicar el requisito y no imponer más restricciones
-de las necesarias.
+No debe marcarse una capacidad como verificada solo porque sus archivos existan o su
+sintaxis sea correcta. Si una comprobación requiere Arch, Pacman, systemd, una sesión
+gráfica o un arranque real, debe realizarse en un entorno de integración apropiado o
+quedar pendiente en la checklist.
 
-## Obligación de actualizar las pruebas
+La suite debe ser determinista, no necesitar red, no modificar el sistema anfitrión y no
+requerir privilegios.
 
-**Todo cambio en un paquete, sus dependencias, hooks, scripts, recursos
-ejecutables o archivos de configuración debe incluir una revisión explícita de
-las pruebas afectadas.** La revisión puede concluir que no hace falta modificar
-ninguna prueba, pero esa conclusión debe ser deliberada: se debe comprobar si
-el cambio altera un contrato esencial o introduce un nuevo riesgo de sintaxis o
-de pipeline.
+## Mantenimiento de las pruebas
 
-**Todo cambio en `scripts/`, dependencias de construcción, workflows,
-configuración de CI o proceso de publicación debe revisar las pruebas
-transversales y los contratos de pipeline.**
+Todo cambio en un paquete, sus dependencias, hooks, scripts, recursos ejecutables o
+configuración requiere revisar las pruebas afectadas. La revisión puede concluir que no
+hace falta modificarlas, pero esa conclusión debe ser deliberada.
+
+Los cambios en `scripts/`, dependencias de construcción, workflows, configuración de CI
+o publicación requieren revisar también las pruebas transversales y los contratos del
+pipeline.
 
 En particular:
 
-- Una funcionalidad nueva requiere un contrato automatizado cuando pueda
-  verificarse sin un sistema completo; además, debe añadirse a la checklist
-  funcional si necesita validación real.
-- Una corrección de bug debe añadir o adaptar una prueba que reproduzca el
-  comportamiento incorrecto cuando sea viable.
-- La eliminación o sustitución de una prueba exige justificar que el contrato
-  queda cubierto de otra manera o que ha dejado de formar parte del alcance.
-- No se deben modificar tests únicamente para hacer pasar una implementación
-  que incumple el comportamiento esperado.
-- Los cambios de paquetes y pipeline deben revisar la suite en el mismo cambio
-  Git; no se debe posponer esa revisión a un commit futuro.
+- Añade una prueba automatizada para las nuevas funciones que puedan verificarse sin un
+  sistema completo.
+- Añade o adapta una prueba que reproduzca el comportamiento incorrecto cuando se
+  corrige un bug y sea viable automatizarlo.
+- Añade a la checklist las funciones nuevas que necesiten validación real.
+- Justifica la eliminación o sustitución de una prueba indicando cómo queda cubierto el
+  contrato o por qué deja de formar parte del alcance.
+- No cambies pruebas para ocultar un incumplimiento funcional.
 
-## Ejecución local y CI
+## Ejecución local
 
-Ejecutar desde la raíz:
+Desde la raíz del repositorio:
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
-Requisitos: Python 3, Bash y PyYAML. Las comprobaciones Zsh y Fish se ejecutan
-si los intérpretes están instalados. El workflow instala ambos para que esas
-comprobaciones no se omitan en CI.
-
-La suite debe ser determinista, no necesitar red, no modificar el sistema
-anfitrión y no requerir privilegios. Las pruebas que necesiten Arch Linux,
-Pacman, una sesión gráfica, systemd o arranque real pertenecen a entornos de
-integración separados o a la checklist funcional.
+Requisitos mínimos: Python 3, Bash y PyYAML. Las comprobaciones de Zsh y Fish se
+ejecutan si sus intérpretes están instalados. El workflow de CI instala ambos para que
+esas comprobaciones no se omitan.

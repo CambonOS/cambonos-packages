@@ -1,20 +1,20 @@
 # cambonos-branding
 
-Recursos visuales oficiales de CambonOS para aplicaciones, instaladores y componentes del escritorio.
+Recursos visuales y paletas oficiales de CambonOS para el sistema y sus aplicaciones.
 
-## Funciones
+## Funcionalidad
 
-- Iconos y logotipos en SVG y PNG, incluido el icono de 1024x1024 y los recursos usados por Plymouth.
-- Fondo 4K y recursos gráficos de la barra de progreso de Plymouth.
-- Paleta ANSI de CambonOS aplicada a las consolas virtuales.
-- Tema global de CambonOS para `dialog` en `/etc/dialogrc`.
-- Predeterminado global de colores para Xfce Terminal cuando está instalado.
+- Logotipos e iconos en SVG y PNG, fondos y recursos gráficos utilizados por otros
+  componentes.
+- Paleta ANSI de CambonOS para las consolas virtuales.
+- Tema global de `dialog` mediante `/etc/dialogrc`.
+- Colores predeterminados de Xfce Terminal cuando está instalado.
 
-La integración de Xfce Terminal modifica solo los valores globales de paleta,
-fondo y texto en `/etc/xdg/xfce4/terminal/terminalrc`. Conserva las demás
-opciones y las configuraciones de usuario; al desinstalar `xfce4-terminal`
-restaura los valores globales anteriores.
+La integración de Xfce Terminal modifica únicamente los valores globales de paleta,
+fondo y texto en `/etc/xdg/xfce4/terminal/terminalrc`. Conserva el resto de opciones y
+las preferencias de usuario. Al retirar `xfce4-terminal` o `cambonos-branding`, restaura
+los valores globales anteriores que administra.
 
 ## Dependencias
 
-`bash`, `coreutils`, `gawk`, `kbd`.
+`bash`, `coreutils`, `gawk` y `kbd`.

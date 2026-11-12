@@ -1,40 +1,44 @@
-# CambonOS GTK Theme — Opacity Policy
+# Política de opacidad del tema GTK de CambonOS
 
-This package generates three GTK theme profiles from one canonical palette.
+El paquete genera tres perfiles GTK a partir de una única paleta y plantilla canónicas.
 
-## Profiles
+## Perfiles
 
-| Theme | Window opacity | Transparency multiplier |
+| Tema | Opacidad de ventana | Multiplicador de transparencia |
 |---|---:|---:|
-| `CambonOS-dark` | 98% | 1 |
-| `CambonOS-dark-balanced` | 88% | 5 |
-| `CambonOS-dark-transparent` | 78% | 10 |
+| `CambonOS-dark` | 98 % | 1 |
+| `CambonOS-dark-balanced` | 88 % | 5 |
+| `CambonOS-dark-transparent` | 78 % | 10 |
 
-The base `CambonOS-dark` theme is the Conservative profile and preserves the
-historical default theme name. The other profiles are generated alternatives.
+`CambonOS-dark` es el perfil Conservador y conserva el nombre predeterminado histórico.
+Los otros dos perfiles son variantes generadas.
 
-## Surface policy
+## Política de superficies
 
-- Main windows and primary content/input surfaces use the profile's window
-  opacity.
-- Secondary and floating surfaces use their semantic palette tokens and are
-  transformed by the profile multiplier.
-- Text, icons, accents, and functional indicators remain opaque unless a
-  specific design token states otherwise.
-- Flat buttons and structural GTK containers remain transparent where their
-  parent provides the visible surface.
-- Internal nodes such as `GtkBox` children must not receive a global background
-  merely because GTK Inspector reports a transparent computed background.
-- Popovers, menus, and tooltips are independent floating surfaces.
-- XFWM4 shadow opacity is independent from GTK widget background alpha.
+- Las ventanas y las superficies principales de contenido y entrada utilizan la opacidad
+  del perfil.
+- Las superficies secundarias y flotantes utilizan los tokens semánticos de la paleta y
+  se transforman con el multiplicador del perfil.
+- El texto, los iconos, los acentos y los indicadores funcionales permanecen opacos,
+  salvo que un token de diseño indique expresamente lo contrario.
+- Los botones planos y los contenedores GTK estructurales permanecen transparentes
+  cuando heredan la superficie visible de su elemento padre.
+- Los popovers, menús y tooltips son superficies flotantes independientes.
+- La opacidad de las sombras de Xfwm4 es independiente del alfa de los fondos GTK.
 
-## Implementation rules
+## Reglas de implementación
 
-All generated alpha values originate in `files/src/palette.json` and are
-transformed by `files/tools/build-theme.py`. GTK stylesheets must consume
-generated palette tokens rather than introducing ad-hoc RGBA values.
+Los valores alfa se definen en `src/palette.json` y se transforman mediante
+`tools/build-theme.py`. Las hojas de estilo GTK deben consumir los tokens generados; no
+deben introducir colores RGBA ad hoc.
 
-The validator checks generated theme structure, profile output, and the
-documented transparency exceptions. GTK's runtime widget tree remains
-context-dependent: a transparent structural node is valid when it inherits
-the intended visible surface from its parent.
+El generador aplica a cada token con alfa la transformación:
+
+```text
+alpha_generado = opacidad_ventana - (1 - alpha_fuente) * multiplicador
+```
+
+El validador comprueba la estructura generada, los perfiles y las excepciones de
+transparencia documentadas. Un nodo GTK estructural transparente puede ser correcto si
+hereda la superficie prevista de su padre; el árbol de widgets real depende del contexto
+de cada aplicación.

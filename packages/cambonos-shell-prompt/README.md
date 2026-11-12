@@ -2,16 +2,20 @@
 
 Configuración de Starship que proporciona el prompt visual de CambonOS.
 
-## Funciones
+## Funcionalidad
 
-- Prompt de dos líneas con contexto Git, estado de comandos y datos del entorno.
-- Los colores usan nombres ANSI y siguen la paleta activa del terminal.
-- Las consolas virtuales Linux (`/dev/ttyN`) usan un perfil con símbolos ASCII; los emuladores (`/dev/pts/*`) conservan el perfil visual actual.
+- Prompt de dos líneas con contexto Git, estado de comandos e información del entorno.
+- Colores basados en nombres ANSI para seguir la paleta activa del terminal.
 - Integración con Bash, Zsh y Fish.
-- Respeta la configuración personal del usuario.
+- Perfil compatible con consolas virtuales Linux (`/dev/ttyN`); los emuladores
+  (`/dev/pts/*`) mantienen el perfil visual habitual.
+- Respeta la configuración personal de Starship del usuario.
+
+El paquete proporciona los fragmentos de integración comunes. La integración de Zsh se
+completa con `cambonos-zsh`.
 
 ## Dependencias
 
-`ttf-nerd-fonts-symbols-mono` proporciona los glifos de Nerd Fonts utilizados por los símbolos del prompt en terminales monoespaciadas.
+Obligatorias: `starship`, `bash`, `util-linux` y `ttf-nerd-fonts-symbols-mono`.
 
-`starship`, `bash`, `util-linux`, `ttf-nerd-fonts-symbols-mono`.
+Opcional: `fish` para su integración automática.

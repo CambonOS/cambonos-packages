@@ -1,140 +1,137 @@
-# CambonOS Package Versioning (CPV)
+# Versionado de paquetes CambonOS (CPV)
 
-**Specification: CPV 1.0**
+**Especificación: CPV 1.0**
 
-CPV is the versioning policy for packages maintained by CambonOS. It is
-SemVer-inspired, but deliberately uses Arch Linux package fields directly.
-It does not replace pacman's version model.
+CPV define la política de versiones de los paquetes mantenidos por CambonOS. Está
+inspirada en SemVer, pero utiliza directamente los campos de versión de Arch Linux y no
+sustituye el modelo de versiones de Pacman.
 
-## Version format
+## Formato
 
-Every CambonOS `PKGBUILD` must use:
+Todos los `PKGBUILD` de CambonOS deben utilizar:
 
 ```bash
 pkgver=MAJOR.MINOR.PATCH
 pkgrel=1
-# epoch is omitted or set to 0 unless an exceptional Arch ordering repair is needed.
+# epoch se omite o se establece en 0, salvo una reparación excepcional del orden de versiones de Arch.
 ```
 
-`pkgver` is exactly three non-negative decimal integers separated by dots.
-Leading zeroes, additional components, and prerelease/build metadata are not
-allowed. `pkgrel` is a positive integer. `epoch` is a non-negative integer.
+`pkgver` contiene exactamente tres enteros decimales no negativos separados por puntos.
+No se permiten ceros iniciales, componentes adicionales ni metadatos de pre-release o
+build. `pkgrel` es un entero positivo y `epoch` un entero no negativo.
 
-The resulting Arch version is `[epoch:]pkgver-pkgrel`. All ordering decisions
-must use pacman's `vercmp`; CPV must not substitute Python string or SemVer
-ordering for Arch ordering.
+La versión Arch resultante es `[epoch:]pkgver-pkgrel`. Las comparaciones de orden deben
+utilizar `vercmp` de Pacman; no se debe sustituir el orden de Arch por comparaciones de
+cadenas o por las reglas de SemVer.
 
-## Change classification
+## Clasificación de cambios
 
-Choose the highest applicable change class when a change contains more than
-one kind of modification.
+Cuando un cambio incluya varias clases, se aplica la de mayor impacto.
 
-| Field | Increment when | Example |
+| Campo | Cuándo incrementarlo | Ejemplo |
 |---|---|---|
-| MAJOR | A breaking change, incompatible interface/configuration change, or substantial incompatible redesign | `1.4.2` -> `2.0.0` |
-| MINOR | Any new feature or compatible functional capability/change, including new integrations, options, resources, or functional visual improvements | `1.4.2` -> `1.5.0` |
-| PATCH | A fix to existing functionality or behavior, including visual bug fixes and corrections | `1.4.2` -> `1.4.3` |
-| PKGREL | Packaging-only changes that do not change the package's functional behavior | `1.4.2-1` -> `1.4.2-2` |
+| MAJOR | Cambio incompatible, ruptura de interfaz o configuración, o rediseño sustancial incompatible. | `1.4.2` → `2.0.0` |
+| MINOR | Nueva función o capacidad compatible, incluidas integraciones, opciones, recursos o mejoras visuales funcionales. | `1.4.2` → `1.5.0` |
+| PATCH | Corrección de una función o comportamiento existente, incluidos errores visuales. | `1.4.2` → `1.4.3` |
+| `pkgrel` | Cambio exclusivo de empaquetado que no modifica el comportamiento funcional. | `1.4.2-1` → `1.4.2-2` |
 
-When `pkgver` changes, `pkgrel` must reset to `1`. When only packaging changes,
-`pkgver` remains unchanged and `pkgrel` increases. A functional change must
-never be disguised as a `pkgrel` increment.
+Cuando cambia `pkgver`, `pkgrel` debe volver a `1`. Si solo cambia el empaquetado,
+`pkgver` se mantiene y `pkgrel` aumenta. Un cambio funcional nunca debe expresarse
+únicamente mediante `pkgrel`.
 
-The MAJOR/MINOR/PATCH classification is a maintainer decision. Automation can
-validate version shape, monotonic ordering, and `pkgrel` reset rules, but must
-not infer feature significance from a source diff. Record the rationale in
-the commit message or package changelog.
+La clasificación MAJOR/MINOR/PATCH corresponde al mantenedor. La automatización valida
+el formato, el orden monotónico y el reinicio de `pkgrel`, pero no deduce la importancia
+funcional de un diff. Registra el motivo en el mensaje del commit o en el changelog del
+paquete.
 
-## Channels
+## Canales
 
-`testing` and `stable` use the same CPV version. Channel identity is not encoded
-in `pkgver` or `pkgrel`; do not add `alpha`, `beta`, `rc`, `dev`, or channel
-suffixes. When a build is promoted from testing to stable, the exact same package
-artifact must be promoted, identified by its SHA-256, rather than rebuilt.
-The current repository pipeline builds the `dev/testing` and `main/stable`
-snapshots independently; this CPV change does not redesign that workflow.
-Therefore byte-identical cross-channel promotion remains a pipeline-level
-requirement to implement separately, not a guarantee introduced by CPV alone.
+`testing` y `stable` utilizan la misma política CPV. La identidad del canal no se
+codifica en `pkgver` ni en `pkgrel`: no añadas sufijos `alpha`, `beta`, `rc`, `dev` ni
+identificadores de canal.
 
-## Artifact immutability
+Cuando un paquete se promueve de testing a stable, debe promoverse el mismo artefacto,
+identificado por su SHA-256, en lugar de reconstruirlo. El pipeline actual construye de
+forma independiente los snapshots `dev/testing` y `main/stable`; CPV no rediseña ese
+flujo. Por tanto, la promoción binaria idéntica entre canales sigue siendo un requisito
+de pipeline y no una garantía que establezca por sí sola esta política.
 
-A published package name/version/architecture tuple identifies one immutable
-binary artifact. Re-publishing the same version is allowed only when the
-package SHA-256 is identical. A different binary requires a new CPV version.
-Source changes under an unchanged version are rejected as well.
+## Inmutabilidad de artefactos
 
-The publication manifest is the continuity record for each channel. A missing
-previous package may be treated as a removal, but a package that remains
-published cannot move backwards in Arch version order.
+La tupla nombre/versión/arquitectura de un paquete publicado identifica un binario
+inmutable. Solo se permite volver a publicar la misma versión si el SHA-256 del paquete
+es idéntico. Un binario diferente requiere una versión CPV nueva. También se rechazan
+cambios de fuente bajo una versión sin modificar.
+
+El manifiesto de publicación mantiene la continuidad de cada canal. Un paquete puede
+retirarse, pero uno que continúa publicado no puede retroceder en el orden de versiones
+de Arch.
 
 ## Epoch
 
-`epoch` is reserved for exceptional repairs to Arch version ordering. It is
-not a release train, channel marker, or substitute for MAJOR. Do not add or
-increase it during normal version increments.
+`epoch` se reserva para reparaciones excepcionales del orden de versiones de Arch. No es
+un identificador de ciclo de publicación, un marcador de canal ni un sustituto de MAJOR.
+No debe añadirse ni incrementarse en los cambios ordinarios.
 
-## Scope and migration
+## Alcance y migración
 
-CPV applies only to packages maintained in this repository. Third-party Arch
-and AUR dependencies retain their upstream versioning schemes.
+CPV se aplica únicamente a los paquetes mantenidos en este repositorio. Las dependencias
+de Arch y AUR conservan sus políticas de versión upstream.
 
-Existing published versions are not rewritten. The policy applies immediately
-to all future package changes. Existing package versions are accepted as the
-initial CPV baseline if they satisfy the numeric triplet format. Do not reset
-a published `pkgrel` merely to make it look cleaner; the next `pkgver` change
-starts at `pkgrel=1`.
+Las versiones ya publicadas no se reescriben. La política se aplica a todos los cambios
+futuros. Las versiones existentes se aceptan como línea base inicial si cumplen el
+formato numérico. No reinicies un `pkgrel` publicado solo para simplificarlo; el
+siguiente cambio de `pkgver` comenzará en `pkgrel=1`.
 
+## Línea base de la migración CPV
 
-## Initial CPV migration baseline
+La migración inicial se aplicó sobre el snapshot `e530c5d` (11 de noviembre de 2026).
+Las versiones existentes no se reiniciaron mecánicamente. Los paquetes con cambios
+funcionales posteriores a su línea base anterior de `pkgver` se reclasificaron según
+CPV; los cambios de metadatos exclusivamente de empaquetado no exigieron un incremento
+funcional.
 
-The immediate migration was applied against repository snapshot `e530c5d`
-(11 November 2026). Existing versions were not mechanically reset. Packages
-with functional changes recorded after their previous `pkgver` baseline were
-reclassified under CPV; packaging-only metadata changes did not force a
-functional version increment.
-
-| Package | Previous version | CPV baseline | Classification |
+| Paquete | Versión anterior | Línea base CPV | Clasificación |
 |---|---:|---:|---|
-| `cambonos-base` | `0.1.0-1` | `0.1.0-1` | Unchanged; metapackage baseline |
-| `cambonos-branding` | `0.1.2-3` | `0.1.3-1` | PATCH: Dialog contrast correction |
-| `cambonos-fastfetch` | `0.1.1-3` | `0.1.2-1` | PATCH: terminal ANSI color correction |
-| `cambonos-grub` | `0.1.1-2` | `0.2.0-1` | MINOR: boot parameter behavior update |
-| `cambonos-gtk-theme` | `0.6.2-12` | `0.7.0-1` | MINOR: widget styling and accessibility additions |
-| `cambonos-keyring` | `0.1.0-5` | `0.1.0-5` | Unchanged; metadata-only changes |
-| `cambonos-lightdm` | `0.1.0-5` | `0.2.0-1` | MINOR: CambonOS Slick Greeter theme integration |
-| `cambonos-pacman` | `0.1.0-4` | `0.1.0-4` | Unchanged; dependency metadata correction |
-| `cambonos-plymouth` | `0.1.1-9` | `0.2.0-1` | MINOR: resolution scaling and branding integration |
-| `cambonos-release` | `0.1.1-3` | `0.1.2-1` | PATCH: os-release color correction |
-| `cambonos-shell-prompt` | `0.1.0-9` | `0.2.0-1` | MINOR: custom directory prompt module |
-| `cambonos-zsh` | `0.1.0-5` | `0.2.0-1` | MINOR: automatic sudo integration |
+| `cambonos-base` | `0.1.0-1` | `0.1.0-1` | Sin cambios; línea base del metapaquete |
+| `cambonos-branding` | `0.1.2-3` | `0.1.3-1` | PATCH: corrección de contraste de Dialog |
+| `cambonos-fastfetch` | `0.1.1-3` | `0.1.2-1` | PATCH: corrección de color ANSI del terminal |
+| `cambonos-grub` | `0.1.1-2` | `0.2.0-1` | MINOR: actualización del comportamiento de parámetros de arranque |
+| `cambonos-gtk-theme` | `0.6.2-12` | `0.7.0-1` | MINOR: estilos de widgets y mejoras de accesibilidad |
+| `cambonos-keyring` | `0.1.0-5` | `0.1.0-5` | Sin cambios; cambios solo de metadatos |
+| `cambonos-lightdm` | `0.1.0-5` | `0.2.0-1` | MINOR: integración del tema Slick Greeter |
+| `cambonos-pacman` | `0.1.0-4` | `0.1.0-4` | Sin cambios; corrección de dependencias |
+| `cambonos-plymouth` | `0.1.1-9` | `0.2.0-1` | MINOR: escalado de resolución e integración de branding |
+| `cambonos-release` | `0.1.1-3` | `0.1.2-1` | PATCH: corrección de color en os-release |
+| `cambonos-shell-prompt` | `0.1.0-9` | `0.2.0-1` | MINOR: módulo de prompt para directorios personalizados |
+| `cambonos-zsh` | `0.1.0-5` | `0.2.0-1` | MINOR: integración automática de sudo |
 
-These are source-tree migration versions. Before publication, the publication
-manifest must confirm that every proposed version is greater than the last
-published version in its channel and that no published version is being
-replaced. If a listed baseline version has already been published with a
-different binary, the migration must be reconciled with that manifest rather
-than bypassing the immutability rule.
+Estas versiones corresponden a la migración del árbol de fuentes. Antes de publicar, el
+manifiesto debe confirmar que cada versión propuesta es superior a la última publicada
+en su canal y que no sustituye una versión ya publicada. Si una versión de esta línea
+base ya se publicó con otro binario, la discrepancia debe reconciliarse con el
+manifiesto; no se debe eludir la regla de inmutabilidad.
 
-## Examples
+## Ejemplos
 
 ```bash
-# New package
+# Paquete nuevo
 pkgver=0.1.0
 pkgrel=1
 
-# Functional bug fix
+# Corrección funcional
 pkgver=0.1.1
 pkgrel=1
 
-# Compatible feature
+# Función compatible
 pkgver=0.2.0
 pkgrel=1
 
-# Breaking change
+# Cambio incompatible
 pkgver=1.0.0
 pkgrel=1
 
-# Packaging-only correction after 1.0.0-1
+# Corrección exclusiva de empaquetado tras 1.0.0-1
 pkgver=1.0.0
 pkgrel=2
 ```
