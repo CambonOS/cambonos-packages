@@ -32,11 +32,11 @@ visuales en una sesión real.
 - [x] GTK 4 carga los recursos del tema en aplicaciones compatibles probadas; no implica compatibilidad completa con aplicaciones libadwaita.
 - [x] La selección del tema requiere acción del usuario; el paquete no fuerza un tema ni sustituye la configuración local del escritorio.
 - [x] La retirada elimina los recursos instalados sin alterar la configuración previa del sistema ni de los usuarios.
-- [ ] Xfwm4 representa correctamente las decoraciones y todos los estados de los botones en una sesión real (activa/inactiva, maximizar, minimizar, cerrar, sombrear y fijar).
-- [ ] Xfwm4 mantiene el turquesa original `#019FA7` en ventanas activas y muestra el turquesa atenuado `#397B82` en ventanas inactivas, en los cinco segmentos del título y en las tres variantes.
-- [ ] La banda de selección al arrastrar en el escritorio XFCE muestra el relleno translúcido y el borde turquesa del tema.
-- [ ] La legibilidad y el contraste de texto, menús, tooltips, entradas y controles se mantienen con las superficies translúcidas definidas en la paleta.
-- [ ] La selección del tema en Apariencia y Gestor de ventanas persiste tras cerrar sesión e iniciar de nuevo.
+- [x] Xfwm4 representa correctamente las decoraciones y todos los estados de los botones en una sesión real (activa/inactiva, maximizar, minimizar, cerrar, sombrear y fijar).
+- [x] Xfwm4 mantiene el turquesa original `#019FA7` en ventanas activas y muestra el turquesa atenuado `#397B82` en ventanas inactivas, en los cinco segmentos del título y en las tres variantes.
+- [x] La banda de selección al arrastrar en el escritorio XFCE muestra el relleno translúcido y el borde turquesa del tema.
+- [x] La legibilidad y el contraste de texto, menús, tooltips, entradas y controles se mantienen con las superficies translúcidas definidas en la paleta.
+- [x] La selección del tema en Apariencia y Gestor de ventanas persiste tras cerrar sesión e iniciar de nuevo.
 
 ## cambonos-fastfetch
 
@@ -158,5 +158,5 @@ Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última
 | `cambonos-base` | VM (iso-install) | 12/11/2026 | — |
 | `cambonos-keyring` | VM (iso-install) | 12/11/2026 | — |
 | `cambonos-lightdm` | VM (iso-install) | 12/11/2026 | — |
-| `cambonos-gtk-theme` | VM (iso-install) | 08/11/2026 | Pendiente verificaciones |
+| `cambonos-gtk-theme` | VM (iso-install) | 12/11/2026 | - |
 | `cambonos-mkiso` | VM (iso-install) | 12/11/2026 | - |
