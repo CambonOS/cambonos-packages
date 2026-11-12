@@ -7,7 +7,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 VARIANTS = {
-    "CambonOS-dark-Conservative": {"window_opacity": 0.98, "multiplier": 1},
+    "CambonOS-dark": {"window_opacity": 0.98, "multiplier": 1},
     "CambonOS-dark-Balanced": {"window_opacity": 0.88, "multiplier": 5},
     "CambonOS-dark-Transparent": {"window_opacity": 0.78, "multiplier": 10},
 }
@@ -205,7 +205,7 @@ for theme, policy in VARIANTS.items():
             "tooltip_bg_color": "tooltip_bg", "scrollbar_color": "scrollbar",
             "borders": "border", "disabled_bg_color": "disabled_bg",
             "input_bg_color": "input", "card_bg_color": "surface_raised",
-            "dialog_bg_color": "base",
+            "dialog_bg_color": "base", "sidebar_bg_color": "surface_alt",
         }
         for css_token, source_token in source_tokens.items():
             if css_token not in definitions:
@@ -231,6 +231,54 @@ for theme, policy in VARIANTS.items():
                 errors.append(
                     f"{theme}/{api}/widgets.css: inline alpha color bypasses the canonical palette"
                 )
+
+# Verify GTK4 semantic surfaces are wired to their dedicated tokens.
+for theme in VARIANTS:
+    gtk4 = (ROOT / "themes" / theme / "gtk-4.0" / "widgets.css").read_text()
+    required_rules = {
+        "dropdown input surface": (r"dropdown,\s*combobox\s*\{[^}]*background-color:\s*@input_bg_color",),
+        "popover floating surface": (r"popover,\s*\.popover\s*\{[^}]*background-color:\s*@popover_bg_color",),
+        "tooltip floating surface": (r"tooltip\s*\{[^}]*background-color:\s*@tooltip_bg_color",),
+        "sidebar secondary surface": (r"sidebar,\s*\.sidebar,\s*\.navigation-sidebar,\s*placessidebar\s*\{[^}]*background-color:\s*@sidebar_bg_color",),
+        "spinbutton input surface": (r"spinbutton\s*\{[^}]*background-color:\s*@input_bg_color",),
+    }
+    for label, patterns in required_rules.items():
+        if not any(re.search(pattern, gtk4, re.S) for pattern in patterns):
+            errors.append(f"{theme}/gtk-4.0/widgets.css: missing {label} rule")
+
+    gtk3 = (ROOT / "themes" / theme / "gtk-3.0" / "widgets.css").read_text()
+    if not re.search(r"spinbutton\s*\{[^}]*background-color:\s*@theme_base_color", gtk3, re.S):
+        errors.append(f"{theme}/gtk-3.0/widgets.css: spinbutton outer surface is not defined")
+
+# Explicitly protect intentional transparent controls and structural containers.
+if PALETTE["dark"].get("button_bg") != "transparent" or PALETTE["dark"].get("button_border") != "transparent":
+    errors.append("palette.dark: idle button background and border must remain transparent")
+
+for theme in VARIANTS:
+    for api in APIS:
+        widgets_path = ROOT / "themes" / theme / api / "widgets.css"
+        widgets = re.sub(r"/\*.*?\*/", "", widgets_path.read_text(), flags=re.S)
+        button_selector = (
+            r"(?m)^button,\s*\.button,\s*modelbutton\s*\{[^}]*background-color:\s*@button_bg_color"
+            if api == "gtk-3.0"
+            else r"(?m)^button\s*\{[^}]*background-color:\s*@button_bg_color"
+        )
+        if not re.search(button_selector, widgets, re.S):
+            errors.append(f"{theme}/{api}/widgets.css: idle buttons must use the transparent button token")
+        if re.search(r"(?m)^box\s*\{[^}]*background-color:", widgets, re.S):
+            errors.append(f"{theme}/{api}/widgets.css: global GtkBox surface rule is forbidden")
+
+    gtk3 = (ROOT / "themes" / theme / "gtk-3.0" / "widgets.css").read_text()
+    if not re.search(r"spinbutton entry\s*\{[^}]*background-color:\s*transparent", gtk3, re.S):
+        errors.append(f"{theme}/gtk-3.0/widgets.css: SpinButton internal entry must remain transparent")
+    if not re.search(r"spinbutton button,\s*spinbutton button\.up,\s*spinbutton button\.down\s*\{[^}]*background-color:\s*transparent", gtk3, re.S):
+        errors.append(f"{theme}/gtk-3.0/widgets.css: SpinButton stepper buttons must remain transparent")
+
+    gtk4 = (ROOT / "themes" / theme / "gtk-4.0" / "widgets.css").read_text()
+    if not re.search(r"spinbutton text\s*\{[^}]*background-color:\s*transparent", gtk4, re.S):
+        errors.append(f"{theme}/gtk-4.0/widgets.css: SpinButton internal text must remain transparent")
+    if not re.search(r"spinbutton button,\s*spinbutton button\.up,\s*spinbutton button\.down\s*\{[^}]*background-color:\s*transparent", gtk4, re.S):
+        errors.append(f"{theme}/gtk-4.0/widgets.css: SpinButton stepper buttons must remain transparent")
 
 # Check the same semantic popover token is generated consistently in both GTK APIs.
 for theme in VARIANTS:

@@ -661,7 +661,7 @@ spinbutton {
   padding: 2px 3px 2px 8px;
   border: 1px solid @borders;
   border-radius: 8px;
-  background-color: transparent;
+  background-color: @theme_base_color;
   box-shadow: none;
 }
 spinbutton entry {

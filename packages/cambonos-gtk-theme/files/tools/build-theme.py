@@ -88,7 +88,8 @@ EXTRA = {
         "trough_color": "trough", "text_muted_color": "text_muted",
         "surface_hover_color": "surface_hover", "menu_hover_bg_color": "menu_hover",
         "scrollbar_color": "scrollbar", "scrollbar_hover_color": "scrollbar_hover",
-        "link_color": "link",
+        "link_color": "link", "sidebar_bg_color": "surface_alt",
+        "tooltip_bg_color": "tooltip_bg", "tooltip_fg_color": "tooltip_fg",
     },
 }
 HEX_RE = re.compile(r"^#([0-9a-fA-F]{6})$")
@@ -164,43 +165,70 @@ def validate_source():
                     )
 
 
-def write_variant(name, variant):
-    template = THEME_ROOT / TEMPLATE_NAME
-    theme_name = f"CambonOS-dark-{name}"
-    destination = THEME_ROOT / theme_name
-    if not template.is_dir():
-        raise FileNotFoundError(f"Missing canonical theme template: {template}")
-    if destination.exists():
-        shutil.rmtree(destination)
-    shutil.copytree(template, destination)
-
-    index_path = destination / "index.theme"
+def set_theme_metadata(theme_dir: Path, theme_name: str, comment: str) -> None:
+    index_path = theme_dir / "index.theme"
     index = index_path.read_text()
     replacements = {
         r"(?m)^Name=.*$": f"Name={theme_name}",
         r"(?m)^GtkTheme=.*$": f"GtkTheme={theme_name}",
         r"(?m)^MetacityTheme=.*$": f"MetacityTheme={theme_name}",
-        r"(?m)^Comment=.*$": f"Comment=CambonOS dark theme ({name.lower()} transparency)",
+        r"(?m)^Comment=.*$": f"Comment={comment}",
     }
-    for pattern, replacement in replacements.items():
+    for pattern, value in replacements.items():
         if re.search(pattern, index):
-            index = re.sub(pattern, replacement, index)
+            index = re.sub(pattern, value, index)
         elif pattern.startswith(r"(?m)^Comment"):
-            index = index.rstrip() + f"\n{replacement}\n"
+            index = index.rstrip() + f"\n{value}\n"
         else:
             raise ValueError(f"{theme_name}/index.theme: missing metadata field {pattern}")
     index_path.write_text(index)
 
+
+def write_theme_colors(theme_dir: Path, variant: dict) -> None:
     for api in ("gtk-3.0", "gtk-4.0"):
-        (destination / api / "colors-dark.css").write_text(token_css("dark", api, variant))
+        (theme_dir / api / "colors-dark.css").write_text(
+            token_css("dark", api, variant)
+        )
+
+
+def write_themes():
+    """Generate the default Conservative theme and named alternatives."""
+    template = THEME_ROOT / TEMPLATE_NAME
+    if not template.is_dir():
+        raise FileNotFoundError(f"Missing canonical theme template: {template}")
+
+    conservative = dict(VARIANTS["Conservative"], name="Conservative")
+    # Keep the established CambonOS-dark name as the default Conservative theme.
+    set_theme_metadata(
+        template,
+        TEMPLATE_NAME,
+        "CambonOS dark theme (conservative transparency)",
+    )
+    write_theme_colors(template, conservative)
+
+    for name, variant in VARIANTS.items():
+        if name == "Conservative":
+            continue
+        theme_name = f"{TEMPLATE_NAME}-{name}"
+        destination = THEME_ROOT / theme_name
+        if destination.exists():
+            shutil.rmtree(destination)
+        shutil.copytree(template, destination)
+        set_theme_metadata(
+            destination,
+            theme_name,
+            f"CambonOS dark theme ({'high' if name == 'Transparent' else name.lower()} transparency)",
+        )
+        write_theme_colors(destination, dict(variant, name=name))
 
 
 def main():
     validate_source()
+    write_themes()
     for name, variant in VARIANTS.items():
-        write_variant(name, variant)
+        theme_name = TEMPLATE_NAME if name == "Conservative" else f"{TEMPLATE_NAME}-{name}"
         print(
-            f"Generated CambonOS-dark-{name}: "
+            f"Generated {theme_name}: "
             f"window opacity {variant['window_opacity']:.0%}, "
             f"transparency multiplier {variant['multiplier']}"
         )
