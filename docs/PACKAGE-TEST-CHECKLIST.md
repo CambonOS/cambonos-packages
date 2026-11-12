@@ -13,9 +13,9 @@ Registra el entorno, la fecha y las observaciones de cada comprobación. La exis
 
 - [x] Los recursos SVG de identidad se muestran correctamente.
 - [x] Los recursos PNG de identidad se muestran correctamente.
-- [ ] La paleta ANSI de CambonOS se aplica a cada TTY virtual al inicializarse.
-- [ ] Los 16 colores de consola corresponden a la paleta publicada.
-- [ ] `dialog` aplica el tema CambonOS de `/etc/dialogrc`.
+- [x] La paleta ANSI de CambonOS se aplica a cada TTY virtual al inicializarse.
+- [x] Los 16 colores de consola corresponden a la paleta publicada.
+- [x] `dialog` aplica el tema CambonOS de `/etc/dialogrc`.
 
 ## cambonos-gtk-theme
 
@@ -56,8 +56,8 @@ visuales en una sesión real.
 - [x] El prompt funciona en sesiones interactivas de Fish.
 - [x] El directorio actual y sus directorios padre se representan correctamente.
 - [x] Se respeta la configuración personal de Starship del usuario.
-- [ ] Las consolas virtuales Linux usan el perfil compatible con TTY y los emuladores conservan el perfil visual actual.
-- [ ] Bash, Zsh y Fish seleccionan el perfil TTY correctamente en una consola virtual real.
+- [x] Las consolas virtuales Linux usan el perfil compatible con TTY y los emuladores conservan el perfil visual actual.
+- [x] Bash, Zsh y Fish seleccionan el perfil TTY correctamente en una consola virtual real.
 
 ## cambonos-zsh
 
@@ -137,7 +137,7 @@ visuales en una sesión real.
 
 - [x] La comprobación de red live accede al mirror geo de Arch configurado para `[core]` y `[extra]`.
 - [x] La actualización de `cambonos-installer` muestra la salida de Pacman y maneja correctamente errores.
-- [ ] El menú gráfico Syslinux BIOS muestra el fondo y los colores CambonOS legibles en hardware real.
+- [x] El menú gráfico Syslinux BIOS muestra el fondo y los colores CambonOS legibles en hardware real.
 - [x] Las entradas BIOS, UEFI y UEFI loopback arrancan sin copiar la imagen raíz a RAM y permiten instalar con el medio conectado.
 - [x] La ISO arranca e instala correctamente en una máquina virtual o equipo de prueba, en BIOS y UEFI.
 
@@ -147,11 +147,11 @@ Registrar aquí, por paquete, el entorno real utilizado y la fecha de la última
 
 | Paquete | Entorno de prueba | Fecha | Observaciones |
 |---|---|---|---|
-| `cambonos-branding` | VM (iso-install) | 07/11/2026 | Paleta TTY pendiente de verificación funcional (09/11/2026) |
-| `cambonos-fastfetch` | VM (iso-install) | 07/11/2026 | — |
-| `cambonos-shell-prompt` | VM (iso-install) | 07/11/2026 | — |
-| `cambonos-zsh` | VM (iso-install) | 07/11/2026 | — |
-| `cambonos-release` | VM (iso-install) | 07/11/2026 | — |
+| `cambonos-branding` | VM (iso-install) | 12/11/2026 | - |
+| `cambonos-fastfetch` | VM (iso-install) | 12/11/2026 | — |
+| `cambonos-shell-prompt` | VM (iso-install) | 12/11/2026 | — |
+| `cambonos-zsh` | VM (iso-install) | 12/11/2026 | — |
+| `cambonos-release` | VM (iso-install) | 12/11/2026 | — |
 | `cambonos-pacman` | VM (iso-install) | 12/11/2026 | — |
 | `cambonos-grub` | VM (iso-install) | 12/11/2026 | — |
 | `cambonos-plymouth` | VM (iso-install) | 12/11/2026 | - |

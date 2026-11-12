@@ -9,9 +9,9 @@ Tema gráfico de arranque de CambonOS e integración con `mkinitcpio`.
 - Mantiene la selección del tema y actualiza los presets existentes cuando corresponde.
 
 El fondo se adapta a la resolución sin deformarse; el grupo del logotipo y la barra
-conserva su proporción y centrado. Los recursos de marca proceden de
-`cambonos-branding`.
+conserva su proporción y centrado. El paquete instala los recursos gráficos junto
+al tema Plymouth.
 
 ## Dependencias
 
-`plymouth`, `mkinitcpio>=36` y `cambonos-branding`.
+`plymouth` y `mkinitcpio>=36`.

@@ -4,8 +4,7 @@ Recursos visuales y paletas oficiales de CambonOS para el sistema y sus aplicaci
 
 ## Funcionalidad
 
-- Logotipos e iconos en SVG y PNG, fondos y recursos gráficos utilizados por otros
-  componentes.
+- Logotipos e iconos en SVG y PNG para la identidad de CambonOS.
 - Paleta ANSI de CambonOS para las consolas virtuales.
 - Tema global de `dialog` mediante `/etc/dialogrc`.
 

@@ -4,7 +4,7 @@ Description=CambonOS branded boot splash with progress animation
 ModuleName=script
 
 [script]
-ImageDir=/usr/share/cambonos/branding
+ImageDir=/usr/share/plymouth/themes/cambonos
 ScriptFile=/usr/share/plymouth/themes/cambonos/cambonos.script
 ConsoleLogBackgroundColor=0x061C31
 
