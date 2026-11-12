@@ -34,6 +34,12 @@ class PipelineContractTests(unittest.TestCase):
     def test_build_only_runs_for_supported_branches_and_has_no_secrets(self):
         branches = self.build["on"]["push"]["branches"]
         self.assertEqual(set(branches), {"dev", "main"})
+        self.assertEqual(
+            self.build["on"]["repository_dispatch"]["types"],
+            ["external-package-updated"],
+        )
+        self.assertEqual(self.build["concurrency"]["group"], "cambonos-package-build")
+        self.assertEqual(self.build["concurrency"]["cancel-in-progress"], "false")
         self.assertNotIn("CAMBONOS_SIGNING_KEY", self.build_source)
         self.assertNotIn("CAMBONOS_SIGNING_PASSPHRASE", self.build_source)
         self.assertNotIn("environment:", self.build_source)
@@ -46,6 +52,11 @@ class PipelineContractTests(unittest.TestCase):
         validate_steps = jobs["validate"]["steps"]
         self.assertTrue(any("unittest discover -s tests" in s.get("run", "")
                             for s in validate_steps))
+        dispatch_step = next(s for s in validate_steps
+                             if s.get("name") == "Validate external package dispatch")
+        self.assertIn("validate_external_dispatch.py", dispatch_step["run"])
+        self.assertIn("merge-base --is-ancestor", dispatch_step["run"])
+        self.assertIn("DISPATCH_COMMIT", dispatch_step.get("env", {}))
         shell_step = next(s for s in validate_steps
                           if s.get("name") == "Validate Zsh and Fish syntax in Arch container")
         for required in (
@@ -65,8 +76,9 @@ class PipelineContractTests(unittest.TestCase):
         self.assertEqual(names, {"build-${{ matrix.channel }}"})
         self.assertIn("previous-publication-manifest", self.build_source)
         self.assertIn("name: build-context", self.build_source)
-        self.assertIn('"bootstrap": "${{ steps.previous.outputs.bootstrap }}"',
-                      self.build_source)
+        self.assertIn("schema_version: 2", self.build_source)
+        self.assertIn('external_sources', self.build_source)
+        self.assertIn('Attach external source snapshots to build manifest', self.build_source)
         self.assertIn("retention-days: 2", self.build_source)
 
     def test_publish_is_workflow_run_gated_and_serialized(self):
@@ -86,6 +98,10 @@ class PipelineContractTests(unittest.TestCase):
         self.assertIn("run-id: ${{ github.event.workflow_run.id }}", self.publish_source)
         self.assertIn(".path | endswith(\".github/workflows/package-build.yml\")",
                       self.publish_source)
+        self.assertIn('"repository_dispatch"', self.publish_source)
+        self.assertIn("check_external_snapshot CambonOS/cambonos-installer", self.publish_source)
+        self.assertIn("check_external_snapshot CambonOS/cambonos-mkiso", self.publish_source)
+        self.assertIn(".external_sources[\"cambonos-installer\"]", self.publish_source)
         self.assertIn("git ls-remote --heads origin", self.publish_source)
         self.assertIn("EXPECTED_DEV_SHA", self.publish_source)
         self.assertIn("EXPECTED_MAIN_SHA", self.publish_source)

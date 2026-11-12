@@ -96,7 +96,32 @@ def stage_external_package(
     if destination.exists() or destination.is_symlink():
         raise CambonosError(f"ya existe el destino del paquete externo: {destination}")
 
-    source_date_epoch = _git(source, "show", "-s", "--format=%ct", expected_commit)
+    # Package provenance tracks the last commit that changed effective build
+    # inputs, not the branch tip. README, tests and workflow-only commits must
+    # not invalidate the package fingerprint or trigger a rebuild.
+    build_input_paths = ["PKGBUILD", "LICENSE", "*.install", "files/"]
+    for raw_reference in re.findall(
+        r"\$startdir/([^\s\"']+)", pkgb.read_text(encoding="utf-8")
+    ):
+        relative = Path(raw_reference.rstrip("\\"))
+        if relative.is_absolute() or ".." in relative.parts:
+            raise CambonosError(
+                f"referencia insegura en PKGBUILD externo de {package_name}: {raw_reference}"
+            )
+        if relative.parts and relative.parts[0] != "files":
+            build_input_paths.append(relative.as_posix())
+    input_commit = _git(
+        source,
+        "log",
+        "-1",
+        "--format=%H",
+        expected_commit,
+        "--",
+        *sorted(set(build_input_paths)),
+    )
+    if not re.fullmatch(r"[0-9a-f]{40}", input_commit):
+        raise CambonosError(f"no se pudo resolver el último commit de entradas de {package_name}")
+    source_date_epoch = _git(source, "show", "-s", "--format=%ct", input_commit)
     if not source_date_epoch.isdigit():
         raise CambonosError(f"fecha de commit inválida para {package_name}")
     try:
@@ -108,7 +133,7 @@ def stage_external_package(
         )
         metadata = {
             "repository": expected_url.removesuffix(".git"),
-            "commit": expected_commit,
+            "commit": input_commit,
             "source_date_epoch": int(source_date_epoch),
         }
         (destination / ".cambonos-source.json").write_text(
