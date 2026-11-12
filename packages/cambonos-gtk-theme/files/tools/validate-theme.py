@@ -42,7 +42,57 @@ for theme in THEMES:
                 errors.append(f"{theme}/{api}: missing widgets.css")
                 continue
             widgets = widget_path.read_text()
-            used = set(re.findall(r"@([\w-]+)", widgets))
+            # GtkSpinner has the same CSS node and :checked state in GTK 3/4.
+            # Keep its active-only visibility and rotation behavior in sync;
+            # only the palette token name differs between GTK APIs.
+            spinner = re.search(
+                r"(?s)spinner\s*\{([^}]*)\}\s*"
+                r"spinner:checked\s*\{([^}]*)\}\s*"
+                r"@keyframes\s+cambonos-spinner-rotate\s*\{([^}]*)\}",
+                widgets,
+            )
+            if not spinner:
+                errors.append(f"{theme}/{api}: missing complete GtkSpinner state styling")
+            else:
+                base_rule, active_rule, keyframes = spinner.groups()
+                expected_color = "@accent;" if api == "gtk-3.0" else "@accent_color;"
+                if expected_color not in base_rule or "opacity: 0" not in base_rule:
+                    errors.append(f"{theme}/{api}: GtkSpinner idle styling must use the API accent and be hidden")
+                if "opacity: 1" not in active_rule or "cambonos-spinner-rotate 1s linear infinite" not in active_rule:
+                    errors.append(f"{theme}/{api}: GtkSpinner active state must be visible and animated")
+                if "-gtk-icon-transform: rotate(1turn)" not in keyframes:
+                    errors.append(f"{theme}/{api}: GtkSpinner keyframes must rotate the icon")
+            # Grid selection and rubberband selection have equivalent roles in
+            # GTK 3 GtkIconView and GTK 4 GtkGridView, despite different CSS nodes.
+            if api == "gtk-3.0":
+                selected = re.search(r"iconview\.view:selected\s*\{([^}]*)\}", widgets)
+                expected_selected_fg = "@theme_base_color"
+                expected_rubberband_border = "@accent"
+            else:
+                selected = re.search(r"gridview child:selected\s*\{([^}]*)\}", widgets)
+                expected_selected_fg = "@view_bg_color"
+                expected_rubberband_border = "@accent_color"
+            if not selected or expected_selected_fg not in selected.group(1) or "@accent_emphasis" not in selected.group(1):
+                errors.append(f"{theme}/{api}: grid/icon selection must use the shared light-accent treatment")
+            expected_rubberband_fill = "alpha(@accent, 0.22)" if api == "gtk-3.0" else "alpha(@accent_color, 0.22)"
+            rubberband_rules = re.findall(
+                r"(?s)([^{}]*\brubberband\b[^{}]*)\{([^{}]*)\}", widgets
+            )
+            rubberband_selectors = "\n".join(
+                selectors for selectors, declarations in rubberband_rules
+                if expected_rubberband_fill in declarations
+                and expected_rubberband_border in declarations
+            )
+            required_rubberband_selectors = (
+                ("rubberband", "XfdesktopIconView.view .rubberband", ".content-view rubberband",
+                 "treeview.view rubberband", "flowbox rubberband", ".rubberband")
+                if api == "gtk-3.0" else
+                ("rubberband", ".content-view > rubberband", "columnview.view > rubberband",
+                 "treeview.view > rubberband", "gridview > rubberband", "flowbox > rubberband")
+            )
+            if any(selector not in rubberband_selectors for selector in required_rubberband_selectors):
+                errors.append(f"{theme}/{api}: drag-selection rubberband selectors do not cover the supported GTK/XFCE views")
+            used = set(re.findall(r"@([\w-]+)", widgets)) - {"keyframes"}
             missing = sorted(used - defined)
             if missing:
                 errors.append(f"{theme}/{api}/{entry}: undefined colors: {', '.join(missing)}")

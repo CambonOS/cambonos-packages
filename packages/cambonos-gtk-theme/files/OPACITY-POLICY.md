@@ -7,8 +7,8 @@ This package generates three GTK theme profiles from one canonical palette.
 | Theme | Window opacity | Transparency multiplier |
 |---|---:|---:|
 | `CambonOS-dark` | 98% | 1 |
-| `CambonOS-dark-Balanced` | 88% | 5 |
-| `CambonOS-dark-Transparent` | 78% | 10 |
+| `CambonOS-dark-balanced` | 88% | 5 |
+| `CambonOS-dark-transparent` | 78% | 10 |
 
 The base `CambonOS-dark` theme is the Conservative profile and preserves the
 historical default theme name. The other profiles are generated alternatives.

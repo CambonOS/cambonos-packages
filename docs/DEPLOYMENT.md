@@ -60,7 +60,7 @@ El sitio publicado incluye `metadata/manifest.json`. El manifiesto registra los 
 
 La política de versiones se aplica de forma independiente a cada canal:
 
-- Si cambia el contenido fuente de un paquete, debe incrementarse `pkgrel` o `pkgver`.
+- Si cambia el comportamiento funcional del paquete, debe incrementarse `pkgver` según CPV (MAJOR, MINOR o PATCH). `pkgrel` se incrementa únicamente para cambios de empaquetado que no alteran el comportamiento funcional.
 - No se permiten retrocesos de versión.
 - La incorporación o retirada de paquetes está permitida.
 - Una reconstrucción puede producir un binario distinto aunque la fuente no haya cambiado, debido a la naturaleza rolling de Arch. El hash del paquete identifica el artefacto concreto y no sustituye la política de versión.
@@ -77,7 +77,7 @@ La firma acredita la procedencia criptográfica del artefacto, no que el código
 
 ## Versionado de paquetes
 
-Cuando cambia el contenido fuente de un paquete, debe incrementarse `pkgrel` o `pkgver`. El pipeline rechaza cambios de fuente sin incremento de versión y retrocesos de versión. `testing` y `stable` aplican esta política de forma independiente.
+Cuando cambian las entradas de construcción, el pipeline exige un incremento de versión. La clasificación entre MAJOR, MINOR y PATCH corresponde al mantenedor conforme a [VERSIONING.md](VERSIONING.md); los cambios exclusivamente de empaquetado incrementan `pkgrel`. La automatización comprueba la forma de la versión, su orden monotónico y el reinicio de `pkgrel` al cambiar `pkgver`, pero no deduce la naturaleza funcional del diff. `testing` y `stable` aplican esta política de forma independiente.
 
 Los manifiestos publicados registran los commits de origen, versiones y hashes de los paquetes. El manifiesto anterior se verifica criptográficamente antes de utilizarse como referencia para una publicación posterior.
 

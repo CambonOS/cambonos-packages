@@ -1,4 +1,49 @@
+## 0.9.7
+
+- Expanded drag-selection rubberband selectors to cover XFCE desktop icon views, Thunar content views and GTK tree/flow/grid/column views while retaining the CambonOS teal at 22% fill alpha and a solid teal outline.
+- Removed the Thunar-specific rubberband selector and standardized GTK 3/GTK 4 drag-selection styling on the generic `rubberband` CSS node, using the primary teal accent at 22% fill alpha with a solid teal outline.
+- Added the same state-aware `GtkSpinner` styling to GTK 4 as GTK 3: hidden while idle and visible with continuous rotation only while `:checked`, using GTK 4's equivalent `@accent_color` token.
+- Aligned GTK 4 grid-item selection and drag-selection rubberband with GTK 3's icon-view treatment: light teal (`#70E7E6`) fill, dark readable text and a primary-teal (`#019FA7`) outline.
+- Extended theme validation to require matching spinner lifecycle and animation behavior in both GTK stylesheets.
+
+## 0.9.6
+
+- Restored GTK 3 `GtkSpinner` state handling: the indicator is hidden while idle and appears with a continuous rotation only while the widget is active (`:checked`).
+- Styled the active spinner with the theme highlight color without changing Thunar behavior or GTK 4 styling.
+
+## 0.9.5
+
+- Improved GTK 3 Thunar icon selection visibility with the light teal highlight (`#70E7E6`) and dark foreground (`#061C31`), matching the desktop rubberband appearance while preserving legibility.
+- Scoped the drag-selection rectangle styling to the `iconview.view rubberband` CSS node so it remains distinct from selected icon tiles.
+
 # Changelog
+
+## 0.9.4
+
+- Increased GTK 3 drag-selection rubberband visibility over dark Thunar surfaces by using the lighter highlight teal (`#70E7E6`) at 45% opacity, while retaining the primary teal outline (`#019FA7`).
+- Kept GTK 4, individual item selection, popup-menu hover and the global palette unchanged.
+
+## 0.9.3
+
+- Corrected the GTK 3 drag-selection rubberband to use the CambonOS teal accent (`#019FA7`) instead of the dark general selected-background token.
+- Kept the existing 22% translucent fill and 1 px teal border; GTK 4 already uses the accent and remains unchanged.
+
+## 0.9.2
+
+- Improved GTK 3/GTK 4 drag-selection rubberband visibility in icon views with a translucent CambonOS teal fill and a clear teal border.
+- Kept individual item selection, menu hover, primary accent and other palette states unchanged.
+
+## 0.9.1
+
+- Darkened the GTK 3/GTK 4 popup-menu hover and selected-item background to `#176F78` for readable white labels.
+- Kept the primary accent, focus, link and scrollbar colors unchanged; the menu-specific color is controlled by the canonical palette token.
+
+## 0.8.1
+
+- Retuned inactive Xfwm4 title accents to use muted CambonOS teal `#397B82`, while preserving the active teal `#019FA7`, navy surfaces, title geometry and accent thickness.
+- Applied the inactive title accent consistently to all five title segments (`title-1` through `title-5`) in the canonical theme template; generated variants inherit the same assets.
+- Corrected theme variant identifiers and package-version references in the package documentation.
+- Updated the functional checklist to cover all three installed variants and the active/inactive Xfwm4 title accent; visual verification remains pending on a real XFCE session.
 
 ## 0.8.0
 

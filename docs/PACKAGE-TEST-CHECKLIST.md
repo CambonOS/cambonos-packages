@@ -24,18 +24,21 @@ Anota el entorno y la fecha de la comprobación en el registro del paquete. Si u
 
 ## cambonos-gtk-theme
 
-Alcance del paquete: una única variante (`CambonOS-dark`) con recursos GTK 3,
-GTK 4 y Xfwm4. GTK 2 no forma parte del alcance: no se incluye
-`gtk-2.0/gtkrc`. La validación estructural ejecutada durante la construcción
-no sustituye las comprobaciones visuales en una sesión real.
+Alcance del paquete: tres variantes (`CambonOS-dark`,
+`CambonOS-dark-balanced` y `CambonOS-dark-transparent`) con recursos GTK 3,
+GTK 4 y Xfwm4, generadas desde una plantilla y una paleta canónicas. GTK 2 no
+forma parte del alcance: no se incluye `gtk-2.0/gtkrc`. La validación
+estructural ejecutada durante la construcción no sustituye las comprobaciones
+visuales en una sesión real.
 
-- [x] La instalación deja únicamente `CambonOS-dark` en `/usr/share/themes/` y la licencia en `/usr/share/licenses/cambonos-gtk-theme/`.
+- [x] La instalación deja las tres variantes en `/usr/share/themes/` y la licencia en `/usr/share/licenses/cambonos-gtk-theme/`.
 - [x] La instalación no modifica preferencias de usuario ni archivos de configuración global de GTK.
 - [x] GTK 3 carga los recursos del tema en aplicaciones compatibles de una sesión XFCE real.
 - [x] GTK 4 carga los recursos del tema en aplicaciones compatibles probadas; no implica compatibilidad completa con aplicaciones libadwaita.
 - [x] La selección del tema requiere acción del usuario; el paquete no fuerza un tema ni sustituye la configuración local del escritorio.
 - [x] La retirada elimina los recursos instalados sin alterar la configuración previa del sistema ni de los usuarios.
 - [ ] Xfwm4 representa correctamente las decoraciones y todos los estados de los botones en una sesión real (activa/inactiva, maximizar, minimizar, cerrar, sombrear y fijar).
+- [ ] Xfwm4 mantiene el turquesa original `#019FA7` en ventanas activas y muestra el turquesa atenuado `#397B82` en ventanas inactivas, en los cinco segmentos del título y en las tres variantes.
 - [ ] La banda de selección al arrastrar en el escritorio XFCE muestra el relleno translúcido y el borde turquesa del tema.
 - [ ] La legibilidad y el contraste de texto, menús, tooltips, entradas y controles se mantienen con las superficies translúcidas definidas en la paleta.
 - [ ] La selección del tema en Apariencia y Gestor de ventanas persiste tras cerrar sesión e iniciar de nuevo.

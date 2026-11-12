@@ -6,15 +6,15 @@ una única plantilla visual. Las variantes comparten RGB, geometría, widgets,
 iconografía y recursos Xfwm4; únicamente cambia la política de transparencia
 aplicada a los tokens de color.
 
-**Versión del paquete Arch:** `0.8.0-1`.
+**Versión del paquete Arch:** `0.9.7-1`.
 
 ## Variantes distribuidas
 
 | Tema | Opacidad de ventanas | Multiplicador | Uso previsto |
 |---|---:|---:|---|
-| `CambonOS-dark-Conservative` | 98 % | 1 | Ventanas prácticamente opacas; transparencia ambiental discreta. |
-| `CambonOS-dark-Balanced` | 88 % | 5 | Perfil equilibrado, equivalente al nivel de opacidad de ventana utilizado hasta ahora. |
-| `CambonOS-dark-Transparent` | 78 % | 10 | Mayor transparencia del escritorio, manteniendo los textos y controles opacos. |
+| `CambonOS-dark` | 98 % | 1 | Perfil conservador; ventanas prácticamente opacas. |
+| `CambonOS-dark-balanced` | 88 % | 5 | Perfil equilibrado. |
+| `CambonOS-dark-transparent` | 78 % | 10 | Mayor transparencia del escritorio, manteniendo textos y controles opacos. |
 
 Cada variante se instala como un tema independiente y seleccionable desde XFCE.
 Los nombres se mantienen diferenciados para GTK y Xfwm4, de modo que ambas
@@ -52,8 +52,8 @@ una cuarta variante ni se instala directamente.
 `tools/build-theme.py` genera los tres directorios finales:
 
 - `themes/CambonOS-dark-Conservative/`
-- `themes/CambonOS-dark-Balanced/`
-- `themes/CambonOS-dark-Transparent/`
+- `themes/CambonOS-dark-balanced/`
+- `themes/CambonOS-dark-transparent/`
 
 La política se define en `VARIANTS` dentro del builder:
 
@@ -94,10 +94,16 @@ versiones se conservan en sus respectivas hojas `widgets.css`.
 ### Xfwm4
 
 Las tres variantes reutilizan los mismos recursos gráficos y la misma
-configuración `themerc`. La opacidad de las sombras de Xfwm4 es independiente
-de los alfas CSS de GTK y no se escala con los multiplicadores. Esta separación
-evita confundir la transparencia de superficies GTK con la composición de
-sombras y decoraciones de ventana.
+configuración `themerc`. Las decoraciones distinguen los estados de foco:
+las ventanas activas conservan el acento turquesa `#019FA7`, mientras que
+las ventanas inactivas utilizan el turquesa atenuado `#397B82` sobre su
+superficie azul marino. La diferencia se aplica a los cinco segmentos del
+título (`title-1` a `title-5`) y mantiene la misma geometría y grosor.
+
+La opacidad de las sombras de Xfwm4 es independiente de los alfas CSS de GTK
+y no se escala con los multiplicadores. Esta separación evita confundir la
+transparencia de superficies GTK con la composición de sombras y decoraciones
+de ventana.
 
 ## Construcción e instalación
 
@@ -129,12 +135,13 @@ Selecciona el mismo nombre de variante en:
 También se puede seleccionar mediante `xfconf-query` (ejemplo Balanced):
 
 ```bash
-xfconf-query -c xsettings -p /Net/ThemeName -s CambonOS-dark-Balanced
-xfconf-query -c xfwm4 -p /general/theme -s CambonOS-dark-Balanced
+xfconf-query -c xsettings -p /Net/ThemeName -s CambonOS-dark-balanced
+xfconf-query -c xfwm4 -p /general/theme -s CambonOS-dark-balanced
 ```
 
-Sustituye `Balanced` por `Conservative` o `Transparent` para utilizar otro
-perfil. La selección GTK y Xfwm4 sigue siendo independiente.
+Sustituye `CambonOS-dark-balanced` por `CambonOS-dark` o
+`CambonOS-dark-transparent` para utilizar otro perfil. La selección GTK y
+Xfwm4 sigue siendo independiente.
 
 ## Compatibilidad y limitaciones
 
@@ -163,7 +170,7 @@ real. Para aceptar cambios visuales, comprueba como mínimo:
    y Whisker Menu cuando estén disponibles.
 4. Comprobar foco, selección, estados deshabilitados, hover, pressed y backdrop.
 5. Revisar contraste y legibilidad de texto, menús, tooltips, entradas y
-   controles, especialmente en `CambonOS-dark-Transparent`.
+   controles, especialmente en `CambonOS-dark-transparent`.
 6. En Xfwm4, comprobar ventanas activas/inactivas, botones, bordes, esquinas,
    título y redimensionado en las tres variantes.
 7. Confirmar que el compositor está activo y registrar las versiones de
