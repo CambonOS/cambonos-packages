@@ -28,11 +28,11 @@ VARIANTS = {
         "window_opacity": 0.98,
         "multiplier": 1,
     },
-    "Balanced": {
+    "balanced": {
         "window_opacity": 0.88,
         "multiplier": 5,
     },
-    "Transparent": {
+    "transparent": {
         "window_opacity": 0.78,
         "multiplier": 10,
     },

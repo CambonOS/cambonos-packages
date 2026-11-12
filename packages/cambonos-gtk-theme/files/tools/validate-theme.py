@@ -8,8 +8,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 VARIANTS = {
     "CambonOS-dark": {"window_opacity": 0.98, "multiplier": 1},
-    "CambonOS-dark-Balanced": {"window_opacity": 0.88, "multiplier": 5},
-    "CambonOS-dark-Transparent": {"window_opacity": 0.78, "multiplier": 10},
+    "CambonOS-dark-balanced": {"window_opacity": 0.88, "multiplier": 5},
+    "CambonOS-dark-transparent": {"window_opacity": 0.78, "multiplier": 10},
 }
 THEMES = tuple(VARIANTS)
 PALETTE = json.loads((ROOT / "src/palette.json").read_text())

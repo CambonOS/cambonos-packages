@@ -1,7 +1,7 @@
 # Maintainer: CambonOS contributors
 pkgname=cambonos-gtk-theme
-pkgver=0.8.0
-pkgrel=2
+pkgver=0.8.1
+pkgrel=1
 pkgdesc="CambonOS GTK 3/4 and Xfwm4 dark themes with three transparency profiles"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
@@ -15,8 +15,8 @@ optdepends=(
 
 _themes=(
   CambonOS-dark
-  CambonOS-dark-Balanced
-  CambonOS-dark-Transparent
+  CambonOS-dark-balanced
+  CambonOS-dark-transparent
 )
 
 build() {
@@ -47,6 +47,6 @@ package() {
 
   install -Dm644 "$builddir/LICENSE" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-  install -Dm644 "$startdir/files/OPACITY-POLICY.md" \
+  install -Dm644 "$builddir/OPACITY-POLICY.md" \
     "$pkgdir/usr/share/doc/$pkgname/OPACITY-POLICY.md"
 }
