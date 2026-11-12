@@ -69,11 +69,11 @@ class CPVTransitionTests(unittest.TestCase):
     def test_pkgrel_increments_with_same_pkgver(self):
         validate_version_transition("1.2.3-1", "1.2.3", "2", "0", "", fake_vercmp)
 
-    def test_pkgver_change_resets_pkgrel(self):
-        validate_version_transition("1.2.3-9", "1.2.4", "1", "0", "", fake_vercmp)
-        for pkgrel in ("2", "9"):
-            with self.subTest(pkgrel=pkgrel), self.assertRaises(CambonosError):
+    def test_pkgver_change_accepts_positive_pkgrel(self):
+        for pkgrel in ("1", "2", "9"):
+            with self.subTest(pkgrel=pkgrel):
                 validate_version_transition("1.2.3-9", "1.2.4", pkgrel, "0", "", fake_vercmp)
+        validate_version_transition("0.7.0-1", "0.9.7", "2", "0", "", fake_vercmp)
 
     def test_rejects_downgrade(self):
         with self.assertRaises(CambonosError):
@@ -127,13 +127,13 @@ class CPVPublicationPolicyTests(unittest.TestCase):
             with self.assertRaisesRegex(CambonosError, "cambió el contenido fuente"):
                 validate_version_policy(self.current, self.previous, "testing", "unused")
 
-    def test_pkgver_change_requires_pkgrel_one(self):
+    def test_pkgver_change_accepts_pkgrel_greater_than_one(self):
         self.current["cambonos-example"].update(
-            version="1.2.4-2", pkgver="1.2.4", pkgrel="2"
+            version="0.9.7-2", pkgver="0.9.7", pkgrel="2"
         )
+        self.previous["channels"]["testing"]["packages"]["cambonos-example"]["version"] = "0.7.0-1"
         with patch("scripts.cambonos_lib.manifest.compare_arch_versions", return_value=-1):
-            with self.assertRaisesRegex(CambonosError, "pkgrel debe reiniciarse a 1"):
-                validate_version_policy(self.current, self.previous, "testing", "unused")
+            validate_version_policy(self.current, self.previous, "testing", "unused")
 
 
     def test_documentation_change_is_not_a_build_input_change(self):

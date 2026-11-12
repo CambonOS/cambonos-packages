@@ -8,7 +8,7 @@ sustituye el modelo de versiones de Pacman.
 
 ## Formato
 
-Todos los `PKGBUILD` de CambonOS deben utilizar:
+Ejemplo de formato para los `PKGBUILD` de CambonOS:
 
 ```bash
 pkgver=MAJOR.MINOR.PATCH
@@ -35,12 +35,12 @@ Cuando un cambio incluya varias clases, se aplica la de mayor impacto.
 | PATCH | Corrección de una función o comportamiento existente, incluidos errores visuales. | `1.4.2` → `1.4.3` |
 | `pkgrel` | Cambio exclusivo de empaquetado que no modifica el comportamiento funcional. | `1.4.2-1` → `1.4.2-2` |
 
-Cuando cambia `pkgver`, `pkgrel` debe volver a `1`. Si solo cambia el empaquetado,
-`pkgver` se mantiene y `pkgrel` aumenta. Un cambio funcional nunca debe expresarse
-únicamente mediante `pkgrel`.
+Cuando cambia `pkgver`, `pkgrel` puede ser cualquier entero positivo; no es obligatorio
+reiniciarlo a `1`. Si solo cambia el empaquetado, `pkgver` se mantiene y `pkgrel`
+aumenta. Un cambio funcional nunca debe expresarse únicamente mediante `pkgrel`.
 
 La clasificación MAJOR/MINOR/PATCH corresponde al mantenedor. La automatización valida
-el formato, el orden monotónico y el reinicio de `pkgrel`, pero no deduce la importancia
+el formato y el orden monotónico, pero no deduce la importancia
 funcional de un diff. Registra el motivo en el mensaje del commit o en el changelog del
 paquete.
 
@@ -80,8 +80,8 @@ de Arch y AUR conservan sus políticas de versión upstream.
 
 Las versiones ya publicadas no se reescriben. La política se aplica a todos los cambios
 futuros. Las versiones existentes se aceptan como línea base inicial si cumplen el
-formato numérico. No reinicies un `pkgrel` publicado solo para simplificarlo; el
-siguiente cambio de `pkgver` comenzará en `pkgrel=1`.
+formato numérico. No reinicies un `pkgrel` publicado solo para simplificarlo; al cambiar
+`pkgver`, no es obligatorio reiniciar `pkgrel`.
 
 ## Línea base de la migración CPV
 
@@ -125,7 +125,7 @@ pkgrel=1
 
 # Función compatible
 pkgver=0.2.0
-pkgrel=1
+pkgrel=2
 
 # Cambio incompatible
 pkgver=1.0.0

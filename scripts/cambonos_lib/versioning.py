@@ -61,7 +61,7 @@ def validate_version_transition(
     image: str,
     comparator: Callable[[str, str, str], int] = compare_arch_versions,
 ) -> int:
-    """Enforce monotonic Arch ordering and CPV's pkgrel reset rule.
+    """Enforce monotonic Arch ordering for CPV versions.
 
     Classification of a change as MAJOR/MINOR/PATCH remains a maintainer
     decision; this function validates the machine-checkable invariants.
@@ -74,10 +74,4 @@ def validate_version_transition(
             f"retroceso de versión {old_version} -> {new_version}"
         )
 
-    old_without_epoch = old_version.split(":", 1)[-1]
-    old_pkgver = old_without_epoch.rsplit("-", 1)[0]
-    if old_pkgver != new_pkgver and new_pkgrel != "1":
-        raise CambonosError(
-            f"al cambiar pkgver ({old_pkgver} -> {new_pkgver}) pkgrel debe reiniciarse a 1"
-        )
     return ordering
