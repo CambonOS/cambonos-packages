@@ -59,9 +59,24 @@ perfil.
   paquete.
 
 La validación automática comprueba la estructura y los recursos generados, pero no
-sustituye las pruebas visuales en una sesión XFCE real. La [checklist
-funcional](../../docs/PACKAGE-TEST-CHECKLIST.md) recoge las comprobaciones pendientes.
+sustituye las pruebas visuales en una sesión XFCE real. En Xfwm4, selecciona el tema en
+**Configuración → Gestor de ventanas → Estilo** y la variante GTK correspondiente en
+**Apariencia → Estilo**. Los recursos XPM utilizan la paleta de CambonOS; la validación
+estructural no sustituye la comprobación visual en la versión de XFCE/Xfwm4 utilizada.
+La [checklist funcional](../../docs/PACKAGE-TEST-CHECKLIST.md) recoge las comprobaciones
+pendientes.
 
 ## Dependencias de construcción
 
 `python` (utilizado por el generador y el validador del tema).
+
+## Historial reciente
+
+- **0.9.7:** ampliada la cobertura de los selectores de selección por arrastre en XFCE,
+  Thunar y GTK; unificados los estilos GTK 3/4 y reforzada su validación.
+- **0.9.6:** restaurado el comportamiento de estado y animación de `GtkSpinner` en GTK 3.
+- **0.9.5:** mejorada la visibilidad de la selección de iconos en Thunar.
+- **0.9.4–0.9.1:** ajustes progresivos de contraste, color y visibilidad del selector
+  de arrastre y del resaltado de menús.
+- **0.8.0:** introducidos los tres perfiles de opacidad generados desde una paleta y
+  plantilla comunes.
