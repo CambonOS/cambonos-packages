@@ -10,6 +10,7 @@ backup=(
   'etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar-volman.xml'
 )
 depends=(
+  'pipewire-jack'
   'avahi'
   'bluez'
   'bluez-utils'
@@ -47,7 +48,6 @@ depends=(
   'pipewire'
   'pipewire-alsa'
   'pipewire-audio'
-  'pipewire-jack'
   'pipewire-pulse'
   'polkit-gnome'
   'shared-mime-info'
