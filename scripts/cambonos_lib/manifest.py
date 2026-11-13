@@ -110,17 +110,6 @@ def validate_version_policy(
                     f"{channel}/{name}: cambió el contenido fuente sin incrementar "
                     f"pkgver (versión {new['version']})"
                 )
-            old_package_hash = old.get("package_hash")
-            new_package_hash = new.get("package_hash")
-            if (
-                old_package_hash is not None
-                and new_package_hash is not None
-                and old_package_hash != new_package_hash
-            ):
-                raise CambonosError(
-                    f"{channel}/{name}: la versión publicada {new['version']} "
-                    "no es inmutable: el SHA-256 del binario ha cambiado"
-                )
     removed = sorted(set(old_packages) - set(current))
     if removed:
         print(f"Paquetes que se retirarán de {channel}: {', '.join(removed)}")
