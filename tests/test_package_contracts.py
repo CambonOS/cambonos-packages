@@ -251,6 +251,31 @@ hosts: mymachines resolve [!UNAVAIL=return] files myhostname dns
         }
         self.assertEqual(set(opacity_values.values()), {"95"})
 
+    def test_xfce_panel_launchers_reference_installed_desktop_files(self):
+        import configparser
+        import xml.etree.ElementTree as ET
+        package = PACKAGES / "cambonos-xfce-conf"
+        pkgbuild = (package / "PKGBUILD").read_text(encoding="utf-8")
+        panel = ET.parse(package / "files/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml").getroot()
+        plugins = panel.find("./property[@name='plugins']")
+        for plugin_id, filename, command in (
+            ("10", "17618130321.desktop", "xfce4-terminal"),
+            ("11", "17618130322.desktop", "thunar"),
+            ("12", "17618130323.desktop", "chromium %U"),
+        ):
+            with self.subTest(plugin=plugin_id):
+                relative = f"xfce4/panel/launcher-{plugin_id}/{filename}"
+                plugin = plugins.find(f"./property[@name='plugin-{plugin_id}']")
+                self.assertEqual(plugin.get("value"), "launcher")
+                items = plugin.findall("./property[@name='items']/value")
+                self.assertEqual([item.get("value") for item in items], [f"/etc/cambonos/xdg/{relative}"])
+                desktop = configparser.ConfigParser(interpolation=None)
+                self.assertEqual(desktop.read(package / "files/xdg" / relative, encoding="utf-8"), [str(package / "files/xdg" / relative)])
+                self.assertEqual(desktop["Desktop Entry"]["Type"], "Application")
+                self.assertEqual(desktop["Desktop Entry"]["Exec"], command)
+                self.assertIn(f'"$startdir/files/xdg/{relative}"', pkgbuild)
+                self.assertIn(f'"$xdg/{relative}"', pkgbuild)
+
     def test_xfce_terminal_palette_is_generated_from_branding(self):
         package = PACKAGES / "cambonos-xfce-conf"
         pkgbuild = (package / "PKGBUILD").read_text(encoding="utf-8")

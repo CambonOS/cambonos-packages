@@ -66,17 +66,17 @@
     <property name="show-command-menueditor" type="bool" value="false" /><property name="show-command-restart" type="bool" value="false" /><property name="show-command-shutdown" type="bool" value="false" /><property name="show-command-suspend" type="bool" value="false" /><property name="show-command-hibernate" type="bool" value="false" /><property name="show-command-logoutuser" type="bool" value="false" /></property>
     <property name="plugin-10" type="string" value="launcher">
       <property name="items" type="array">
-        <value type="string" value="17618130321.desktop" />
+        <value type="string" value="/etc/cambonos/xdg/xfce4/panel/launcher-10/17618130321.desktop" />
       </property>
     </property>
     <property name="plugin-11" type="string" value="launcher">
       <property name="items" type="array">
-        <value type="string" value="17618130322.desktop" />
+        <value type="string" value="/etc/cambonos/xdg/xfce4/panel/launcher-11/17618130322.desktop" />
       </property>
     </property>
     <property name="plugin-12" type="string" value="launcher">
       <property name="items" type="array">
-        <value type="string" value="17618130323.desktop" />
+        <value type="string" value="/etc/cambonos/xdg/xfce4/panel/launcher-12/17618130323.desktop" />
       </property>
     </property>
     <property name="plugin-2" type="string" value="tasklist">

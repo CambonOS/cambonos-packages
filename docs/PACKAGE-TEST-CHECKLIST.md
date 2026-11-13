@@ -144,6 +144,7 @@ visuales en una sesión real.
 - [ ] El wrapper prioriza `/etc/cambonos/xdg`, conserva `/etc/xdg` y los directorios XDG preexistentes.
 - [ ] Las preferencias personales en `~/.config` prevalecen sobre los valores globales.
 - [ ] Una cuenta nueva recibe el panel inferior de 35 px con los 13 elementos en el orden aprobado.
+- [ ] En una cuenta nueva, los lanzadores del panel muestran sus iconos y abren XFCE Terminal, Thunar y Chromium.
 - [ ] Whisker muestra los favoritos Chromium, Thunar y XFCE Terminal y las acciones de configuración, bloqueo, greeter, perfil y cierre de sesión.
 - [ ] La paleta del terminal coincide con los 16 colores canónicos de `cambonos-branding`; el fondo es transparente con oscurecimiento 0.95.
 - [ ] Xfwm4 mantiene compositor, sombras, título centrado, un espacio de trabajo y las opacidades configuradas al 95 %.
