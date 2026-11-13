@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=CambonOS XFCE
+Comment=Sesión XFCE configurada por CambonOS
+Exec=cambonos-startxfce
+TryExec=cambonos-startxfce
+Type=Application
+DesktopNames=XFCE

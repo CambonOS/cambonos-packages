@@ -1,0 +1,104 @@
+pkgname=cambonos-xfce-conf
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="CambonOS XFCE session, system defaults and desktop customization"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('GPL-3.0-only')
+backup=(
+  'etc/cambonos/xdg/menus/xfce-applications.menu'
+  'etc/cambonos/xdg/xfce-mimeapps.list'
+  'etc/cambonos/xdg/xfce4/helpers.rc'
+  'etc/cambonos/xdg/xfce4/panel/whiskermenu-1.rc'
+  'etc/cambonos/xdg/xfce4/panel/launcher-10/17618130321.desktop'
+  'etc/cambonos/xdg/xfce4/panel/launcher-11/17618130322.desktop'
+  'etc/cambonos/xdg/xfce4/panel/launcher-12/17618130323.desktop'
+  'etc/cambonos/xdg/xfce4/terminal/terminalrc'
+  'etc/cambonos/xdg/xfce4/xfconf/xfce-perchannel-xml/keyboards.xml'
+  'etc/cambonos/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml'
+  'etc/cambonos/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml'
+  'etc/cambonos/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-notifyd.xml'
+  'etc/cambonos/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml'
+  'etc/cambonos/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-power-manager.xml'
+  'etc/cambonos/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-screensaver.xml'
+  'etc/cambonos/xdg/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml'
+  'etc/cambonos/xdg/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml'
+)
+makedepends=('cambonos-branding')
+depends=(
+  'cambonos-graphical-base'
+  'cambonos-branding'
+  'cambonos-gtk-theme'
+  'cambonos-lightdm'
+  'cantarell-fonts'
+  'chromium'
+  'elementary-icon-theme'
+  'exo'
+  'mugshot'
+  'papirus-icon-theme'
+  'xfce4-appfinder'
+  'xfce4-clipman-plugin'
+  'xfce4-notifyd'
+  'xfce4-panel'
+  'xfce4-power-manager'
+  'xfce4-pulseaudio-plugin'
+  'xfce4-screensaver'
+  'xfce4-screenshooter'
+  'xfce4-session'
+  'xfce4-settings'
+  'xfce4-taskmanager'
+  'xfce4-terminal'
+  'xfdesktop'
+  'xfconf'
+  'xfwm4'
+  'xorg-xkill'
+)
+
+build() {
+  local palette_file=/usr/share/cambonos/branding/console-colors
+  [[ -r "$palette_file" ]] || {
+    error "No se encuentra la paleta canónica: $palette_file"
+    return 1
+  }
+  if ! awk '
+    NF != 1 || $0 !~ /^#[[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]]$/ { invalid = 1 }
+    END { if (NR != 16 || invalid) exit 1 }
+  ' "$palette_file"; then
+    error "La paleta canónica debe contener exactamente 16 colores hexadecimales RGB: $palette_file"
+    return 1
+  fi
+  local palette
+  palette=$(paste -sd ';' "$palette_file")
+  sed "s|@COLOR_PALETTE@|$palette|" \
+    "$startdir/files/xdg/xfce4/terminal/terminalrc.in" > "$srcdir/terminalrc"
+}
+
+package() {
+  local xdg="$pkgdir/etc/cambonos/xdg"
+  install -Dm644 "$startdir/files/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm755 "$startdir/files/bin/cambonos-startxfce" \
+    "$pkgdir/usr/bin/cambonos-startxfce"
+  install -Dm644 "$startdir/files/xsessions/cambonos-xfce.desktop" \
+    "$pkgdir/usr/share/xsessions/cambonos-xfce.desktop"
+  install -Dm644 "$startdir/files/backgrounds/cambonos/wallpaper.jpeg" \
+    "$pkgdir/usr/share/backgrounds/cambonos/wallpaper.jpeg"
+  install -Dm644 "$startdir/files/xdg/menus/xfce-applications.menu" \
+    "$xdg/menus/xfce-applications.menu"
+  install -Dm644 "$startdir/files/xdg/xfce-mimeapps.list" \
+    "$xdg/xfce-mimeapps.list"
+  install -Dm644 "$startdir/files/xdg/xfce4/helpers.rc" \
+    "$xdg/xfce4/helpers.rc"
+  install -Dm644 "$startdir/files/xdg/xfce4/panel/whiskermenu-1.rc" \
+    "$xdg/xfce4/panel/whiskermenu-1.rc"
+  install -Dm644 "$startdir/files/xdg/xfce4/panel/launcher-10/17618130321.desktop" \
+    "$xdg/xfce4/panel/launcher-10/17618130321.desktop"
+  install -Dm644 "$startdir/files/xdg/xfce4/panel/launcher-11/17618130322.desktop" \
+    "$xdg/xfce4/panel/launcher-11/17618130322.desktop"
+  install -Dm644 "$startdir/files/xdg/xfce4/panel/launcher-12/17618130323.desktop" \
+    "$xdg/xfce4/panel/launcher-12/17618130323.desktop"
+  install -Dm644 "$srcdir/terminalrc" "$xdg/xfce4/terminal/terminalrc"
+  install -d "$xdg/xfce4/xfconf/xfce-perchannel-xml"
+  cp -a "$startdir/files/xdg/xfce4/xfconf/xfce-perchannel-xml/." \
+    "$xdg/xfce4/xfconf/xfce-perchannel-xml/"
+}

@@ -215,7 +215,7 @@ def validate_source_files(package: Package, package_body: str) -> list[str]:
             if path.is_file() and not path.is_symlink():
                 if not external_source and path.resolve() not in referenced:
                     errors.append(
-                        f"archivo de files/ no utilizado por package(): "
+                        f"archivo de files/ no utilizado por build()/package(): "
                         f"{path.relative_to(directory)}"
                     )
                 errors.extend(validate_file_format(path))
@@ -342,7 +342,10 @@ def validate_package(package: Package) -> list[str]:
                 "package() puede usar srcdir únicamente si build() consume payloads locales desde startdir/files"
             )
         else:
-            source_body = build_body
+            # Validate references from both phases: build() consumes local
+            # templates while package() installs generated files and the
+            # remaining local payloads.
+            source_body = build_body + "\n" + body
     errors.extend(validate_source_files(package, source_body))
     errors.extend(validate_script_syntax(package))
     refs = re.findall(r"""\$startdir/([^\s"']+)""", source_body)

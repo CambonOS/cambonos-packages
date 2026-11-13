@@ -50,7 +50,7 @@ class CPVFormatTests(unittest.TestCase):
 
         root = Path(__file__).resolve().parents[1]
         pkgbuils = sorted((root / "packages").glob("*/PKGBUILD"))
-        self.assertEqual(len(pkgbuils), 13)
+        self.assertEqual(len(pkgbuils), 15)
         for path in pkgbuils:
             text = path.read_text(encoding="utf-8")
             pkgver = re.search(r"(?m)^pkgver=([^\n#]+)", text)

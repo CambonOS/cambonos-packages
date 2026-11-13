@@ -1,10 +1,14 @@
 pkgname=cambonos-graphical-base
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="CambonOS shared Xorg desktop infrastructure and applications"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
+backup=(
+  'etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar.xml'
+  'etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar-volman.xml'
+)
 depends=(
   'avahi'
   'bluez'
@@ -16,6 +20,11 @@ depends=(
   'desktop-file-utils'
   'dex'
   'file-roller'
+  'ffmpegthumbnailer'
+  'freetype2'
+  'gnome-disk-utility'
+  'gnome-keyring'
+  'htop'
   'gawk'
   'gvfs'
   'gvfs-afc'
@@ -25,10 +34,16 @@ depends=(
   'gvfs-nfs'
   'gvfs-smb'
   'gvfs-wsdd'
+  'libgepub'
+  'libgsf'
+  'libopenraw'
+  'libsecret'
   'network-manager-applet'
   'networkmanager'
+  'nvtop'
   'nss-mdns'
   'pavucontrol'
+  'poppler-glib'
   'pipewire'
   'pipewire-alsa'
   'pipewire-audio'
@@ -71,11 +86,13 @@ package() {
   install -Dm644 "$startdir/files/libalpm/hooks/cambonos-nsswitch.hook" \
     "$pkgdir/usr/share/libalpm/hooks/cambonos-nsswitch.hook"
 
-  # Shared XDG session autostart and Thunar Volman defaults.
+  # Shared XDG session autostart and Thunar defaults.
   install -Dm644 "$startdir/files/xdg/autostart/cambonos-thunar-daemon.desktop" \
     "$pkgdir/etc/xdg/autostart/cambonos-thunar-daemon.desktop"
   install -Dm644 "$startdir/files/xdg/autostart/cambonos-polkit-agent.desktop" \
     "$pkgdir/etc/xdg/autostart/cambonos-polkit-agent.desktop"
+  install -Dm644 "$startdir/files/xfconf/xfce-perchannel-xml/thunar.xml" \
+    "$pkgdir/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar.xml"
   install -Dm644 "$startdir/files/xfconf/xfce-perchannel-xml/thunar-volman.xml" \
     "$pkgdir/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar-volman.xml"
 }

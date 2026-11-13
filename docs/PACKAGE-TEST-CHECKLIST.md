@@ -124,14 +124,42 @@ visuales en una sesión real.
 - [ ] `mdns_minimal [NOTFOUND=return]` se añade después de `mymachines` en la línea `hosts:`.
 - [ ] La configuración NSS es idempotente y se repara tras una transacción Pacman que actualiza `/etc/nsswitch.conf`.
 - [ ] Las modificaciones administrativas de `/etc/nsswitch.conf` no se revierten sin una transacción que active el hook.
+- [ ] Thunar conserva sus preferencias globales de vista, zoom, ubicación y navegación mediante `thunar.xml`.
 - [ ] Thunar Volman activa el automontaje de unidades y medios extraíbles con los valores Xfconf globales.
+- [ ] Las miniaturas de vídeo, fuentes, EPUB, ODF, RAW y PDF se generan en Thunar.
+- [ ] GNOME Disk Utility, `htop` y `nvtop` están disponibles en el entorno gráfico.
+- [ ] GNOME Keyring y libsecret están disponibles sin modificar PAM ni prometer desbloqueo automático.
 - [ ] `thunar --daemon` se inicia en las sesiones gráficas compatibles con XDG Autostart.
-- [ ] El agente `polkit-gnome` se inicia una sola vez por sesión, también en XFCE.
+- [ ] El agente `polkit-gnome` se inicia en las sesiones compatibles; comprobar la posible coexistencia con el autoinicio que proporciona `xfce4-session` sin desactivarlo preventivamente.
 - [ ] Blueman Applet y NetworkManager Applet se inician en Qtile y XFCE.
 - [ ] Los iconos de ambos applets se muestran en las zonas de notificación de Qtile y XFCE.
 - [ ] PipeWire, PipeWire Pulse y WirePlumber funcionan en la sesión de usuario con audio ALSA, PulseAudio y JACK.
 - [ ] GVFS permite acceder a recursos SMB, NFS, MTP, AFC, GPhoto2, DNS-SD y WSDD.
 - [ ] Los portales XDG funcionan con la selección de backend definida por cada sesión.
+
+
+## cambonos-xfce-conf
+
+- [ ] LightDM ofrece la sesión `CambonOS XFCE` y la inicia mediante `cambonos-startxfce`.
+- [ ] El wrapper prioriza `/etc/cambonos/xdg`, conserva `/etc/xdg` y los directorios XDG preexistentes.
+- [ ] Las preferencias personales en `~/.config` prevalecen sobre los valores globales.
+- [ ] Una cuenta nueva recibe el panel inferior de 35 px con los 13 elementos en el orden aprobado.
+- [ ] Whisker muestra los favoritos Chromium, Thunar y XFCE Terminal y las acciones de configuración, bloqueo, greeter, perfil y cierre de sesión.
+- [ ] La paleta del terminal coincide con los 16 colores canónicos de `cambonos-branding`; el fondo es transparente con oscurecimiento 0.95.
+- [ ] Xfwm4 mantiene compositor, sombras, título centrado, un espacio de trabajo y las opacidades configuradas al 95 %.
+- [ ] El wallpaper se aplica en la pantalla principal y el modo Zoom conserva proporciones y recorta el excedente.
+- [ ] Los atajos de teclado conservados funcionan; Orca y MenuLibre no se instalan ni se invocan.
+- [ ] Chromium se utiliza como navegador predeterminado de Exo y para HTTP/HTTPS; Thunar se utiliza para directorios y trash.
+- [ ] Las configuraciones globales se actualizan sin migrar ni sobrescribir automáticamente perfiles personales existentes.
+- [ ] La retirada del paquete no elimina perfiles personales ni recursos de usuario.
+
+## cambonos-xfce
+
+- [ ] El metapaquete instala `cambonos-base`, `cambonos-xfce-conf` y las aplicaciones generales seleccionadas.
+- [ ] LibreOffice Fresh y Hunspell aparecen como dependencias opcionales, no obligatorias.
+- [ ] Una instalación limpia del instalador selecciona `CambonOS XFCE` como sesión cuando se elige XFCE.
+- [ ] La ISO instala el metapaquete XFCE sin clonar ni ejecutar el repositorio heredado `Cambon18/xfce`.
+- [ ] Una actualización desde una instalación XFCE existente conserva los datos y preferencias del usuario.
 
 ## cambonos-keyring
 

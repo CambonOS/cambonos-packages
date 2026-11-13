@@ -12,7 +12,9 @@ completa.
 - PipeWire con compatibilidad ALSA, PulseAudio y JACK, WirePlumber y Pavucontrol.
 - Avahi y NSS mDNS para descubrimiento y resolución en redes locales.
 - Thunar con Thunar Volman, UDisks2, GVFS y sus backends seleccionados.
-- Miniaturas y operaciones de compresión desde Thunar.
+- Miniaturas de imágenes, vídeo, fuentes, EPUB, ODF, RAW y PDF, además de operaciones de compresión desde Thunar.
+- Gestor de discos GNOME, `htop` y `nvtop` como utilidades comunes.
+- `gnome-keyring` y `libsecret` para almacenamiento de credenciales; no se modifica PAM ni se promete desbloqueo automático.
 - Agente gráfico Polkit común basado en `polkit-gnome`.
 - UPower y los portales XDG con backend GTK.
 - Autoinicio XDG común para Thunar daemon y el agente Polkit.
@@ -57,9 +59,9 @@ Si no existe una línea `hosts:` activa, hay más de una, o no contiene `mymachi
 script no inventa una estructura alternativa ni reemplaza el archivo: informa del
 problema y termina sin modificarlo.
 
-### Thunar Volman
+### Thunar y Thunar Volman
 
-Se instala una configuración Xfconf global en
+Se instalan las configuraciones Xfconf globales de Thunar y Thunar Volman en
 `/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar-volman.xml` que activa el automontaje
 de unidades y medios extraíbles. También se instala una entrada XDG Autostart para
 `thunar --daemon`.
@@ -77,17 +79,13 @@ sus preferencias individuales en su configuración Xfconf.
   dependencia de esta base para que el ejecutor esté disponible.
 - Cada escritorio debe proporcionar una zona de notificación/bandeja compatible con
   los applets que mantiene en ejecución.
-- `cambonos-graphical-base` inicia el agente `polkit-gnome`. El futuro paquete XFCE debe
-  desactivar el autoinicio de su agente propio para evitar dos agentes en una sesión.
+- `cambonos-graphical-base` instala un autoinicio XDG para el agente `polkit-gnome`. El paquete `xfce4-session` también incluye una entrada de autoinicio de agente Polkit. Por decisión de alcance, `cambonos-xfce-conf` no modifica ni desactiva esa entrada; la posible duplicidad queda como punto de validación funcional y sólo se corregirá si se reproduce un problema real.
 - Los paquetes de escritorio configuran los backends XDG Portal y sus preferencias de
   sesión. Este paquete proporciona el portal y el backend GTK, pero no impone una
   selección global.
 
 ## Exclusiones
 
-No incluye impresión, navegador, editor, visor de documentos, terminal, gestor de
-ventanas, compositor, panel, lanzador, bloqueo de pantalla, daemon de notificaciones ni
-gestor gráfico de energía. Esas funciones pertenecen al paquete de escritorio o al
-paquete de aplicaciones correspondiente.
+No incluye impresión, navegador, editor, visor de documentos, terminal, gestor de ventanas, compositor, panel, lanzador, bloqueo de pantalla, daemon de notificaciones ni gestor gráfico de energía. Esas funciones pertenecen al paquete de escritorio o al paquete de aplicaciones correspondiente.
 
 No incluye Wayland ni backends de portal específicos de Wayland.

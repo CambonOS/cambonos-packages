@@ -1,0 +1,4 @@
+[Configuration]
+BackgroundMode=TERMINAL_BACKGROUND_TRANSPARENT
+BackgroundDarkness=0.95
+ColorPalette=@COLOR_PALETTE@

@@ -1,0 +1,25 @@
+#!/usr/bin/bash
+set -Eeuo pipefail
+
+# System defaults are searched in order; per-user ~/.config remains higher priority.
+config_dirs=(/etc/cambonos/xdg /etc/xdg)
+if [[ -n "${XDG_CONFIG_DIRS:-}" ]]; then
+  IFS=: read -r -a existing_config_dirs <<< "$XDG_CONFIG_DIRS"
+  for directory in "${existing_config_dirs[@]}"; do
+    [[ -n "$directory" ]] || continue
+    duplicate=false
+    for configured in "${config_dirs[@]}"; do
+      if [[ "$configured" == "$directory" ]]; then
+        duplicate=true
+        break
+      fi
+    done
+    [[ "$duplicate" == true ]] || config_dirs+=("$directory")
+  done
+fi
+
+printf -v XDG_CONFIG_DIRS '%s:' "${config_dirs[@]}"
+XDG_CONFIG_DIRS=${XDG_CONFIG_DIRS%:}
+export XDG_CONFIG_DIRS
+
+exec /usr/bin/startxfce4 "$@"
