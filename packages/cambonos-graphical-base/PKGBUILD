@@ -1,0 +1,98 @@
+pkgname=cambonos-graphical-base
+pkgver=0.1.0
+pkgrel=2
+pkgdesc="CambonOS shared Xorg desktop infrastructure and applications"
+arch=('any')
+url="https://github.com/CambonOS/cambonos-packages"
+license=('GPL-3.0-only')
+backup=(
+  'etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar.xml'
+  'etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar-volman.xml'
+)
+depends=(
+  'avahi'
+  'bluez'
+  'bluez-utils'
+  'blueman'
+  'bash'
+  'coreutils'
+  'dbus'
+  'desktop-file-utils'
+  'dex'
+  'file-roller'
+  'ffmpegthumbnailer'
+  'freetype2'
+  'gnome-disk-utility'
+  'gnome-keyring'
+  'htop'
+  'gawk'
+  'gvfs'
+  'gvfs-afc'
+  'gvfs-dnssd'
+  'gvfs-gphoto2'
+  'gvfs-mtp'
+  'gvfs-nfs'
+  'gvfs-smb'
+  'gvfs-wsdd'
+  'libgepub'
+  'libgsf'
+  'libopenraw'
+  'libsecret'
+  'network-manager-applet'
+  'networkmanager'
+  'nvtop'
+  'nss-mdns'
+  'pavucontrol'
+  'poppler-glib'
+  'pipewire'
+  'pipewire-alsa'
+  'pipewire-audio'
+  'pipewire-jack'
+  'pipewire-pulse'
+  'polkit-gnome'
+  'shared-mime-info'
+  'sof-firmware'
+  'systemd'
+  'thunar'
+  'thunar-archive-plugin'
+  'thunar-volman'
+  'tumbler'
+  'udisks2'
+  'upower'
+  'wireplumber'
+  'xf86-input-libinput'
+  'xfconf'
+  'xorg-server'
+  'xorg-xinput'
+  'xorg-xrandr'
+  'xdg-desktop-portal'
+  'xdg-desktop-portal-gtk'
+  'xdg-user-dirs'
+  'xdg-utils'
+)
+install=cambonos-graphical-base.install
+
+package() {
+  install -Dm644 "$startdir/files/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  # Shared maintenance helpers.
+  install -Dm755 "$startdir/files/bin/cambonos-configure-nsswitch" \
+    "$pkgdir/usr/lib/cambonos/graphical-base/configure-nsswitch"
+  install -Dm755 "$startdir/files/bin/cambonos-enable-services" \
+    "$pkgdir/usr/lib/cambonos/graphical-base/enable-services"
+
+  # Repair mDNS NSS integration when another package replaces nsswitch.conf.
+  install -Dm644 "$startdir/files/libalpm/hooks/cambonos-nsswitch.hook" \
+    "$pkgdir/usr/share/libalpm/hooks/cambonos-nsswitch.hook"
+
+  # Shared XDG session autostart and Thunar defaults.
+  install -Dm644 "$startdir/files/xdg/autostart/cambonos-thunar-daemon.desktop" \
+    "$pkgdir/etc/xdg/autostart/cambonos-thunar-daemon.desktop"
+  install -Dm644 "$startdir/files/xdg/autostart/cambonos-polkit-agent.desktop" \
+    "$pkgdir/etc/xdg/autostart/cambonos-polkit-agent.desktop"
+  install -Dm644 "$startdir/files/xfconf/xfce-perchannel-xml/thunar.xml" \
+    "$pkgdir/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar.xml"
+  install -Dm644 "$startdir/files/xfconf/xfce-perchannel-xml/thunar-volman.xml" \
+    "$pkgdir/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar-volman.xml"
+}

@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<channel name="xfce4-panel" version="1.0">
+  <property name="configver" type="int" value="2" />
+  <property name="panels" type="array">
+    <value type="int" value="1" />
+    <property name="dark-mode" type="bool" value="true" />
+    <property name="panel-1" type="empty">
+      <property name="position" type="string" value="p=12;x=0;y=0" />
+      <property name="length" type="uint" value="100" />
+      <property name="position-locked" type="bool" value="true" />
+      <property name="icon-size" type="uint" value="0" />
+      <property name="size" type="uint" value="35" />
+      <property name="plugin-ids" type="array">
+        <value type="int" value="1" />
+        <value type="int" value="10" />
+        <value type="int" value="11" />
+        <value type="int" value="12" />
+        <value type="int" value="2" />
+        <value type="int" value="3" />
+        <value type="int" value="4" />
+        <value type="int" value="5" />
+        <value type="int" value="7" />
+        <value type="int" value="6" />
+        <value type="int" value="9" />
+        <value type="int" value="8" />
+        <value type="int" value="13" />
+      </property>
+      <property name="enable-struts" type="bool" value="true" />
+      <property name="enter-opacity" type="uint" value="100" />
+      <property name="leave-opacity" type="uint" value="100" />
+    <property name="length-adjust" type="bool" value="false" /><property name="span-monitors" type="bool" value="false" /><property name="autohide-behavior" type="uint" value="0" /></property>
+  </property>
+  <property name="plugins" type="empty">
+    <property name="plugin-1" type="string" value="whiskermenu">
+      <property name="button-title" type="string" value="" />
+      <property name="button-icon" type="string" value="/usr/share/cambonos/branding/cambonos-text.png" />
+      <property name="show-button-title" type="bool" value="false" />
+      <property name="hover-switch-category" type="bool" value="true" />
+      <property name="category-icon-size" type="int" value="0" />
+      <property name="favorites-in-recent" type="bool" value="true" />
+      <property name="position-search-alternate" type="bool" value="true" />
+      <property name="position-categories-alternate" type="bool" value="true" />
+      <property name="menu-width" type="int" value="580" />
+      <property name="menu-height" type="int" value="620" />
+      <property name="command-lockscreen" type="string" value="xfce4-screensaver-command -l" />
+      <property name="command-switchuser" type="string" value="dm-tool switch-to-greeter" />
+      <property name="favorites" type="array">
+        <value type="string" value="chromium.desktop" />
+        <value type="string" value="thunar.desktop" />
+        <value type="string" value="xfce4-terminal.desktop" />
+      </property>
+      <property name="menu-opacity" type="int" value="95" />
+      <property name="profile-shape" type="int" value="0" />
+      <property name="position-commands-alternate" type="bool" value="false" />
+      <property name="position-profile-alternate" type="bool" value="false" />
+      <property name="position-categories-horizontal" type="bool" value="false" />
+      <property name="default-category" type="int" value="0" />
+      <property name="stay-on-focus-out" type="bool" value="false" />
+      <property name="button-single-row" type="bool" value="false" />
+      <property name="view-mode" type="int" value="1" />
+      <property name="launcher-show-name" type="bool" value="true" />
+      <property name="category-show-name" type="bool" value="true" />
+      <property name="launcher-show-tooltip" type="bool" value="true" />
+      <property name="launcher-show-description" type="bool" value="false" />
+      <property name="launcher-icon-size" type="int" value="2" />
+    <property name="show-command-menueditor" type="bool" value="false" /><property name="show-command-restart" type="bool" value="false" /><property name="show-command-shutdown" type="bool" value="false" /><property name="show-command-suspend" type="bool" value="false" /><property name="show-command-hibernate" type="bool" value="false" /><property name="show-command-logoutuser" type="bool" value="false" /></property>
+    <property name="plugin-10" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="17618130321.desktop" />
+      </property>
+    </property>
+    <property name="plugin-11" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="17618130322.desktop" />
+      </property>
+    </property>
+    <property name="plugin-12" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="17618130323.desktop" />
+      </property>
+    </property>
+    <property name="plugin-2" type="string" value="tasklist">
+      <property name="grouping" type="uint" value="0" />
+      <property name="show-labels" type="bool" value="true" />
+      <property name="flat-buttons" type="bool" value="false" />
+      <property name="show-handle" type="bool" value="false" />
+    </property>
+    <property name="plugin-3" type="string" value="separator">
+      <property name="expand" type="bool" value="true" />
+      <property name="style" type="uint" value="0" />
+    </property>
+    <property name="plugin-5" type="string" value="systray">
+      <property name="square-icons" type="bool" value="false" />
+      <property name="icon-size" type="int" value="21" />
+      <property name="known-items" type="string" value="nm-applet" /><property name="known-items" type="string" value="blueman" /><property name="known-legacy-items" type="string" value="clipman" /></property>
+    <property name="plugin-6" type="string" value="power-manager-plugin" />
+    <property name="plugin-7" type="string" value="pulseaudio">
+      <property name="enable-keyboard-shortcuts" type="bool" value="true" />
+    </property>
+    <property name="plugin-8" type="string" value="clock">
+      <property name="digital-format" type="string" value="%_H:%M" />
+      <property name="digital-time-format" type="string" value="%R" />
+      <property name="digital-layout" type="uint" value="1" />
+      <property name="mode" type="uint" value="2" />
+      <property name="digital-date-format" type="string" value="%d/%m/%Y" />
+    </property>
+    <property name="plugin-9" type="string" value="separator">
+      <property name="style" type="uint" value="0" />
+    </property>
+    <property name="clipman" type="empty">
+      <property name="tweaks" type="empty">
+        <property name="paste-on-activate" type="uint" value="1" />
+        <property name="reorder-items" type="bool" value="true" />
+        <property name="reverse-menu-order" type="bool" value="false" />
+      </property>
+      <property name="settings" type="empty">
+        <property name="add-primary-clipboard" type="bool" value="false" />
+        <property name="history-ignore-primary-clipboard" type="bool" value="false" />
+        <property name="max-texts-in-history" type="uint" value="30" />
+      </property>
+    </property>
+    <property name="plugin-4" type="string" value="notification-plugin" />
+    <property name="plugin-13" type="string" value="separator">
+      <property name="style" type="uint" value="0" />
+    </property>
+  </property>
+</channel>

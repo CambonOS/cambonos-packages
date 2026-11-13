@@ -19,6 +19,9 @@ sistema y del escritorio, e integración con los repositorios CambonOS.
 | [cambonos-grub](packages/cambonos-grub/README.md) | Configuración y tema de GRUB. |
 | [cambonos-plymouth](packages/cambonos-plymouth/README.md) | Tema de arranque e integración con mkinitcpio. |
 | [cambonos-lightdm](packages/cambonos-lightdm/README.md) | Configuración de LightDM y Slick Greeter. |
+| [cambonos-graphical-base](packages/cambonos-graphical-base/README.md) | Infraestructura y aplicaciones comunes para escritorios Xorg. |
+| [cambonos-xfce-conf](packages/cambonos-xfce-conf/README.md) | Sesión, configuración global y personalización de XFCE. |
+| [cambonos-xfce](packages/cambonos-xfce/README.md) | Metapaquete de escritorio XFCE y aplicaciones generales. |
 | [cambonos-keyring](packages/cambonos-keyring/README.md) | Material público de confianza para Pacman. |
 
 Los paquetes del instalador y de creación de imágenes se mantienen en sus propios
@@ -72,6 +75,7 @@ funciones incluidas en el alcance soportado de esa versión. El estado se regist
 - [Versionado CPV](docs/VERSIONING.md): clasificación de cambios e inmutabilidad.
 - [Pruebas automatizadas](docs/TESTING.md): alcance y mantenimiento de la suite.
 - [Checklist funcional](docs/PACKAGE-TEST-CHECKLIST.md): validación en sistemas reales.
+- [Integración de la migración XFCE](docs/XFCE-MIGRATION-INTEGRATION.md): contratos pendientes para installer y mkiso.
 
 ## Licencia
 

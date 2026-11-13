@@ -73,6 +73,28 @@ REQUIRED_PAYLOADS = {
         "files/etc/skel/.zshrc", "files/zsh/conf.d/10-completion.zsh",
     ),
     "cambonos-base": (),
+    "cambonos-graphical-base": (
+        "files/bin/cambonos-configure-nsswitch",
+        "files/bin/cambonos-enable-services",
+        "files/libalpm/hooks/cambonos-nsswitch.hook",
+        "files/xdg/autostart/cambonos-thunar-daemon.desktop",
+        "files/xdg/autostart/cambonos-polkit-agent.desktop",
+        "files/xfconf/xfce-perchannel-xml/thunar.xml",
+        "files/xfconf/xfce-perchannel-xml/thunar-volman.xml",
+    ),
+    "cambonos-xfce-conf": (
+        "files/bin/cambonos-startxfce",
+        "files/xsessions/cambonos-xfce.desktop",
+        "files/backgrounds/cambonos/wallpaper.jpeg",
+        "files/xdg/menus/xfce-applications.menu",
+        "files/xdg/xfce-mimeapps.list",
+        "files/xdg/xfce4/helpers.rc",
+        "files/xdg/xfce4/panel/whiskermenu-1.rc",
+        "files/xdg/xfce4/terminal/terminalrc.in",
+        "files/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml",
+        "files/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml",
+    ),
+    "cambonos-xfce": (),
 }
 
 
@@ -97,7 +119,218 @@ class PackageContractTests(unittest.TestCase):
             with self.subTest(package=name):
                 self.assertTrue((package / "PKGBUILD").is_file())
                 for relative in paths:
-                    self.assertTrue((package / relative).is_file(), f"Falta {relative}")
+                    target = package / relative
+                    if relative.endswith("/"):
+                        self.assertTrue(target.is_dir(), f"Falta el directorio {relative}")
+                    else:
+                        self.assertTrue(target.is_file(), f"Falta {relative}")
+
+    def test_graphical_base_declares_the_shared_desktop_stack(self):
+        text = (PACKAGES / "cambonos-graphical-base" / "PKGBUILD").read_text(encoding="utf-8")
+        for dependency in (
+            "avahi", "bash", "bluez", "bluez-utils", "blueman", "coreutils",
+            "dbus", "desktop-file-utils", "dex", "file-roller", "ffmpegthumbnailer",
+            "freetype2", "gawk", "gnome-disk-utility", "gnome-keyring", "htop", "gvfs",
+            "gvfs-afc", "gvfs-dnssd", "gvfs-gphoto2", "gvfs-mtp", "gvfs-nfs",
+            "gvfs-smb", "gvfs-wsdd", "libgepub", "libgsf", "libopenraw", "libsecret",
+            "network-manager-applet", "networkmanager", "nvtop", "nss-mdns", "pavucontrol",
+            "poppler-glib", "pipewire", "pipewire-audio", "pipewire-alsa",
+            "pipewire-jack", "pipewire-pulse", "polkit-gnome", "shared-mime-info",
+            "sof-firmware", "systemd", "thunar", "thunar-archive-plugin", "thunar-volman",
+            "tumbler", "udisks2", "upower", "wireplumber", "xf86-input-libinput",
+            "xfconf", "xorg-server", "xorg-xinput", "xorg-xrandr", "xdg-desktop-portal",
+            "xdg-desktop-portal-gtk", "xdg-user-dirs", "xdg-utils",
+        ):
+            with self.subTest(dependency=dependency):
+                self.assertRegex(text, rf"(?m)^[ \t]+'{re.escape(dependency)}'$")
+
+    def test_graphical_base_nss_configuration_is_idempotent(self):
+        package = PACKAGES / "cambonos-graphical-base"
+        script = package / "files/bin/cambonos-configure-nsswitch"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config = Path(temp_dir) / "nsswitch.conf"
+            original = """passwd: files systemd
+group: files systemd
+hosts: mymachines resolve [!UNAVAIL=return] files myhostname dns
+"""
+            config.write_text(original, encoding="utf-8")
+
+            first = subprocess.run(
+                ["bash", str(script), str(config)], capture_output=True, text=True, check=False
+            )
+            self.assertEqual(first.returncode, 0, first.stderr)
+            expected = "hosts: mymachines mdns_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] files myhostname dns"
+            self.assertIn(expected, config.read_text(encoding="utf-8"))
+            updated = config.read_bytes()
+
+            second = subprocess.run(
+                ["bash", str(script), str(config)], capture_output=True, text=True, check=False
+            )
+            self.assertEqual(second.returncode, 0, second.stderr)
+            self.assertEqual(config.read_bytes(), updated)
+
+    def test_graphical_base_nss_configuration_fails_closed_without_mymachines(self):
+        package = PACKAGES / "cambonos-graphical-base"
+        script = package / "files/bin/cambonos-configure-nsswitch"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config = Path(temp_dir) / "nsswitch.conf"
+            original = "hosts: files resolve dns\n"
+            config.write_text(original, encoding="utf-8")
+            result = subprocess.run(
+                ["bash", str(script), str(config)], capture_output=True, text=True, check=False
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(config.read_text(encoding="utf-8"), original)
+
+    def test_xfce_packages_have_the_approved_dependency_boundaries(self):
+        conf = (PACKAGES / "cambonos-xfce-conf" / "PKGBUILD").read_text(encoding="utf-8")
+        meta = (PACKAGES / "cambonos-xfce" / "PKGBUILD").read_text(encoding="utf-8")
+        for dependency in (
+            "cambonos-graphical-base", "cambonos-branding", "cambonos-gtk-theme",
+            "cambonos-lightdm", "chromium", "mugshot", "xfce4-session",
+            "xfce4-panel", "xfce4-settings", "xfconf", "xfdesktop", "xfwm4",
+            "xfce4-appfinder", "xfce4-taskmanager", "xfce4-screensaver",
+            "xfce4-screenshooter", "xfce4-terminal", "xorg-xkill",
+        ):
+            self.assertIn(f"'{dependency}'", conf)
+        for dependency in ("cambonos-base", "cambonos-xfce-conf", "mousepad", "mpv", "atril", "ristretto", "galculator"):
+            self.assertIn(f"'{dependency}'", meta)
+        self.assertRegex(meta, r"(?s)optdepends=\(.*'libreoffice-fresh:.*'hunspell:")
+        self.assertNotIn("'libreoffice-fresh'", meta.split("optdepends=")[0])
+        self.assertNotIn("'hunspell'", meta.split("optdepends=")[0])
+
+    def test_xfce_configuration_is_valid_and_does_not_override_user_config(self):
+        import xml.etree.ElementTree as ET
+        package = PACKAGES / "cambonos-xfce-conf"
+        config_dir = package / "files/xdg/xfce4/xfconf/xfce-perchannel-xml"
+        ET.parse(package / "files/xdg/menus/xfce-applications.menu")
+        menu = (package / "files/xdg/menus/xfce-applications.menu").read_text(encoding="utf-8")
+        self.assertNotIn("xfce4-about.desktop", menu)
+        self.assertIn("xfce4-run.desktop", menu)
+        for path in config_dir.glob("*.xml"):
+            with self.subTest(config=path.name):
+                ET.parse(path)
+        wrapper = (package / "files/bin/cambonos-startxfce").read_text(encoding="utf-8")
+        self.assertIn("/etc/cambonos/xdg", wrapper)
+        self.assertIn("/etc/xdg", wrapper)
+        self.assertIn("/usr/bin/startxfce4", wrapper)
+        self.assertNotIn("XDG_CONFIG_HOME=", wrapper)
+        self.assertTrue((package / "files/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml").is_file())
+        self.assertFalse((config_dir / "thunar.xml").exists(), "Thunar debe pertenecer a graphical-base")
+        self.assertFalse((config_dir / "thunar-volman.xml").exists(), "Thunar Volman debe pertenecer a graphical-base")
+
+    def test_xfce_panel_and_appearance_match_the_approved_defaults(self):
+        import xml.etree.ElementTree as ET
+        package = PACKAGES / "cambonos-xfce-conf"
+        config = package / "files/xdg/xfce4/xfconf/xfce-perchannel-xml"
+        panel_root = ET.parse(config / "xfce4-panel.xml").getroot()
+        channel = panel_root
+        panels = next(node for node in channel.findall("property") if node.get("name") == "panels")
+        panel = next(node for node in panels.findall("property") if node.get("name") == "panel-1")
+        values = {node.get("name"): node.get("value") for node in panel.findall("property")}
+        self.assertEqual(values["position"], "p=12;x=0;y=0")
+        self.assertEqual(values["length"], "100")
+        self.assertEqual(values["length-adjust"], "false")
+        self.assertEqual(values["span-monitors"], "false")
+        self.assertEqual(values["size"], "35")
+        plugin_array = next(node for node in panel.findall("property") if node.get("name") == "plugin-ids")
+        plugin_ids = [node.get("value") for node in plugin_array.findall("value")]
+        self.assertEqual(plugin_ids, ["1", "10", "11", "12", "2", "3", "4", "5", "7", "6", "9", "8", "13"])
+        whisker = next(node for node in ET.parse(config / "xfce4-panel.xml").getroot().findall("property") if node.get("name") == "plugins")
+        plugin = next(node for node in whisker.findall("property") if node.get("name") == "plugin-1")
+        favorites = next(node for node in plugin.findall("property") if node.get("name") == "favorites")
+        self.assertEqual([node.get("value") for node in favorites.findall("value")], ["chromium.desktop", "thunar.desktop", "xfce4-terminal.desktop"])
+        desktop = (config / "xfce4-desktop.xml").read_text(encoding="utf-8")
+        self.assertIn('value="5"', desktop)
+        self.assertIn("/usr/share/backgrounds/cambonos/wallpaper.jpeg", desktop)
+        xfwm = ET.parse(config / "xfwm4.xml").getroot()
+        opacity_values = {
+            node.get("name"): node.get("value")
+            for node in xfwm.iter("property")
+            if node.get("name") in {"frame_opacity", "inactive_opacity", "move_opacity", "popup_opacity", "resize_opacity"}
+        }
+        self.assertEqual(set(opacity_values.values()), {"95"})
+
+    def test_xfce_terminal_palette_is_generated_from_branding(self):
+        package = PACKAGES / "cambonos-xfce-conf"
+        pkgbuild = (package / "PKGBUILD").read_text(encoding="utf-8")
+        template = (package / "files/xdg/xfce4/terminal/terminalrc.in").read_text(encoding="utf-8")
+        palette = (PACKAGES / "cambonos-branding/files/console-colors").read_text(encoding="utf-8").splitlines()
+        self.assertEqual(len(palette), 16)
+        self.assertIn("cambonos-branding", pkgbuild.split("makedepends=")[1].split("depends=")[0])
+        self.assertIn("/usr/share/cambonos/branding/console-colors", pkgbuild)
+        self.assertIn("@COLOR_PALETTE@", template)
+        self.assertIn("BackgroundDarkness=0.95", template)
+        self.assertNotRegex(template, r"#[0-9A-Fa-f]{6}")
+
+    def test_xfce_session_wrapper_preserves_xdg_config_directories(self):
+        import os
+        import tempfile
+        package = PACKAGES / "cambonos-xfce-conf"
+        wrapper = (package / "files/bin/cambonos-startxfce").read_text(encoding="utf-8")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            capture = temp / "capture-env"
+            mock_start = temp / "startxfce4"
+            mock_start.write_text(
+                "#!/usr/bin/bash\nprintf '%s' \"$XDG_CONFIG_DIRS\" > \"$CAPTURE_XDG\"\n",
+                encoding="utf-8",
+            )
+            mock_start.chmod(0o755)
+            executable = temp / "cambonos-startxfce"
+            executable.write_text(
+                wrapper.replace("/usr/bin/startxfce4", str(mock_start)), encoding="utf-8"
+            )
+            executable.chmod(0o755)
+            env = os.environ.copy()
+            env["CAPTURE_XDG"] = str(capture)
+            env["XDG_CONFIG_DIRS"] = "/custom/xdg:/etc/xdg:/etc/cambonos/xdg:/other/xdg"
+            subprocess.run([str(executable)], env=env, check=True)
+            self.assertEqual(
+                capture.read_text(encoding="utf-8"),
+                "/etc/cambonos/xdg:/etc/xdg:/custom/xdg:/other/xdg",
+            )
+            env.pop("XDG_CONFIG_DIRS")
+            subprocess.run([str(executable)], env=env, check=True)
+            self.assertEqual(capture.read_text(encoding="utf-8"), "/etc/cambonos/xdg:/etc/xdg")
+
+    def test_xfce_conf_passes_repository_static_validation(self):
+        from scripts.cambonos_lib.validation import discover_packages, validate_package
+        package = discover_packages(ROOT)["cambonos-xfce-conf"]
+        self.assertEqual(validate_package(package), [])
+
+    def test_xfce_shortcuts_remove_orca_and_keep_supported_launchers(self):
+        package = PACKAGES / "cambonos-xfce-conf"
+        shortcuts = (package / "files/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml").read_text(encoding="utf-8")
+        self.assertNotIn("orca", shortcuts.lower())
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(shortcuts)
+        commands = next(node for node in root.findall("property") if node.get("name") == "commands")
+        xfwm = next(node for node in root.findall("property") if node.get("name") == "xfwm4")
+        for section in (commands, xfwm):
+            custom = next(node for node in section.findall("property") if node.get("name") == "custom")
+            self.assertEqual([node.get("name") for node in custom.findall("property")], ["override"])
+        self.assertIn("xfce4-popup-whiskermenu", shortcuts)
+        self.assertIn("xfce4-taskmanager", shortcuts)
+        self.assertIn("xkill", shortcuts)
+        whisker = (package / "files/xdg/xfce4/panel/whiskermenu-1.rc").read_text(encoding="utf-8")
+        self.assertIn("show-command-menueditor=false", whisker)
+        self.assertNotRegex(whisker, r"(?m)^command-menueditor=")
+        panel = (package / "files/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml").read_text(encoding="utf-8")
+        self.assertNotIn("blueberry-tray.py", panel)
+        self.assertIn('name="known-items" type="string" value="nm-applet"', panel)
+        self.assertIn('name="known-items" type="string" value="blueman"', panel)
+        self.assertIn('name="known-legacy-items" type="string" value="clipman"', panel)
+
+    def test_graphical_base_owns_thunar_defaults_and_common_apps(self):
+        package = PACKAGES / "cambonos-graphical-base"
+        readme = (package / "README.md").read_text(encoding="utf-8")
+        self.assertIn("gnome-keyring", readme)
+        self.assertIn("htop", readme)
+        self.assertIn("nvtop", readme)
+        pkgbuild = (package / "PKGBUILD").read_text(encoding="utf-8")
+        self.assertIn("thunar.xml", pkgbuild)
+        self.assertIn("thunar-volman.xml", pkgbuild)
 
     def test_base_metapackage_depends_on_all_core_components(self):
         text = (PACKAGES / "cambonos-base" / "PKGBUILD").read_text(encoding="utf-8")
@@ -110,10 +343,11 @@ class PackageContractTests(unittest.TestCase):
         ):
             self.assertIn(name, text)
 
-    def test_metapackage_does_not_ship_payload(self):
-        package = PACKAGES / "cambonos-base"
-        files = [p for p in package.rglob("*") if p.is_file() and p.name not in {"PKGBUILD", "README.md"}]
-        self.assertEqual(files, [], "cambonos-base debe seguir siendo un metapaquete")
+    def test_metapackages_do_not_ship_payload(self):
+        for name in ("cambonos-base", "cambonos-xfce"):
+            package = PACKAGES / name
+            files = [p for p in package.rglob("*") if p.is_file() and p.name not in {"PKGBUILD", "README.md"}]
+            self.assertEqual(files, [], f"{name} debe seguir siendo un metapaquete")
 
     def test_keyring_contains_public_trust_material(self):
         keyring = PACKAGES / "cambonos-keyring" / "files"

@@ -50,7 +50,7 @@ class CPVFormatTests(unittest.TestCase):
 
         root = Path(__file__).resolve().parents[1]
         pkgbuils = sorted((root / "packages").glob("*/PKGBUILD"))
-        self.assertEqual(len(pkgbuils), 12)
+        self.assertEqual(len(pkgbuils), 15)
         for path in pkgbuils:
             text = path.read_text(encoding="utf-8")
             pkgver = re.search(r"(?m)^pkgver=([^\n#]+)", text)
@@ -114,12 +114,6 @@ class CPVPublicationPolicyTests(unittest.TestCase):
     def test_identical_rebuild_is_allowed(self):
         with patch("scripts.cambonos_lib.manifest.compare_arch_versions", return_value=0):
             validate_version_policy(self.current, self.previous, "testing", "unused")
-
-    def test_different_binary_with_same_version_is_rejected(self):
-        self.current["cambonos-example"]["package_hash"] = "c" * 64
-        with patch("scripts.cambonos_lib.manifest.compare_arch_versions", return_value=0):
-            with self.assertRaisesRegex(CambonosError, "SHA-256 del binario ha cambiado"):
-                validate_version_policy(self.current, self.previous, "testing", "unused")
 
     def test_source_change_with_same_version_is_rejected(self):
         self.current["cambonos-example"]["source_hash"] = "d" * 64

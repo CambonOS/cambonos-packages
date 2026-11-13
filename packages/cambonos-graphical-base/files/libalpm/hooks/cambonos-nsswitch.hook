@@ -1,0 +1,10 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Path
+Target = etc/nsswitch.conf
+
+[Action]
+Description = Restoring CambonOS mDNS NSS configuration...
+When = PostTransaction
+Exec = /usr/lib/cambonos/graphical-base/configure-nsswitch

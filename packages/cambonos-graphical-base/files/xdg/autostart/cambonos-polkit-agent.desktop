@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=CambonOS PolicyKit Authentication Agent
+Comment=Authentication agent for graphical privilege requests
+TryExec=/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+Exec=/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
