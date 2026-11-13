@@ -1,5 +1,5 @@
 pkgname=cambonos-xfce
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=1
 pkgdesc="CambonOS XFCE desktop environment and default applications"
 arch=('any')
@@ -7,6 +7,7 @@ url="https://github.com/CambonOS/cambonos-packages"
 license=('GPL-3.0-only')
 depends=(
   'cambonos-base'
+  'cambonos-graphical-base'
   'cambonos-xfce-conf'
   'atril'
   'galculator'
