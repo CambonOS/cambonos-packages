@@ -1,0 +1,94 @@
+#!/usr/bin/bash
+set -Eeuo pipefail
+
+config_file=${1:-/etc/nsswitch.conf}
+
+if [[ $# -gt 1 ]]; then
+  printf 'Uso: %s [archivo-nsswitch]\n' "${0##*/}" >&2
+  exit 2
+fi
+
+if [[ ! -f "$config_file" || -L "$config_file" ]]; then
+  printf 'cambonos-graphical-base: %s no existe o no es un archivo regular; no se modifica.\n' "$config_file" >&2
+  exit 1
+fi
+
+config_dir=$(dirname -- "$config_file")
+temporary_file=$(mktemp --tmpdir="$config_dir" '.nsswitch.conf.XXXXXX')
+trap 'rm -f -- "$temporary_file"' EXIT
+
+if ! /usr/bin/awk '
+  /^[[:space:]]*hosts:[[:space:]]*/ {
+    hosts_count++
+    if (hosts_count > 1) {
+      print "cambonos-configure-nsswitch: hay más de una línea hosts: activa." > "/dev/stderr"
+      failed = 1
+      exit 2
+    }
+
+    active = $0
+    sub(/[[:space:]]*#.*/, "", active)
+
+    if (active ~ /(^|[[:space:]])mdns_minimal([[:space:]]|$)/) {
+      print
+      next
+    }
+
+    if (active !~ /(^|[[:space:]])mymachines([[:space:]]|$)/) {
+      print "cambonos-configure-nsswitch: la línea hosts: no contiene mymachines; no se modifica." > "/dev/stderr"
+      failed = 1
+      exit 2
+    }
+
+    line = $0
+    comment = ""
+    if (match(line, /[[:space:]]+#/)) {
+      comment = substr(line, RSTART)
+      line = substr(line, 1, RSTART - 1)
+    }
+
+    for (position = 1; position <= length(line); position++) {
+      if (substr(line, position, 10) == "mymachines" &&
+          (position == 1 || substr(line, position - 1, 1) ~ /[[:space:]]/) &&
+          (position + 10 > length(line) || substr(line, position + 10, 1) ~ /[[:space:]]/)) {
+        line = substr(line, 1, position + 9) " mdns_minimal [NOTFOUND=return]" substr(line, position + 10)
+        break
+      }
+    }
+
+    print line comment
+    next
+  }
+
+  { print }
+
+  END {
+    if (hosts_count == 0) {
+      print "cambonos-configure-nsswitch: no se encontró una línea hosts: activa." > "/dev/stderr"
+      failed = 1
+    }
+    if (failed) {
+      exit 2
+    }
+  }
+' "$config_file" > "$temporary_file"; then
+  exit 1
+fi
+
+if /usr/bin/cmp -s -- "$config_file" "$temporary_file"; then
+  exit 0
+fi
+
+# Preserve ownership, mode, ACLs and extended attributes before atomic replace.
+if ! /usr/bin/cp --attributes-only --preserve=all -- "$config_file" "$temporary_file"; then
+  printf 'cambonos-graphical-base: no se pudieron preservar los atributos de %s.\n' "$config_file" >&2
+  exit 1
+fi
+
+if ! /usr/bin/mv -fT -- "$temporary_file" "$config_file"; then
+  printf 'cambonos-graphical-base: no se pudo actualizar %s.\n' "$config_file" >&2
+  exit 1
+fi
+
+trap - EXIT
+printf 'cambonos-graphical-base: añadido mdns_minimal a la línea hosts: de %s.\n' "$config_file"

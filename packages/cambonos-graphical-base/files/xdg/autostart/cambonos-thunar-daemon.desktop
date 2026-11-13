@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=CambonOS Thunar Daemon
+Comment=Keep Thunar volume management available in the desktop session
+Exec=thunar --daemon
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

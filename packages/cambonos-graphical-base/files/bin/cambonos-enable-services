@@ -1,0 +1,34 @@
+#!/usr/bin/bash
+set -u
+
+readonly -a required_units=(
+  NetworkManager.service
+  bluetooth.service
+  avahi-daemon.service
+)
+
+failed=0
+
+for unit in "${required_units[@]}"; do
+  state=$(/usr/bin/systemctl is-enabled "$unit" 2>/dev/null || true)
+
+  case "$state" in
+    enabled|linked|alias)
+      continue
+      ;;
+    masked|masked-runtime)
+      printf 'cambonos-graphical-base: %s está enmascarado; no se modificará la decisión administrativa.\n' "$unit" >&2
+      failed=1
+      continue
+      ;;
+  esac
+
+  if /usr/bin/systemctl enable "$unit"; then
+    printf 'cambonos-graphical-base: habilitado %s.\n' "$unit"
+  else
+    printf 'cambonos-graphical-base: no se pudo habilitar %s.\n' "$unit" >&2
+    failed=1
+  fi
+done
+
+exit "$failed"

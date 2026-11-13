@@ -73,6 +73,14 @@ REQUIRED_PAYLOADS = {
         "files/etc/skel/.zshrc", "files/zsh/conf.d/10-completion.zsh",
     ),
     "cambonos-base": (),
+    "cambonos-graphical-base": (
+        "files/bin/cambonos-configure-nsswitch",
+        "files/bin/cambonos-enable-services",
+        "files/libalpm/hooks/cambonos-nsswitch.hook",
+        "files/xdg/autostart/cambonos-thunar-daemon.desktop",
+        "files/xdg/autostart/cambonos-polkit-agent.desktop",
+        "files/xfconf/xfce-perchannel-xml/thunar-volman.xml",
+    ),
 }
 
 
@@ -98,6 +106,61 @@ class PackageContractTests(unittest.TestCase):
                 self.assertTrue((package / "PKGBUILD").is_file())
                 for relative in paths:
                     self.assertTrue((package / relative).is_file(), f"Falta {relative}")
+
+    def test_graphical_base_declares_the_shared_desktop_stack(self):
+        text = (PACKAGES / "cambonos-graphical-base" / "PKGBUILD").read_text(encoding="utf-8")
+        for dependency in (
+            "avahi", "bash", "bluez", "bluez-utils", "blueman", "coreutils",
+            "dbus", "desktop-file-utils", "dex", "file-roller", "gawk", "gvfs",
+            "gvfs-afc", "gvfs-dnssd", "gvfs-gphoto2", "gvfs-mtp", "gvfs-nfs",
+            "gvfs-smb", "gvfs-wsdd", "network-manager-applet", "networkmanager",
+            "nss-mdns", "pavucontrol", "pipewire", "pipewire-audio", "pipewire-alsa",
+            "pipewire-jack", "pipewire-pulse", "polkit-gnome", "shared-mime-info",
+            "sof-firmware", "systemd", "thunar", "thunar-archive-plugin", "thunar-volman",
+            "tumbler", "udisks2", "upower", "wireplumber", "xf86-input-libinput",
+            "xfconf", "xorg-server", "xorg-xinput", "xorg-xrandr", "xdg-desktop-portal",
+            "xdg-desktop-portal-gtk", "xdg-user-dirs", "xdg-utils",
+        ):
+            with self.subTest(dependency=dependency):
+                self.assertRegex(text, rf"(?m)^[ \t]+'{re.escape(dependency)}'$")
+
+    def test_graphical_base_nss_configuration_is_idempotent(self):
+        package = PACKAGES / "cambonos-graphical-base"
+        script = package / "files/bin/cambonos-configure-nsswitch"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config = Path(temp_dir) / "nsswitch.conf"
+            original = """passwd: files systemd
+group: files systemd
+hosts: mymachines resolve [!UNAVAIL=return] files myhostname dns
+"""
+            config.write_text(original, encoding="utf-8")
+
+            first = subprocess.run(
+                ["bash", str(script), str(config)], capture_output=True, text=True, check=False
+            )
+            self.assertEqual(first.returncode, 0, first.stderr)
+            expected = "hosts: mymachines mdns_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] files myhostname dns"
+            self.assertIn(expected, config.read_text(encoding="utf-8"))
+            updated = config.read_bytes()
+
+            second = subprocess.run(
+                ["bash", str(script), str(config)], capture_output=True, text=True, check=False
+            )
+            self.assertEqual(second.returncode, 0, second.stderr)
+            self.assertEqual(config.read_bytes(), updated)
+
+    def test_graphical_base_nss_configuration_fails_closed_without_mymachines(self):
+        package = PACKAGES / "cambonos-graphical-base"
+        script = package / "files/bin/cambonos-configure-nsswitch"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config = Path(temp_dir) / "nsswitch.conf"
+            original = "hosts: files resolve dns\n"
+            config.write_text(original, encoding="utf-8")
+            result = subprocess.run(
+                ["bash", str(script), str(config)], capture_output=True, text=True, check=False
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(config.read_text(encoding="utf-8"), original)
 
     def test_base_metapackage_depends_on_all_core_components(self):
         text = (PACKAGES / "cambonos-base" / "PKGBUILD").read_text(encoding="utf-8")

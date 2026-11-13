@@ -1,0 +1,29 @@
+#!/bin/bash
+
+_cambonos_graphical_base_apply() {
+  local failed=0
+
+  if ! /usr/lib/cambonos/graphical-base/enable-services; then
+    printf '%s\n' \
+      'cambonos-graphical-base: no se pudieron habilitar todos los servicios requeridos.' \
+      'cambonos-graphical-base: revisa NetworkManager.service, bluetooth.service y avahi-daemon.service.' >&2
+    failed=1
+  fi
+
+  if ! /usr/lib/cambonos/graphical-base/configure-nsswitch; then
+    printf '%s\n' \
+      'cambonos-graphical-base: no se pudo garantizar mdns_minimal en /etc/nsswitch.conf.' \
+      'cambonos-graphical-base: revisa la línea hosts: y vuelve a instalar el paquete tras corregirla.' >&2
+    failed=1
+  fi
+
+  return "$failed"
+}
+
+post_install() {
+  _cambonos_graphical_base_apply
+}
+
+post_upgrade() {
+  _cambonos_graphical_base_apply
+}

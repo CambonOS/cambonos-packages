@@ -117,6 +117,22 @@ visuales en una sesión real.
 - [x] Las actualizaciones y la retirada respetan el estado de activación del servicio.
 - [x] Las configuraciones locales se conservan durante las actualizaciones y la retirada.
 
+## cambonos-graphical-base
+
+- [ ] La instalación habilita `NetworkManager.service`, `bluetooth.service` y `avahi-daemon.service` cuando no están habilitados, sin iniciarlos ni reiniciarlos.
+- [ ] Las unidades enmascaradas se conservan y generan un aviso.
+- [ ] `mdns_minimal [NOTFOUND=return]` se añade después de `mymachines` en la línea `hosts:`.
+- [ ] La configuración NSS es idempotente y se repara tras una transacción Pacman que actualiza `/etc/nsswitch.conf`.
+- [ ] Las modificaciones administrativas de `/etc/nsswitch.conf` no se revierten sin una transacción que active el hook.
+- [ ] Thunar Volman activa el automontaje de unidades y medios extraíbles con los valores Xfconf globales.
+- [ ] `thunar --daemon` se inicia en las sesiones gráficas compatibles con XDG Autostart.
+- [ ] El agente `polkit-gnome` se inicia una sola vez por sesión, también en XFCE.
+- [ ] Blueman Applet y NetworkManager Applet se inician en Qtile y XFCE.
+- [ ] Los iconos de ambos applets se muestran en las zonas de notificación de Qtile y XFCE.
+- [ ] PipeWire, PipeWire Pulse y WirePlumber funcionan en la sesión de usuario con audio ALSA, PulseAudio y JACK.
+- [ ] GVFS permite acceder a recursos SMB, NFS, MTP, AFC, GPhoto2, DNS-SD y WSDD.
+- [ ] Los portales XDG funcionan con la selección de backend definida por cada sesión.
+
 ## cambonos-keyring
 
 - [x] Pacman incorpora la clave pública de CambonOS.

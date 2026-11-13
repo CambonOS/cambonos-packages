@@ -19,6 +19,7 @@ sistema y del escritorio, e integración con los repositorios CambonOS.
 | [cambonos-grub](packages/cambonos-grub/README.md) | Configuración y tema de GRUB. |
 | [cambonos-plymouth](packages/cambonos-plymouth/README.md) | Tema de arranque e integración con mkinitcpio. |
 | [cambonos-lightdm](packages/cambonos-lightdm/README.md) | Configuración de LightDM y Slick Greeter. |
+| [cambonos-graphical-base](packages/cambonos-graphical-base/README.md) | Infraestructura y aplicaciones comunes para escritorios Xorg. |
 | [cambonos-keyring](packages/cambonos-keyring/README.md) | Material público de confianza para Pacman. |
 
 Los paquetes del instalador y de creación de imágenes se mantienen en sus propios
