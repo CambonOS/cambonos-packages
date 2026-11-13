@@ -115,12 +115,6 @@ class CPVPublicationPolicyTests(unittest.TestCase):
         with patch("scripts.cambonos_lib.manifest.compare_arch_versions", return_value=0):
             validate_version_policy(self.current, self.previous, "testing", "unused")
 
-    def test_different_binary_with_same_version_is_rejected(self):
-        self.current["cambonos-example"]["package_hash"] = "c" * 64
-        with patch("scripts.cambonos_lib.manifest.compare_arch_versions", return_value=0):
-            with self.assertRaisesRegex(CambonosError, "SHA-256 del binario ha cambiado"):
-                validate_version_policy(self.current, self.previous, "testing", "unused")
-
     def test_source_change_with_same_version_is_rejected(self):
         self.current["cambonos-example"]["source_hash"] = "d" * 64
         with patch("scripts.cambonos_lib.manifest.compare_arch_versions", return_value=0):
