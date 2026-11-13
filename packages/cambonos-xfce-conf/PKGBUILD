@@ -1,6 +1,6 @@
 pkgname=cambonos-xfce-conf
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="CambonOS XFCE session, system defaults and desktop customization"
 arch=('any')
 url="https://github.com/CambonOS/cambonos-packages"
@@ -40,6 +40,7 @@ depends=(
   'xfce4-clipman-plugin'
   'xfce4-notifyd'
   'xfce4-panel'
+  'xfce4-whiskermenu-plugin'
   'xfce4-power-manager'
   'xfce4-pulseaudio-plugin'
   'xfce4-screensaver'
